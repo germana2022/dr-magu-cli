@@ -18,7 +18,7 @@ class TuiSettings:
     """Settings used to start the Dr Magu Terminal UI."""
 
     workspace_path: str
-    version: str = "0.4.0"
+    version: str = "0.4.1"
 
 
 def _build_context(workspace_path: str) -> CommandContext:
@@ -101,14 +101,42 @@ def run_tui(workspace_path: str) -> None:
         }
 
         #input-panel {
-            height: 3;
+            height: 4;
             border: round #22c55e;
             padding: 0 1;
             background: #020617;
         }
 
+        #command-row {
+            height: 1;
+            width: 1fr;
+        }
+
+        #command-label {
+            width: 12;
+            color: #22c55e;
+            text-style: bold;
+            background: #020617;
+        }
+
         #prompt-input {
             width: 1fr;
+            height: 1;
+            color: #f8fafc;
+            background: #111827;
+            border: none;
+            padding: 0 1;
+        }
+
+        #prompt-input:focus {
+            color: #ffffff;
+            background: #1f2937;
+            border: none;
+        }
+
+        #prompt-input > .input--placeholder {
+            color: #64748b;
+            text-style: italic;
         }
 
         .sidebar-title {
@@ -147,13 +175,18 @@ def run_tui(workspace_path: str) -> None:
                         yield Static("\nShortcuts", classes="sidebar-section")
                         yield Label("F1 Help | F2 Commands | F5 Status")
                 with Container(id="input-panel"):
-                    yield Input(placeholder="Type /help, /commands, /status, fl, gs, gd, or /run <command>...", id="prompt-input")
+                    with Horizontal(id="command-row"):
+                        yield Label("Command ›", id="command-label")
+                        yield Input(
+                            placeholder="Type a command... Examples: /status, fl, gs, gd, /run git.status",
+                            id="prompt-input",
+                        )
             yield Footer()
 
         def on_mount(self) -> None:
             log = self.query_one("#console", RichLog)
-            log.write("[bold cyan]Welcome to Dr Magu v0.4.0[/]")
-            log.write("[dim]Improved Terminal UI with readable command output, aliases, and suggestions.[/]")
+            log.write("[bold cyan]Welcome to Dr Magu v0.4.1[/]")
+            log.write("[dim]Improved Terminal UI with a visible command input area, readable output, aliases, and suggestions.[/]")
             self._write_separator(log)
             log.write("[bold]Try:[/] /help, /commands, /status, fl, gs, gd")
             self.query_one("#prompt-input", Input).focus()
