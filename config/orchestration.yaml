@@ -1,6 +1,6 @@
-version: "0.5.2"
-name: "dr-magu-cli-persistent-session-management"
-description: "Tool CLI, command processor, improved Terminal UI, and persistent session management."
+version: "0.7.0"
+name: "dr-magu-cli-context-generator-engine"
+description: "Tool CLI, command processor, improved Terminal UI, persistent sessions, repository scanner, and deterministic context generation."
 
 runtime:
   default_workspace: "."
@@ -9,6 +9,8 @@ runtime:
   command_processor_enabled: true
   tui_enabled: true
   persistent_sessions_enabled: true
+  repository_scanner_enabled: true
+  context_generator_enabled: true
 
 permissions:
   file_read: true
@@ -51,52 +53,23 @@ command_registry:
     - name: "shell.run"
       category: "shell"
       description: "Run a shell command inside the workspace."
+    - name: "repo.scan"
+      category: "repository"
+      description: "Scan the workspace and detect repository metadata."
+    - name: "context.generate"
+      category: "context"
+      description: "Generate deterministic project context files from repository scan metadata."
+    - name: "context.show"
+      category: "context"
+      description: "Show generated structured project context."
+    - name: "context.path"
+      category: "context"
+      description: "Show the project context directory path."
 
 tui:
   enabled: true
-  command: "dr-magu tui"
   theme: "dark"
-  layout:
-    main_console: true
-    right_sidebar: true
-    bottom_input: true
-    status_bar: true
-  slash_commands:
-    - "/help"
-    - "/commands"
-    - "/status"
-    - "/run"
-    - "/clear"
-    - "/exit"
-
-
-sessions:
-  enabled: true
-  storage_root: ".dr-magu"
-  current_session_pointer: "current-session"
-  persist_command_metadata: true
-  persist_full_output: false
-  persist_file_contents: false
-  persist_secrets: false
-  files:
-    metadata: "session.json"
-    commands: "commands.jsonl"
-    events: "events.jsonl"
-
-
-repository_scanner:
-  enabled: true
-  deterministic_only: true
-  write_latest_scan: true
-  output_path: ".dr-magu/scans/latest-scan.json"
-  max_files: 5000
-  ignored_directories:
-    - .git
-    - .dr-magu
-    - .venv
-    - node_modules
-    - dist
-    - build
-    - bin
-    - obj
-    - __pycache__
+  session_manager_popup_enabled: true
+  command_history_enabled: true
+  repository_scan_enabled: true
+  context_generator_enabled: true

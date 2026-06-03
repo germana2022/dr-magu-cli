@@ -8,12 +8,23 @@ from dr_magu.tools.git_tools import git_diff, git_status
 from dr_magu.tools.search_tools import search_code
 from dr_magu.tools.shell_tools import run_shell
 from dr_magu.scanner.repository_scanner import scan_repository
+from dr_magu.project_context.generator import generate_project_context, get_context_path, show_project_context
 
 
 def _get_str(args: dict[str, object], key: str, default: str) -> str:
     value = args.get(key, default)
     return str(value)
 
+
+
+
+def _get_bool(args: dict[str, object], key: str, default: bool = False) -> bool:
+    value = args.get(key, default)
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        return value.lower() in {"1", "true", "yes", "y", "on"}
+    return bool(value)
 
 def _get_int(args: dict[str, object], key: str, default: int) -> int:
     value = args.get(key, default)
@@ -71,6 +82,21 @@ def handle_repo_scan(args: dict[str, object], context: CommandContext) -> ToolRe
         context.workspace_path,
         max_files=_get_int(args, "max_files", 5000),
     )
+
+
+def handle_context_generate(args: dict[str, object], context: CommandContext) -> ToolResult:
+    return generate_project_context(
+        context.workspace_path,
+        refresh=_get_bool(args, "refresh", False),
+    )
+
+
+def handle_context_show(args: dict[str, object], context: CommandContext) -> ToolResult:
+    return show_project_context(context.workspace_path)
+
+
+def handle_context_path(args: dict[str, object], context: CommandContext) -> ToolResult:
+    return get_context_path(context.workspace_path)
 
 
 class CommandRegistry:
@@ -147,4 +173,26 @@ registry.register(CommandDefinition(
     description="Scan the workspace and detect repository metadata.",
     category="repository",
     handler=handle_repo_scan,
+))
+
+registry.register(CommandDefinition(
+    name="context.generate",
+    aliases=["context", "cg"],
+    description="Generate deterministic project context files from repository scan metadata.",
+    category="context",
+    handler=handle_context_generate,
+))
+registry.register(CommandDefinition(
+    name="context.show",
+    aliases=["cs"],
+    description="Show the generated structured project context.",
+    category="context",
+    handler=handle_context_show,
+))
+registry.register(CommandDefinition(
+    name="context.path",
+    aliases=["cp"],
+    description="Show the project context directory path.",
+    category="context",
+    handler=handle_context_path,
 ))

@@ -66,6 +66,9 @@ class CommandProcessor:
         elif command_name in {"repo.scan", "scan"}:
             if positional:
                 args.setdefault("path", positional[0])
+        elif command_name in {"context.generate", "context", "cg"}:
+            if positional and positional[0] in {"--refresh", "refresh"}:
+                args.setdefault("refresh", True)
         else:
             if positional:
                 args.setdefault("value", " ".join(positional))

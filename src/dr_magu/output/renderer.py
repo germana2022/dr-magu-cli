@@ -76,6 +76,44 @@ class ResultRenderer:
                 self.console.print(files_table)
             return
 
+        if result.tool in {"context.generate", "context.show"}:
+            data = result.data or {}
+            table = Table(title="Project Context")
+            table.add_column("Field")
+            table.add_column("Value")
+            table.add_row("Workspace", str(data.get("workspace_path", "")))
+            table.add_row("Project", str(data.get("project_name", "")))
+            table.add_row("Type", str(data.get("project_type", "")))
+            table.add_row("Primary language", str(data.get("primary_language", "unknown")))
+            table.add_row("Languages", ", ".join(data.get("languages", [])))
+            table.add_row("Frameworks", ", ".join(data.get("frameworks", [])))
+            if data.get("context_dir"):
+                table.add_row("Context directory", str(data.get("context_dir")))
+            self.console.print(table)
+
+            generated_files = data.get("generated_files", []) or []
+            if generated_files:
+                files_table = Table(title="Generated Context Files")
+                files_table.add_column("Name")
+                files_table.add_column("Path")
+                files_table.add_column("Description")
+                for item in generated_files:
+                    files_table.add_row(str(item.get("name", "")), str(item.get("path", "")), str(item.get("description", "")))
+                self.console.print(files_table)
+            return
+
+        if result.tool == "context.path":
+            data = result.data or {}
+            table = Table(title="Project Context Path")
+            table.add_column("Field")
+            table.add_column("Value")
+            table.add_row("Workspace", str(data.get("workspace_path", "")))
+            table.add_row("Context directory", str(data.get("context_dir", "")))
+            table.add_row("Exists", str(data.get("exists", False)))
+            self.console.print(table)
+            return
+
+
         if result.tool in {"git.status", "git.diff", "shell.run"}:
             stdout = result.data.get("stdout", "")
             stderr = result.data.get("stderr", "")

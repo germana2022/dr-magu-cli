@@ -12,14 +12,16 @@ from dr_magu.output.renderer import ResultRenderer
 from dr_magu.sessions.manager import SessionManager
 from dr_magu.scanner.models import RepositoryScan
 from dr_magu.scanner.writers import write_latest_scan
+from dr_magu.project_context.generator import generate_project_context, get_context_path, show_project_context
 
-app = typer.Typer(help="Dr Magu CLI - Tool CLI, command processor, Terminal UI, and repository scanner")
+app = typer.Typer(help="Dr Magu CLI - Tool CLI, command processor, Terminal UI, repository scanner, and context generator")
 files_app = typer.Typer(help="File system tools")
 search_app = typer.Typer(help="Code search tools")
 git_app = typer.Typer(help="Git tools")
 shell_app = typer.Typer(help="Shell execution tools")
 commands_app = typer.Typer(help="Command registry tools")
 session_app = typer.Typer(help="Persistent session management")
+context_app = typer.Typer(help="Deterministic project context generation")
 
 app.add_typer(files_app, name="files")
 app.add_typer(search_app, name="search")
@@ -27,6 +29,7 @@ app.add_typer(git_app, name="git")
 app.add_typer(shell_app, name="shell")
 app.add_typer(commands_app, name="commands")
 app.add_typer(session_app, name="session")
+app.add_typer(context_app, name="context")
 
 console = Console()
 renderer = ResultRenderer(console)
@@ -147,6 +150,37 @@ def scan_command(
     if result.success and result.data and write:
         output_path = write_latest_scan(context.workspace_path, RepositoryScan.model_validate(result.data))
         result.data["scan_file"] = str(output_path)
+    renderer.render(result, json_output)
+
+
+@context_app.command("generate")
+def context_generate_command(
+    workspace: str = typer.Option(default_workspace(), "--workspace", "-w", help="Workspace root."),
+    refresh: bool = typer.Option(False, "--refresh", help="Refresh repository scan before generating context."),
+    json_output: bool = typer.Option(False, "--json", help="Return JSON output."),
+) -> None:
+    """Generate deterministic project context files from repository scan metadata."""
+    result = generate_project_context(workspace, refresh=refresh)
+    renderer.render(result, json_output)
+
+
+@context_app.command("show")
+def context_show_command(
+    workspace: str = typer.Option(default_workspace(), "--workspace", "-w", help="Workspace root."),
+    json_output: bool = typer.Option(False, "--json", help="Return JSON output."),
+) -> None:
+    """Show the generated structured project context."""
+    result = show_project_context(workspace)
+    renderer.render(result, json_output)
+
+
+@context_app.command("path")
+def context_path_command(
+    workspace: str = typer.Option(default_workspace(), "--workspace", "-w", help="Workspace root."),
+    json_output: bool = typer.Option(False, "--json", help="Return JSON output."),
+) -> None:
+    """Show the project context directory path."""
+    result = get_context_path(workspace)
     renderer.render(result, json_output)
 
 
@@ -276,7 +310,7 @@ def tui_command(
 
 @app.command("version")
 def version() -> None:
-    console.print("dr-magu-cli v0.6.0")
+    console.print("dr-magu-cli v0.7.0")
 
 
 if __name__ == "__main__":

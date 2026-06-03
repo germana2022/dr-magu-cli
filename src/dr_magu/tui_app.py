@@ -76,7 +76,7 @@ class TuiSettings:
     """Settings used to start the Dr Magu Terminal UI."""
 
     workspace_path: str
-    version: str = "0.6.0"
+    version: str = "0.7.0"
 
 
 def _build_context(workspace_path: str) -> CommandContext:
@@ -535,6 +535,14 @@ def run_tui(workspace_path: str) -> None:
                 self._execute_and_render("repo.scan", log)
                 return
 
+            if command in {"/context", "context", "cg"}:
+                self._execute_and_render("context.generate", log)
+                return
+
+            if command in {"/context --refresh", "context --refresh", "cg --refresh"}:
+                self._execute_and_render("context.generate --refresh true", log)
+                return
+
             if command.startswith("/") and not command.startswith("/run "):
                 command = command[1:]
 
@@ -619,6 +627,9 @@ def run_tui(workspace_path: str) -> None:
                 "search.code": self._render_search_code,
                 "shell.run": self._render_shell_run,
                 "repo.scan": self._render_repo_scan,
+                "context.generate": self._render_project_context,
+                "context.show": self._render_project_context,
+                "context.path": self._render_context_path,
             }.get(result.tool, self._render_generic_data)
 
             renderer(result.data, log)
@@ -760,6 +771,40 @@ def run_tui(workspace_path: str) -> None:
                     log.write(f"  [cyan]{item.get('path', '')}[/] [dim]{item.get('reason', '')}[/]")
             if data.get("scan_file"):
                 log.write(f"[bold green]Scan written:[/] {data.get('scan_file')}")
+
+
+        @staticmethod
+        def _render_project_context(data: dict[str, Any], log: RichLog) -> None:
+            log.write("[bold cyan]Project Context[/]")
+            log.write(f"[bold]Workspace:[/] {data.get('workspace_path', '')}")
+            log.write(f"[bold]Project:[/] {data.get('project_name', '')}")
+            log.write(f"[bold]Type:[/] {data.get('project_type', '')}")
+            log.write(f"[bold]Primary Language:[/] {data.get('primary_language') or 'unknown'}")
+
+            for label, key in (
+                ("Languages", "languages"),
+                ("Frameworks", "frameworks"),
+                ("Capabilities", "capabilities"),
+            ):
+                values = data.get(key, []) or []
+                log.write(f"[bold]{label}:[/] {', '.join(values) if values else 'none detected'}")
+
+            context_dir = data.get("context_dir")
+            if context_dir:
+                log.write(f"[bold green]Context directory:[/] {context_dir}")
+
+            generated_files = data.get("generated_files", []) or []
+            if generated_files:
+                log.write("[bold]Generated Files[/]")
+                for item in generated_files:
+                    log.write(f"  [cyan]{item.get('name', '')}[/] [dim]{item.get('path', '')}[/]")
+
+        @staticmethod
+        def _render_context_path(data: dict[str, Any], log: RichLog) -> None:
+            log.write("[bold cyan]Project Context Path[/]")
+            log.write(f"[bold]Workspace:[/] {data.get('workspace_path', '')}")
+            log.write(f"[bold]Context directory:[/] {data.get('context_dir', '')}")
+            log.write(f"[bold]Exists:[/] {data.get('exists', False)}")
 
         @staticmethod
         def _render_generic_data(data: dict[str, Any], log: RichLog) -> None:
