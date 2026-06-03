@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=69.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dr-magu-cli"
+version = "0.3.0"
+description = "Dr Magu CLI with Tool CLI, Command Processor, and Terminal UI foundation."
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [{ name = "Dr Magu Team" }]
+dependencies = [
+    "typer>=0.12.5",
+    "rich>=13.9.4",
+    "pydantic>=2.9.2",
+    "python-dotenv>=1.0.1",
+    "PyYAML>=6.0.2",
+    "textual>=0.85.0"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.3",
+    "coverage>=7.6.1"
+]
+
+[project.scripts]
+dr-magu = "dr_magu.cli:app"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]

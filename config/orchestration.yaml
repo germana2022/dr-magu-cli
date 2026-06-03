@@ -1,0 +1,69 @@
+version: "0.3.0"
+name: "dr-magu-cli-tui-foundation"
+description: "Tool CLI and command processor with an OpenCode-style terminal UI foundation."
+
+runtime:
+  default_workspace: "."
+  output_format: "human"
+  allow_json_output: true
+  command_processor_enabled: true
+  tui_enabled: true
+
+permissions:
+  file_read: true
+  file_write: false
+  file_delete: false
+  shell_run: true
+  git_status: true
+  git_diff: true
+  git_commit: false
+  git_push: false
+
+blocked_shell_patterns:
+  - "rm -rf"
+  - "del /s"
+  - "format"
+  - "shutdown"
+  - "reboot"
+  - "git push"
+  - "git reset --hard"
+  - "git clean -fd"
+
+command_registry:
+  enabled: true
+  commands:
+    - name: "files.list"
+      category: "files"
+      description: "List files inside the workspace."
+    - name: "files.read"
+      category: "files"
+      description: "Read a text file from the workspace."
+    - name: "search.code"
+      category: "search"
+      description: "Search text across source files."
+    - name: "git.status"
+      category: "git"
+      description: "Show git status for the workspace."
+    - name: "git.diff"
+      category: "git"
+      description: "Show git diff for the workspace."
+    - name: "shell.run"
+      category: "shell"
+      description: "Run a shell command inside the workspace."
+
+tui:
+  enabled: true
+  command: "dr-magu tui"
+  theme: "dark"
+  layout:
+    main_console: true
+    right_sidebar: true
+    bottom_input: true
+    status_bar: true
+  slash_commands:
+    - "/help"
+    - "/commands"
+    - "/status"
+    - "/run"
+    - "/clear"
+    - "/exit"
