@@ -12,6 +12,8 @@ from dr_magu.commands.registry import registry
 from dr_magu.config import load_config
 from dr_magu.result import ToolResult
 from dr_magu.sessions.manager import SessionManager
+from dr_magu.scanner.models import RepositoryScan
+from dr_magu.scanner.writers import write_latest_scan
 from dr_magu.sessions.models import SessionMetadata
 from dr_magu.tui_history import SessionCommandHistory
 
@@ -74,7 +76,7 @@ class TuiSettings:
     """Settings used to start the Dr Magu Terminal UI."""
 
     workspace_path: str
-    version: str = "0.5.2"
+    version: str = "0.6.0"
 
 
 def _build_context(workspace_path: str) -> CommandContext:
@@ -408,7 +410,8 @@ def run_tui(workspace_path: str) -> None:
                         yield Label("not configured")
                         yield Static("\nQuick Commands", classes="sidebar-section")
                         yield Label("/help     /commands")
-                        yield Label("/status   /clear")
+                        yield Label("/status   /scan")
+                        yield Label("/clear    /session")
                         yield Label("fl        gs        gd")
                         yield Static("\nHistory", classes="sidebar-section")
                         yield Label("↑ previous command")
@@ -427,12 +430,12 @@ def run_tui(workspace_path: str) -> None:
 
         def on_mount(self) -> None:
             log = self.query_one("#console", RichLog)
-            log.write("[bold cyan]Welcome to Dr Magu v0.5.2[/]")
+            log.write("[bold cyan]Welcome to Dr Magu v0.6.0[/]")
             log.write(
-                "[dim]Improved Terminal UI with persistent sessions, in-memory navigation history, readable output, aliases, and suggestions.[/]"
+                "[dim]Workspace-aware Terminal UI with persistent sessions, command history, and deterministic repository scanning.[/]"
             )
             self._write_separator(log)
-            log.write("[bold]Try:[/] /help, /commands, /session, /status, fl, gs, gd")
+            log.write("[bold]Try:[/] /help, /commands, /session, /scan, /status, fl, gs, gd")
             log.write("[dim]Use Arrow Up and Arrow Down to navigate commands executed in this TUI session.[/]")
             log.write(f"[dim]Persistent session:[/] {session_metadata.id}")
             self.query_one("#prompt-input", Input).focus()
@@ -528,6 +531,10 @@ def run_tui(workspace_path: str) -> None:
                 self._execute_and_render("git.status", log)
                 return
 
+            if command in {"/scan", "scan", "rs"}:
+                self._execute_and_render("repo.scan", log)
+                return
+
             if command.startswith("/") and not command.startswith("/run "):
                 command = command[1:]
 
@@ -540,6 +547,9 @@ def run_tui(workspace_path: str) -> None:
 
         def _execute_and_render(self, command_line: str, log: RichLog) -> None:
             result = processor.execute_line(command_line, context)
+            if result.success and result.tool == "repo.scan" and result.data:
+                output_path = write_latest_scan(context.workspace_path, RepositoryScan.model_validate(result.data))
+                result.data["scan_file"] = str(output_path)
             updated_session = session_manager.record_command(self.session_metadata.id, command_line, result)
             self._update_session_sidebar(updated_session)
             self._render_result(result, command_line, log)
@@ -555,6 +565,7 @@ def run_tui(workspace_path: str) -> None:
                 ("/help", "Show this help."),
                 ("/commands", "List registered internal commands."),
                 ("/status or status", "Show Git workspace status."),
+                ("/scan, scan, rs", "Scan the workspace and persist latest scan metadata."),
                 ("/session, ss", "Open the persistent session manager popup."),
                 ("/run <command>", "Execute an internal command."),
                 ("fl, gs, gd", "Quick aliases for files.list, git.status, git.diff."),
@@ -607,6 +618,7 @@ def run_tui(workspace_path: str) -> None:
                 "git.diff": self._render_git_diff,
                 "search.code": self._render_search_code,
                 "shell.run": self._render_shell_run,
+                "repo.scan": self._render_repo_scan,
             }.get(result.tool, self._render_generic_data)
 
             renderer(result.data, log)
@@ -720,6 +732,34 @@ def run_tui(workspace_path: str) -> None:
                 log.write(str(stderr))
             if return_code is not None:
                 log.write(f"[bold]return_code:[/] {return_code}")
+
+        @staticmethod
+        def _render_repo_scan(data: dict[str, Any], log: RichLog) -> None:
+            log.write("[bold cyan]Repository Scan Summary[/]")
+            log.write(f"[bold]Workspace:[/] {data.get('workspace_path', '')}")
+            log.write(f"[bold]Project:[/] {data.get('project_name', '')}")
+            log.write(f"[bold]Type:[/] {data.get('project_type', '')}")
+            log.write(f"[bold]Primary Language:[/] {data.get('primary_language') or 'unknown'}")
+
+            for label, key in (
+                ("Languages", "languages"),
+                ("Frameworks", "frameworks"),
+                ("Package Managers", "package_managers"),
+                ("Build Tools", "build_tools"),
+                ("Test Frameworks", "test_frameworks"),
+                ("Capabilities", "capabilities"),
+            ):
+                values = data.get(key, []) or []
+                log.write(f"[bold]{label}:[/] {', '.join(values) if values else 'none detected'}")
+
+            log.write(f"[bold]Files:[/] {data.get('file_count', 0)}")
+            important_files = data.get("important_files", []) or []
+            if important_files:
+                log.write("[bold]Important Files[/]")
+                for item in important_files[:20]:
+                    log.write(f"  [cyan]{item.get('path', '')}[/] [dim]{item.get('reason', '')}[/]")
+            if data.get("scan_file"):
+                log.write(f"[bold green]Scan written:[/] {data.get('scan_file')}")
 
         @staticmethod
         def _render_generic_data(data: dict[str, Any], log: RichLog) -> None:

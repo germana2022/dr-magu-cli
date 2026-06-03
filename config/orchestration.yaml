@@ -82,3 +82,21 @@ sessions:
     metadata: "session.json"
     commands: "commands.jsonl"
     events: "events.jsonl"
+
+
+repository_scanner:
+  enabled: true
+  deterministic_only: true
+  write_latest_scan: true
+  output_path: ".dr-magu/scans/latest-scan.json"
+  max_files: 5000
+  ignored_directories:
+    - .git
+    - .dr-magu
+    - .venv
+    - node_modules
+    - dist
+    - build
+    - bin
+    - obj
+    - __pycache__

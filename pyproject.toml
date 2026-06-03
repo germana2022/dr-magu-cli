@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dr-magu-cli"
-version = "0.5.2"
-description = "Dr Magu CLI with persistent session management, improved Terminal UI, command aliases, readable output renderers, and command suggestions."
+version = "0.6.0"
+description = "Dr Magu CLI with workspace-aware persistent sessions, improved Terminal UI, and deterministic repository scanner engine."
 readme = "README.md"
 requires-python = ">=3.11"
 authors = [{ name = "Dr Magu Team" }]

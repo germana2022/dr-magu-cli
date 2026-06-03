@@ -46,6 +46,36 @@ class ResultRenderer:
             self.console.print(table)
             return
 
+
+        if result.tool == "repo.scan":
+            data = result.data or {}
+            table = Table(title="Repository Scan Summary")
+            table.add_column("Field")
+            table.add_column("Value")
+            table.add_row("Workspace", str(data.get("workspace_path", "")))
+            table.add_row("Project", str(data.get("project_name", "")))
+            table.add_row("Type", str(data.get("project_type", "")))
+            table.add_row("Primary language", str(data.get("primary_language", "unknown")))
+            table.add_row("Languages", ", ".join(data.get("languages", [])))
+            table.add_row("Frameworks", ", ".join(data.get("frameworks", [])))
+            table.add_row("Package managers", ", ".join(data.get("package_managers", [])))
+            table.add_row("Build tools", ", ".join(data.get("build_tools", [])))
+            table.add_row("Test frameworks", ", ".join(data.get("test_frameworks", [])))
+            table.add_row("Files", str(data.get("file_count", 0)))
+            if data.get("scan_file"):
+                table.add_row("Scan file", str(data.get("scan_file")))
+            self.console.print(table)
+
+            important_files = data.get("important_files", []) or []
+            if important_files:
+                files_table = Table(title="Important Files")
+                files_table.add_column("Path")
+                files_table.add_column("Reason")
+                for item in important_files[:20]:
+                    files_table.add_row(str(item.get("path", "")), str(item.get("reason", "")))
+                self.console.print(files_table)
+            return
+
         if result.tool in {"git.status", "git.diff", "shell.run"}:
             stdout = result.data.get("stdout", "")
             stderr = result.data.get("stderr", "")

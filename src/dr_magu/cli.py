@@ -10,8 +10,10 @@ from dr_magu.commands.registry import registry
 from dr_magu.config import default_workspace, load_config
 from dr_magu.output.renderer import ResultRenderer
 from dr_magu.sessions.manager import SessionManager
+from dr_magu.scanner.models import RepositoryScan
+from dr_magu.scanner.writers import write_latest_scan
 
-app = typer.Typer(help="Dr Magu CLI - Tool CLI, command processor, and Terminal UI")
+app = typer.Typer(help="Dr Magu CLI - Tool CLI, command processor, Terminal UI, and repository scanner")
 files_app = typer.Typer(help="File system tools")
 search_app = typer.Typer(help="Code search tools")
 git_app = typer.Typer(help="Git tools")
@@ -130,6 +132,22 @@ def session_delete(
     """Soft-delete a persistent session without physically removing files."""
     metadata = SessionManager(workspace).delete(session_id)
     _render_session_metadata(metadata, "Deleted Session")
+
+
+@app.command("scan")
+def scan_command(
+    workspace: str = typer.Option(default_workspace(), "--workspace", "-w", help="Workspace root."),
+    max_files: int = typer.Option(5000, help="Maximum number of files to scan."),
+    write: bool = typer.Option(True, "--write/--no-write", help="Write .dr-magu/scans/latest-scan.json."),
+    json_output: bool = typer.Option(False, "--json", help="Return JSON output."),
+) -> None:
+    """Scan the workspace and detect repository metadata without using an LLM."""
+    context = build_context(workspace, json_output)
+    result = processor.execute("repo.scan", {"max_files": max_files}, context)
+    if result.success and result.data and write:
+        output_path = write_latest_scan(context.workspace_path, RepositoryScan.model_validate(result.data))
+        result.data["scan_file"] = str(output_path)
+    renderer.render(result, json_output)
 
 
 @app.command("run")
@@ -258,7 +276,7 @@ def tui_command(
 
 @app.command("version")
 def version() -> None:
-    console.print("dr-magu-cli v0.5.2")
+    console.print("dr-magu-cli v0.6.0")
 
 
 if __name__ == "__main__":

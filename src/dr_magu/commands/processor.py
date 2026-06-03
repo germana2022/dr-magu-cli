@@ -63,6 +63,9 @@ class CommandProcessor:
                 args.setdefault("path", positional[1])
         elif command_name == "shell.run" and positional:
             args.setdefault("command", " ".join(positional))
+        elif command_name in {"repo.scan", "scan"}:
+            if positional:
+                args.setdefault("path", positional[0])
         else:
             if positional:
                 args.setdefault("value", " ".join(positional))

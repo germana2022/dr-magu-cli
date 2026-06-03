@@ -7,6 +7,7 @@ from dr_magu.tools.file_tools import list_files, read_file
 from dr_magu.tools.git_tools import git_diff, git_status
 from dr_magu.tools.search_tools import search_code
 from dr_magu.tools.shell_tools import run_shell
+from dr_magu.scanner.repository_scanner import scan_repository
 
 
 def _get_str(args: dict[str, object], key: str, default: str) -> str:
@@ -62,6 +63,13 @@ def handle_shell_run(args: dict[str, object], context: CommandContext) -> ToolRe
         command=_get_str(args, "command", ""),
         blocked_patterns=list(blocked_patterns),
         timeout_seconds=_get_int(args, "timeout_seconds", 120),
+    )
+
+
+def handle_repo_scan(args: dict[str, object], context: CommandContext) -> ToolResult:
+    return scan_repository(
+        context.workspace_path,
+        max_files=_get_int(args, "max_files", 5000),
     )
 
 
@@ -131,4 +139,12 @@ registry.register(CommandDefinition(
     description="Run a shell command inside the workspace.",
     category="shell",
     handler=handle_shell_run,
+))
+
+registry.register(CommandDefinition(
+    name="repo.scan",
+    aliases=["scan", "rs"],
+    description="Scan the workspace and detect repository metadata.",
+    category="repository",
+    handler=handle_repo_scan,
 ))
