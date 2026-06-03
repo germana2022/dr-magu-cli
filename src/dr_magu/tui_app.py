@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from difflib import get_close_matches
 from pathlib import Path
 from typing import Any
@@ -11,7 +11,62 @@ from dr_magu.commands.processor import CommandProcessor
 from dr_magu.commands.registry import registry
 from dr_magu.config import load_config
 from dr_magu.result import ToolResult
+from dr_magu.sessions.manager import SessionManager
+from dr_magu.sessions.models import SessionMetadata
 from dr_magu.tui_history import SessionCommandHistory
+
+
+
+def _short_session_id(session_id: str) -> str:
+    """Return a compact session label for terminal tables."""
+    parts = session_id.split("-")
+    if len(parts) >= 2 and len(parts[1]) == 6:
+        return f"{parts[1][:2]}:{parts[1][2:4]}:{parts[1][4:6]}"
+    return session_id[-8:]
+
+
+def _format_command_count(command_count: int) -> str:
+    """Return a readable command count label."""
+    return "1 command" if command_count == 1 else f"{command_count} commands"
+
+
+def _format_relative_time(timestamp: str, now: datetime | None = None) -> str:
+    """Convert an ISO timestamp into a compact relative time label."""
+    if not timestamp:
+        return "unknown"
+    current = now or datetime.now(timezone.utc)
+    try:
+        value = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+    except ValueError:
+        return timestamp
+    if value.tzinfo is None:
+        value = value.replace(tzinfo=timezone.utc)
+    delta = current - value.astimezone(timezone.utc)
+    seconds = int(delta.total_seconds())
+    if seconds < 0:
+        return "just now"
+    if seconds < 60:
+        return "just now" if seconds < 5 else f"{seconds}s ago"
+    minutes = seconds // 60
+    if minutes < 60:
+        return "1 min ago" if minutes == 1 else f"{minutes} min ago"
+    hours = minutes // 60
+    if hours < 24:
+        return "1 hour ago" if hours == 1 else f"{hours} hours ago"
+    days = hours // 24
+    if days < 7:
+        return "1 day ago" if days == 1 else f"{days} days ago"
+    return value.strftime("%Y-%m-%d")
+
+
+def _format_status(status: str) -> str:
+    """Return an explicit status label that does not rely on color alone."""
+    labels = {
+        "active": "● Active",
+        "closed": "○ Closed",
+        "deleted": "× Deleted",
+    }
+    return labels.get(status, status)
 
 
 @dataclass(frozen=True)
@@ -19,7 +74,7 @@ class TuiSettings:
     """Settings used to start the Dr Magu Terminal UI."""
 
     workspace_path: str
-    version: str = "0.4.2"
+    version: str = "0.5.2"
 
 
 def _build_context(workspace_path: str) -> CommandContext:
@@ -39,7 +94,8 @@ def run_tui(workspace_path: str) -> None:
         from textual.app import App, ComposeResult
         from textual.containers import Container, Horizontal, Vertical
         from textual.events import Key
-        from textual.widgets import Footer, Header, Input, Label, RichLog, Static
+        from textual.screen import ModalScreen
+        from textual.widgets import Button, DataTable, Footer, Header, Input, Label, RichLog, Static
     except ModuleNotFoundError as exc:  # pragma: no cover - only triggered without optional runtime dependency
         missing = exc.name or "textual"
         raise RuntimeError(
@@ -50,6 +106,177 @@ def run_tui(workspace_path: str) -> None:
     processor = CommandProcessor(registry)
     context = _build_context(settings.workspace_path)
     history = SessionCommandHistory()
+    session_manager = SessionManager(settings.workspace_path)
+    session_metadata = session_manager.get_or_start_current()
+
+    class SessionManagerScreen(ModalScreen[SessionMetadata | None]):
+        """Modal popup for managing persistent sessions from inside the TUI."""
+
+        BINDINGS = [
+            ("escape", "cancel", "Cancel"),
+            ("a", "add_session", "Add"),
+            ("d", "delete_session", "Delete"),
+            ("enter", "resume_selected", "Resume"),
+        ]
+
+        CSS = """
+        SessionManagerScreen {
+            align: center middle;
+        }
+
+        #session-modal {
+            width: 96;
+            height: 30;
+            border: round #38bdf8;
+            background: #0f172a;
+            padding: 1 2;
+        }
+
+        #session-title {
+            color: #22d3ee;
+            text-style: bold;
+            margin-bottom: 0;
+        }
+
+        #session-hint {
+            color: #94a3b8;
+            margin-bottom: 1;
+        }
+
+        #session-search {
+            height: 3;
+            border: round #334155;
+            background: #020617;
+            color: #e2e8f0;
+            margin-bottom: 1;
+        }
+
+        #session-table {
+            height: 1fr;
+            margin: 0 0 1 0;
+        }
+
+        #session-actions {
+            height: 3;
+            align-horizontal: center;
+        }
+
+        Button {
+            margin: 0 1;
+            min-width: 14;
+        }
+
+        #delete-session {
+            margin-left: 4;
+        }
+        """
+
+        def __init__(self, current_session_id: str) -> None:
+            super().__init__()
+            self.current_session_id = current_session_id
+            self.search_text = ""
+
+        def compose(self) -> ComposeResult:
+            with Container(id="session-modal"):
+                yield Static("Sessions", id="session-title")
+                yield Static(
+                    "Enter=Resume | A=Add new session | D=Soft delete selected | Esc=Close",
+                    id="session-hint",
+                )
+                yield Input(placeholder="Search sessions by id or status...", id="session-search")
+                table = DataTable(id="session-table")
+                table.cursor_type = "row"
+                yield table
+                with Horizontal(id="session-actions"):
+                    yield Button("▶ Resume", id="resume-session", variant="primary")
+                    yield Button("＋ Add", id="add-session", variant="success")
+                    yield Button("✖ Delete", id="delete-session", variant="error")
+                    yield Button("↩ Cancel", id="cancel-session")
+
+        def on_mount(self) -> None:
+            self._load_table()
+            self.query_one("#session-table", DataTable).focus()
+
+        def on_input_changed(self, event: Input.Changed) -> None:
+            if event.input.id != "session-search":
+                return
+            self.search_text = event.value.strip().lower()
+            self._load_table()
+
+        def _load_table(self) -> None:
+            table = self.query_one("#session-table", DataTable)
+            table.clear(columns=True)
+            table.add_columns("", "Session", "Status", "History", "Updated", "Full ID")
+
+            sessions = [metadata for metadata in session_manager.list() if self._matches_search(metadata)]
+            for metadata in sessions:
+                current_marker = "★" if metadata.id == self.current_session_id else ""
+                table.add_row(
+                    current_marker,
+                    _short_session_id(metadata.id),
+                    _format_status(metadata.status),
+                    _format_command_count(metadata.command_count),
+                    _format_relative_time(metadata.updated_at),
+                    metadata.id,
+                    key=metadata.id,
+                )
+
+        def _matches_search(self, metadata: SessionMetadata) -> bool:
+            if not self.search_text:
+                return True
+            searchable = " ".join(
+                [
+                    metadata.id,
+                    _short_session_id(metadata.id),
+                    metadata.status,
+                    str(metadata.command_count),
+                    _format_relative_time(metadata.updated_at),
+                ]
+            ).lower()
+            return self.search_text in searchable
+
+        def _selected_session_id(self) -> str | None:
+            table = self.query_one("#session-table", DataTable)
+            if table.row_count == 0:
+                return None
+            key = table.coordinate_to_cell_key(table.cursor_coordinate).row_key
+            return str(key.value) if key is not None else None
+
+        def action_cancel(self) -> None:
+            self.dismiss(None)
+
+        def action_add_session(self) -> None:
+            metadata = session_manager.start()
+            self.dismiss(metadata)
+
+        def action_resume_selected(self) -> None:
+            session_id = self._selected_session_id()
+            if not session_id:
+                return
+            try:
+                metadata = session_manager.resume(session_id)
+            except ValueError:
+                return
+            self.dismiss(metadata)
+
+        def action_delete_session(self) -> None:
+            session_id = self._selected_session_id()
+            if not session_id:
+                return
+            session_manager.delete(session_id)
+            if session_id == self.current_session_id:
+                self.current_session_id = ""
+            self._load_table()
+
+        def on_button_pressed(self, event: Button.Pressed) -> None:
+            if event.button.id == "resume-session":
+                self.action_resume_selected()
+            elif event.button.id == "add-session":
+                self.action_add_session()
+            elif event.button.id == "delete-session":
+                self.action_delete_session()
+            elif event.button.id == "cancel-session":
+                self.action_cancel()
 
     class DrMaguTui(App):
         """OpenCode-inspired terminal interface for Dr Magu."""
@@ -61,6 +288,7 @@ def run_tui(workspace_path: str) -> None:
             ("ctrl+l", "clear_console", "Clear"),
             ("f1", "show_help", "Help"),
             ("f2", "show_commands", "Commands"),
+            ("f3", "open_sessions", "Sessions"),
             ("f5", "show_status", "Status"),
         ]
 
@@ -157,6 +385,10 @@ def run_tui(workspace_path: str) -> None:
         }
         """
 
+        def __init__(self) -> None:
+            super().__init__()
+            self.session_metadata = session_metadata
+
         def compose(self) -> ComposeResult:
             yield Header(show_clock=True)
             with Vertical(id="root"):
@@ -166,7 +398,10 @@ def run_tui(workspace_path: str) -> None:
                     with Container(id="sidebar"):
                         yield Static("Dr Magu", classes="sidebar-title")
                         yield Label(f"Version: v{settings.version}")
-                        yield Label("Session: local")
+                        yield Static("\nSession", classes="sidebar-section")
+                        yield Label(f"ID: {session_metadata.id}", id="session-id")
+                        yield Label(f"Status: {session_metadata.status}", id="session-status")
+                        yield Label(f"Commands: {session_metadata.command_count}", id="session-commands")
                         yield Static("\nWorkspace", classes="sidebar-section")
                         yield Label(settings.workspace_path)
                         yield Static("\nProvider", classes="sidebar-section")
@@ -179,7 +414,8 @@ def run_tui(workspace_path: str) -> None:
                         yield Label("↑ previous command")
                         yield Label("↓ next command")
                         yield Static("\nShortcuts", classes="sidebar-section")
-                        yield Label("F1 Help | F2 Commands | F5 Status")
+                        yield Label("F1 Help | F2 Commands")
+                        yield Label("F3 Sessions | F5 Status")
                 with Container(id="input-panel"):
                     with Horizontal(id="command-row"):
                         yield Label("Command ›", id="command-label")
@@ -191,13 +427,14 @@ def run_tui(workspace_path: str) -> None:
 
         def on_mount(self) -> None:
             log = self.query_one("#console", RichLog)
-            log.write("[bold cyan]Welcome to Dr Magu v0.4.2[/]")
+            log.write("[bold cyan]Welcome to Dr Magu v0.5.2[/]")
             log.write(
-                "[dim]Improved Terminal UI with in-memory command history, readable output, aliases, and suggestions.[/]"
+                "[dim]Improved Terminal UI with persistent sessions, in-memory navigation history, readable output, aliases, and suggestions.[/]"
             )
             self._write_separator(log)
-            log.write("[bold]Try:[/] /help, /commands, /status, fl, gs, gd")
+            log.write("[bold]Try:[/] /help, /commands, /session, /status, fl, gs, gd")
             log.write("[dim]Use Arrow Up and Arrow Down to navigate commands executed in this TUI session.[/]")
+            log.write(f"[dim]Persistent session:[/] {session_metadata.id}")
             self.query_one("#prompt-input", Input).focus()
 
         def on_key(self, event: Key) -> None:
@@ -223,6 +460,9 @@ def run_tui(workspace_path: str) -> None:
             prompt_input.value = value
             prompt_input.cursor_position = len(value)
 
+        def on_unmount(self) -> None:
+            session_manager.record_event(self.session_metadata.id, "tui.closed")
+
         def action_clear_console(self) -> None:
             self.query_one("#console", RichLog).clear()
 
@@ -235,6 +475,19 @@ def run_tui(workspace_path: str) -> None:
         def action_show_status(self) -> None:
             log = self.query_one("#console", RichLog)
             self._execute_and_render("git.status", log)
+
+        def action_open_sessions(self) -> None:
+            self.push_screen(SessionManagerScreen(self.session_metadata.id), self._handle_session_selection)
+
+        def _handle_session_selection(self, metadata: SessionMetadata | None) -> None:
+            if metadata is None:
+                self.query_one("#prompt-input", Input).focus()
+                return
+            self.session_metadata = metadata
+            self._update_session_sidebar(metadata)
+            log = self.query_one("#console", RichLog)
+            log.write(f"[bold cyan]Current session:[/] {metadata.id}")
+            self.query_one("#prompt-input", Input).focus()
 
         def on_input_submitted(self, event: Input.Submitted) -> None:
             raw_value = event.value.strip()
@@ -267,6 +520,10 @@ def run_tui(workspace_path: str) -> None:
                 self._render_commands(log)
                 return
 
+            if command in {"/session", "/sessions", "session", "sessions", "ss"}:
+                self.action_open_sessions()
+                return
+
             if command in {"/status", "status"}:
                 self._execute_and_render("git.status", log)
                 return
@@ -283,7 +540,14 @@ def run_tui(workspace_path: str) -> None:
 
         def _execute_and_render(self, command_line: str, log: RichLog) -> None:
             result = processor.execute_line(command_line, context)
+            updated_session = session_manager.record_command(self.session_metadata.id, command_line, result)
+            self._update_session_sidebar(updated_session)
             self._render_result(result, command_line, log)
+
+        def _update_session_sidebar(self, metadata: SessionMetadata) -> None:
+            self.query_one("#session-id", Label).update(f"ID: {metadata.id}")
+            self.query_one("#session-status", Label).update(f"Status: {metadata.status}")
+            self.query_one("#session-commands", Label).update(f"Commands: {metadata.command_count}")
 
         def _render_help(self, log: RichLog) -> None:
             log.write("[bold cyan]Dr Magu TUI Commands[/]")
@@ -291,6 +555,7 @@ def run_tui(workspace_path: str) -> None:
                 ("/help", "Show this help."),
                 ("/commands", "List registered internal commands."),
                 ("/status or status", "Show Git workspace status."),
+                ("/session, ss", "Open the persistent session manager popup."),
                 ("/run <command>", "Execute an internal command."),
                 ("fl, gs, gd", "Quick aliases for files.list, git.status, git.diff."),
                 ("Arrow Up", "Show previous command from the current TUI session."),

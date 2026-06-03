@@ -1,6 +1,6 @@
-version: "0.3.1"
-name: "dr-magu-cli-tui-foundation"
-description: "Tool CLI and command processor with an OpenCode-style terminal UI foundation."
+version: "0.5.2"
+name: "dr-magu-cli-persistent-session-management"
+description: "Tool CLI, command processor, improved Terminal UI, and persistent session management."
 
 runtime:
   default_workspace: "."
@@ -8,6 +8,7 @@ runtime:
   allow_json_output: true
   command_processor_enabled: true
   tui_enabled: true
+  persistent_sessions_enabled: true
 
 permissions:
   file_read: true
@@ -67,3 +68,17 @@ tui:
     - "/run"
     - "/clear"
     - "/exit"
+
+
+sessions:
+  enabled: true
+  storage_root: ".dr-magu"
+  current_session_pointer: "current-session"
+  persist_command_metadata: true
+  persist_full_output: false
+  persist_file_contents: false
+  persist_secrets: false
+  files:
+    metadata: "session.json"
+    commands: "commands.jsonl"
+    events: "events.jsonl"

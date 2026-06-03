@@ -9,6 +9,7 @@ from dr_magu.commands.processor import CommandProcessor
 from dr_magu.commands.registry import registry
 from dr_magu.config import default_workspace, load_config
 from dr_magu.output.renderer import ResultRenderer
+from dr_magu.sessions.manager import SessionManager
 
 app = typer.Typer(help="Dr Magu CLI - Tool CLI, command processor, and Terminal UI")
 files_app = typer.Typer(help="File system tools")
@@ -16,12 +17,14 @@ search_app = typer.Typer(help="Code search tools")
 git_app = typer.Typer(help="Git tools")
 shell_app = typer.Typer(help="Shell execution tools")
 commands_app = typer.Typer(help="Command registry tools")
+session_app = typer.Typer(help="Persistent session management")
 
 app.add_typer(files_app, name="files")
 app.add_typer(search_app, name="search")
 app.add_typer(git_app, name="git")
 app.add_typer(shell_app, name="shell")
 app.add_typer(commands_app, name="commands")
+app.add_typer(session_app, name="session")
 
 console = Console()
 renderer = ResultRenderer(console)
@@ -34,6 +37,99 @@ def build_context(workspace: str, json_output: bool = False) -> CommandContext:
         output_format="json" if json_output else "human",
         config=load_config(),
     )
+
+
+def _render_session_metadata(metadata, title: str = "Session") -> None:
+    table = Table(title=title)
+    table.add_column("Field")
+    table.add_column("Value")
+    table.add_row("ID", metadata.id)
+    table.add_row("Workspace", metadata.workspace_path)
+    table.add_row("Status", metadata.status)
+    table.add_row("Commands", str(metadata.command_count))
+    table.add_row("Events", str(metadata.event_count))
+    table.add_row("Created", metadata.created_at)
+    table.add_row("Updated", metadata.updated_at)
+    console.print(table)
+
+
+@session_app.command("start")
+def session_start(
+    workspace: str = typer.Option(default_workspace(), "--workspace", "-w", help="Workspace root."),
+) -> None:
+    """Create a new persistent session and make it current."""
+    metadata = SessionManager(workspace).start()
+    _render_session_metadata(metadata, "Started Session")
+
+
+@session_app.command("current")
+def session_current(
+    workspace: str = typer.Option(default_workspace(), "--workspace", "-w", help="Workspace root."),
+) -> None:
+    """Show the current persistent session."""
+    metadata = SessionManager(workspace).current()
+    if metadata is None:
+        console.print("[yellow]No current session found.[/]")
+        return
+    _render_session_metadata(metadata, "Current Session")
+
+
+@session_app.command("list")
+def session_list(
+    workspace: str = typer.Option(default_workspace(), "--workspace", "-w", help="Workspace root."),
+) -> None:
+    """List persistent sessions for the workspace."""
+    sessions = SessionManager(workspace).list()
+    table = Table(title="Persistent Sessions")
+    table.add_column("ID")
+    table.add_column("Status")
+    table.add_column("Commands")
+    table.add_column("Updated")
+    for metadata in sessions:
+        table.add_row(metadata.id, metadata.status, str(metadata.command_count), metadata.updated_at)
+    console.print(table)
+
+
+@session_app.command("show")
+def session_show(
+    session_id: str = typer.Argument(..., help="Session ID to inspect."),
+    workspace: str = typer.Option(default_workspace(), "--workspace", "-w", help="Workspace root."),
+) -> None:
+    """Show one persistent session by ID."""
+    metadata = SessionManager(workspace).show(session_id)
+    _render_session_metadata(metadata, "Session Details")
+
+
+@session_app.command("resume")
+def session_resume(
+    session_id: str = typer.Argument(..., help="Session ID to resume."),
+    workspace: str = typer.Option(default_workspace(), "--workspace", "-w", help="Workspace root."),
+) -> None:
+    """Set an existing session as the current session."""
+    metadata = SessionManager(workspace).resume(session_id)
+    _render_session_metadata(metadata, "Resumed Session")
+
+
+@session_app.command("close")
+def session_close(
+    workspace: str = typer.Option(default_workspace(), "--workspace", "-w", help="Workspace root."),
+) -> None:
+    """Close the current persistent session."""
+    metadata = SessionManager(workspace).close_current()
+    if metadata is None:
+        console.print("[yellow]No current session found.[/]")
+        return
+    _render_session_metadata(metadata, "Closed Session")
+
+
+@session_app.command("delete")
+def session_delete(
+    session_id: str = typer.Argument(..., help="Session ID to soft-delete."),
+    workspace: str = typer.Option(default_workspace(), "--workspace", "-w", help="Workspace root."),
+) -> None:
+    """Soft-delete a persistent session without physically removing files."""
+    metadata = SessionManager(workspace).delete(session_id)
+    _render_session_metadata(metadata, "Deleted Session")
 
 
 @app.command("run")
@@ -162,7 +258,7 @@ def tui_command(
 
 @app.command("version")
 def version() -> None:
-    console.print("dr-magu-cli v0.3.1")
+    console.print("dr-magu-cli v0.5.2")
 
 
 if __name__ == "__main__":
