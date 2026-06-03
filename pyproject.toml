@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dr-magu-cli"
-version = "0.3.0"
-description = "Dr Magu CLI with Tool CLI, Command Processor, and Terminal UI foundation."
+version = "0.4.0"
+description = "Dr Magu CLI with improved Terminal UI, command aliases, readable output renderers, and command suggestions."
 readme = "README.md"
 requires-python = ">=3.11"
 authors = [{ name = "Dr Magu Team" }]
