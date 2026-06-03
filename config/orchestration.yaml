@@ -1,4 +1,4 @@
-version: "0.3.0"
+version: "0.3.1"
 name: "dr-magu-cli-tui-foundation"
 description: "Tool CLI and command processor with an OpenCode-style terminal UI foundation."
 

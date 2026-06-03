@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
-from pathlib import Path
 from difflib import get_close_matches
+from pathlib import Path
 from typing import Any
 
 from dr_magu.commands.context import CommandContext
@@ -11,6 +11,7 @@ from dr_magu.commands.processor import CommandProcessor
 from dr_magu.commands.registry import registry
 from dr_magu.config import load_config
 from dr_magu.result import ToolResult
+from dr_magu.tui_history import SessionCommandHistory
 
 
 @dataclass(frozen=True)
@@ -18,7 +19,7 @@ class TuiSettings:
     """Settings used to start the Dr Magu Terminal UI."""
 
     workspace_path: str
-    version: str = "0.4.1"
+    version: str = "0.4.2"
 
 
 def _build_context(workspace_path: str) -> CommandContext:
@@ -37,6 +38,7 @@ def run_tui(workspace_path: str) -> None:
     try:
         from textual.app import App, ComposeResult
         from textual.containers import Container, Horizontal, Vertical
+        from textual.events import Key
         from textual.widgets import Footer, Header, Input, Label, RichLog, Static
     except ModuleNotFoundError as exc:  # pragma: no cover - only triggered without optional runtime dependency
         missing = exc.name or "textual"
@@ -47,6 +49,7 @@ def run_tui(workspace_path: str) -> None:
     settings = TuiSettings(workspace_path=str(Path(workspace_path).resolve()))
     processor = CommandProcessor(registry)
     context = _build_context(settings.workspace_path)
+    history = SessionCommandHistory()
 
     class DrMaguTui(App):
         """OpenCode-inspired terminal interface for Dr Magu."""
@@ -172,24 +175,53 @@ def run_tui(workspace_path: str) -> None:
                         yield Label("/help     /commands")
                         yield Label("/status   /clear")
                         yield Label("fl        gs        gd")
+                        yield Static("\nHistory", classes="sidebar-section")
+                        yield Label("↑ previous command")
+                        yield Label("↓ next command")
                         yield Static("\nShortcuts", classes="sidebar-section")
                         yield Label("F1 Help | F2 Commands | F5 Status")
                 with Container(id="input-panel"):
                     with Horizontal(id="command-row"):
                         yield Label("Command ›", id="command-label")
                         yield Input(
-                            placeholder="Type a command... Examples: /status, fl, gs, gd, /run git.status",
+                            placeholder="Type a command... Use ↑/↓ for session history. Examples: /status, fl, gs, gd",
                             id="prompt-input",
                         )
             yield Footer()
 
         def on_mount(self) -> None:
             log = self.query_one("#console", RichLog)
-            log.write("[bold cyan]Welcome to Dr Magu v0.4.1[/]")
-            log.write("[dim]Improved Terminal UI with a visible command input area, readable output, aliases, and suggestions.[/]")
+            log.write("[bold cyan]Welcome to Dr Magu v0.4.2[/]")
+            log.write(
+                "[dim]Improved Terminal UI with in-memory command history, readable output, aliases, and suggestions.[/]"
+            )
             self._write_separator(log)
             log.write("[bold]Try:[/] /help, /commands, /status, fl, gs, gd")
+            log.write("[dim]Use Arrow Up and Arrow Down to navigate commands executed in this TUI session.[/]")
             self.query_one("#prompt-input", Input).focus()
+
+        def on_key(self, event: Key) -> None:
+            if not self.query_one("#prompt-input", Input).has_focus:
+                return
+
+            if event.key == "up":
+                previous_command = history.previous()
+                if previous_command is not None:
+                    self._set_input_value(previous_command)
+                    event.stop()
+                return
+
+            if event.key == "down":
+                next_command = history.next()
+                if next_command is not None:
+                    self._set_input_value(next_command)
+                    event.stop()
+                return
+
+        def _set_input_value(self, value: str) -> None:
+            prompt_input = self.query_one("#prompt-input", Input)
+            prompt_input.value = value
+            prompt_input.cursor_position = len(value)
 
         def action_clear_console(self) -> None:
             self.query_one("#console", RichLog).clear()
@@ -209,6 +241,8 @@ def run_tui(workspace_path: str) -> None:
             event.input.value = ""
             if not raw_value:
                 return
+
+            history.add(raw_value)
 
             log = self.query_one("#console", RichLog)
             self._write_command_header(raw_value, log)
@@ -259,6 +293,8 @@ def run_tui(workspace_path: str) -> None:
                 ("/status or status", "Show Git workspace status."),
                 ("/run <command>", "Execute an internal command."),
                 ("fl, gs, gd", "Quick aliases for files.list, git.status, git.diff."),
+                ("Arrow Up", "Show previous command from the current TUI session."),
+                ("Arrow Down", "Show next command from the current TUI session."),
                 ("/clear", "Clear console."),
                 ("/exit", "Exit the TUI."),
             ]
@@ -365,14 +401,21 @@ def run_tui(workspace_path: str) -> None:
 
         @staticmethod
         def _render_git_status(data: dict[str, Any], log: RichLog) -> None:
-            for key in ("branch", "status", "workspace"):
-                if key in data:
-                    log.write(f"[bold]{key.title()}:[/] {data[key]}")
+            stdout = data.get("stdout")
+            stderr = data.get("stderr")
+            return_code = data.get("return_code")
 
-            for key, value in data.items():
-                if key in {"branch", "status", "workspace"}:
-                    continue
-                log.write(f"[bold]{key.replace('_', ' ').title()}:[/] {value}")
+            if stdout:
+                log.write("[bold]status[/]")
+                log.write(str(stdout))
+            else:
+                log.write("[green]Working tree is clean or Git returned no status output.[/]")
+
+            if stderr:
+                log.write("[bold red]stderr[/]")
+                log.write(str(stderr))
+            if return_code is not None:
+                log.write(f"[bold]return_code:[/] {return_code}")
 
         @staticmethod
         def _render_git_diff(data: dict[str, Any], log: RichLog) -> None:
@@ -391,7 +434,13 @@ def run_tui(workspace_path: str) -> None:
                 log.write("[yellow]No matches found.[/]")
                 return
             for item in results[:80]:
-                log.write(f"  [cyan]{item}[/]")
+                if isinstance(item, dict):
+                    path = item.get("path", "")
+                    line = item.get("line", "")
+                    text = item.get("text", "")
+                    log.write(f"  [cyan]{path}:{line}[/] {text}")
+                else:
+                    log.write(f"  [cyan]{item}[/]")
 
         @staticmethod
         def _render_shell_run(data: dict[str, Any], log: RichLog) -> None:

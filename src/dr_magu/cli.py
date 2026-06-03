@@ -162,7 +162,7 @@ def tui_command(
 
 @app.command("version")
 def version() -> None:
-    console.print("dr-magu-cli v0.3.0")
+    console.print("dr-magu-cli v0.3.1")
 
 
 if __name__ == "__main__":
