@@ -15,8 +15,12 @@ from dr_magu.scanner.writers import write_latest_scan
 from dr_magu.project_context.generator import generate_project_context, get_context_path, show_project_context
 from dr_magu.workflows.runner import WorkflowRunner
 from dr_magu.runtime.inspector import RuntimeInspector
+from dr_magu.agents.runner import AgentRunner
+from dr_magu.brain.context_loader import BrainContextLoader
+from dr_magu.tools.registry import ToolRegistry
+from dr_magu.security.permission_context import PermissionContextReader
 
-app = typer.Typer(help="Dr Magu CLI - Tool CLI, command processor, Terminal UI, repository scanner, context generator, and workflow runtime, and runtime introspection")
+app = typer.Typer(help="Dr Magu CLI - Tool CLI, TUI, sessions, repository scanner, context generator, workflows, runtime introspection, and Brain foundation")
 files_app = typer.Typer(help="File system tools")
 search_app = typer.Typer(help="Code search tools")
 git_app = typer.Typer(help="Git tools")
@@ -26,6 +30,10 @@ session_app = typer.Typer(help="Persistent session management")
 context_app = typer.Typer(help="Deterministic project context generation")
 workflow_app = typer.Typer(help="Deterministic workflow runtime, and runtime introspection")
 runtime_app = typer.Typer(help="Runtime introspection tools")
+agent_app = typer.Typer(help="Agent registry tools")
+brain_app = typer.Typer(help="Brain context loader tools")
+tools_app = typer.Typer(help="Formal tool registry tools")
+permissions_app = typer.Typer(help="Permission context tools")
 
 app.add_typer(files_app, name="files")
 app.add_typer(search_app, name="search")
@@ -36,6 +44,10 @@ app.add_typer(session_app, name="session")
 app.add_typer(context_app, name="context")
 app.add_typer(workflow_app, name="workflow")
 app.add_typer(runtime_app, name="runtime")
+app.add_typer(agent_app, name="agent")
+app.add_typer(brain_app, name="brain")
+app.add_typer(tools_app, name="tools")
+app.add_typer(permissions_app, name="permissions")
 
 console = Console()
 renderer = ResultRenderer(console)
@@ -264,6 +276,72 @@ def runtime_inspect_command(
     renderer.render(result, json_output)
 
 
+@agent_app.command("list")
+def agent_list_command(
+    workspace: str = typer.Option(default_workspace(), "--workspace", "-w", help="Workspace root."),
+    json_output: bool = typer.Option(False, "--json", help="Return JSON output."),
+) -> None:
+    """List configured agents with resolved model configuration."""
+    result = AgentRunner(workspace).list_agents()
+    renderer.render(result, json_output)
+
+
+@agent_app.command("show")
+def agent_show_command(
+    agent_id: str = typer.Argument(..., help="Agent ID or alias."),
+    workspace: str = typer.Option(default_workspace(), "--workspace", "-w", help="Workspace root."),
+    json_output: bool = typer.Option(False, "--json", help="Return JSON output."),
+) -> None:
+    """Show one configured agent and its resolved model configuration."""
+    result = AgentRunner(workspace).show_agent(agent_id)
+    renderer.render(result, json_output)
+
+
+@agent_app.command("run")
+def agent_run_command(
+    agent_id: str = typer.Argument("repository-analyzer", help="Agent ID or alias."),
+    workspace: str = typer.Option(default_workspace(), "--workspace", "-w", help="Workspace root."),
+    json_output: bool = typer.Option(False, "--json", help="Return JSON output."),
+) -> None:
+    """Run a configured agent by delegating to its bound workflow."""
+    result = AgentRunner(workspace).run_agent(agent_id)
+    renderer.render(result, json_output)
+
+
+@brain_app.command("context")
+def brain_context_command(
+    workspace: str = typer.Option(default_workspace(), "--workspace", "-w", help="Workspace root."),
+    json_output: bool = typer.Option(False, "--json", help="Return JSON output."),
+) -> None:
+    """Load Brain context for the future Orchestrator Brain."""
+    result = BrainContextLoader(workspace).load_result()
+    renderer.render(result, json_output)
+
+
+@tools_app.command("list")
+def tools_list_command(
+    json_output: bool = typer.Option(False, "--json", help="Return JSON output."),
+) -> None:
+    """List formal tool registry entries exposed to the Brain."""
+    from dr_magu.result import ToolResult
+
+    result = ToolResult(success=True, tool="tools.list", data=ToolRegistry().as_result_data())
+    renderer.render(result, json_output)
+
+
+@permissions_app.command("show")
+def permissions_show_command(
+    workspace: str = typer.Option(default_workspace(), "--workspace", "-w", help="Workspace root."),
+    json_output: bool = typer.Option(False, "--json", help="Return JSON output."),
+) -> None:
+    """Show the effective permission context used by the Brain and validator."""
+    from dr_magu.result import ToolResult
+
+    context = build_context(workspace, json_output)
+    result = ToolResult(success=True, tool="permissions.show", data=PermissionContextReader(context.config).read().model_dump())
+    renderer.render(result, json_output)
+
+
 @app.command("run")
 def run_command(
     command_line: str = typer.Argument(..., help="Internal command line, for example: 'files.read README.md'."),
@@ -390,7 +468,7 @@ def tui_command(
 
 @app.command("version")
 def version() -> None:
-    console.print("dr-magu-cli v0.8.2")
+    console.print("dr-magu-cli v0.9.0")
 
 
 if __name__ == "__main__":

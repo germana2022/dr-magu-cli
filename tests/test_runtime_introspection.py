@@ -20,7 +20,7 @@ def test_runtime_inspector_exposes_brain_ready_snapshot(tmp_path):
     assert any(tool.name == "files.list" for tool in snapshot.tools)
     assert snapshot.permissions.file_read is True
     assert snapshot.summary["brain_ready"] is True
-    assert snapshot.summary["agent_count"] == 0
+    assert snapshot.summary["agent_count"] >= 1
 
 
 def test_runtime_inspect_command_processor_result(tmp_path):

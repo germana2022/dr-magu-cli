@@ -1,6 +1,6 @@
-version: "0.8.2"
-name: "dr-magu-cli-runtime-introspection-foundation"
-description: "Tool CLI, command processor, improved Terminal UI, persistent sessions, repository scanner, deterministic context generation, workflow runtime, and runtime introspection."
+version: "0.9.0"
+name: "dr-magu-cli-brain-foundation"
+description: "Tool CLI, TUI, sessions, repository scanner, context generation, workflow runtime, runtime introspection, Brain Context Loader, Agent Registry, Tool Registry, and Permission Context Reader."
 
 runtime:
   default_workspace: "."
@@ -13,6 +13,14 @@ runtime:
   context_generator_enabled: true
   workflow_runtime_enabled: true
   runtime_introspection_enabled: true
+  brain_context_loader_enabled: true
+  agent_registry_enabled: true
+  formal_tool_registry_enabled: true
+  permission_context_reader_enabled: true
+  brain_context_loader_enabled: true
+  agent_registry_enabled: true
+  formal_tool_registry_enabled: true
+  permission_context_reader_enabled: true
 
 permissions:
   file_read: true
@@ -80,3 +88,30 @@ tui:
   context_generator_enabled: true
   workflow_runtime_enabled: true
   runtime_introspection_enabled: true
+  brain_context_loader_enabled: true
+  agent_registry_enabled: true
+  formal_tool_registry_enabled: true
+  permission_context_reader_enabled: true
+  brain_context_loader_enabled: true
+  agent_registry_enabled: true
+  formal_tool_registry_enabled: true
+  permission_context_reader_enabled: true
+
+
+brain:
+  default_model_config: config/models.yaml
+  llm_calls_enabled: false
+  prompt_planner_enabled: false
+
+agent_registry:
+  enabled: true
+  config_file: config/agents.yaml
+  default_agent: repository-analyzer
+
+tool_registry:
+  enabled: true
+  source: command_registry
+
+permission_context:
+  enabled: true
+  source: permissions

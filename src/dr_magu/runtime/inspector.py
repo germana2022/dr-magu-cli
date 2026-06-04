@@ -3,23 +3,21 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+from dr_magu.agents.registry import AgentRegistry
 from dr_magu.commands.registry import registry
 from dr_magu.config import load_config
 from dr_magu.result import ToolResult
 from dr_magu.runtime.models import (
     CommandRuntimeInfo,
-    PermissionRuntimeInfo,
     RuntimeContextSnapshot,
     SessionRuntimeInfo,
-    ToolRuntimeInfo,
     WorkflowRuntimeInfo,
     WorkspaceRuntimeInfo,
 )
+from dr_magu.security.permission_context import PermissionContextReader
 from dr_magu.sessions.manager import SessionManager
+from dr_magu.tools.registry import ToolRegistry
 from dr_magu.workflows.registry import workflow_registry
-
-
-_TOOL_CATEGORIES = {"files", "git", "search", "shell", "repository", "context"}
 
 
 def _is_git_repository(workspace: Path) -> bool:
@@ -61,32 +59,8 @@ def _build_session_info(workspace_path: str | Path) -> SessionRuntimeInfo:
     )
 
 
-def _build_permissions(config: dict[str, Any]) -> PermissionRuntimeInfo:
-    permissions = config.get("permissions", {}) or {}
-    return PermissionRuntimeInfo(
-        file_read=bool(permissions.get("file_read", False)),
-        file_write=bool(permissions.get("file_write", False)),
-        file_delete=bool(permissions.get("file_delete", False)),
-        shell_run=bool(permissions.get("shell_run", False)),
-        git_status=bool(permissions.get("git_status", False)),
-        git_diff=bool(permissions.get("git_diff", False)),
-        git_commit=bool(permissions.get("git_commit", False)),
-        git_push=bool(permissions.get("git_push", False)),
-        blocked_shell_patterns=list(config.get("blocked_shell_patterns", []) or []),
-    )
-
-
-def _is_read_only_tool(command_name: str) -> bool:
-    """Mark currently supported tool commands as read-only from a workspace perspective."""
-    return command_name not in {"shell.run"}
-
-
 class RuntimeInspector:
-    """Builds a unified runtime snapshot for the future Orchestrator Brain.
-
-    The inspector intentionally does not call an LLM. It only reads local runtime
-    registries, workspace metadata, session metadata, and static configuration.
-    """
+    """Builds a unified runtime snapshot for the future Orchestrator Brain."""
 
     def __init__(self, workspace_path: str | Path, config: dict[str, Any] | None = None) -> None:
         self.workspace_path = str(Path(workspace_path).resolve())
@@ -116,19 +90,9 @@ class RuntimeInspector:
             for workflow in workflow_registry.list()
         ]
 
-        tools = [
-            ToolRuntimeInfo(
-                name=command.name,
-                category=command.category,
-                description=command.description,
-                command=command.name,
-                aliases=list(command.aliases),
-                read_only=_is_read_only_tool(command.name),
-                requires_approval=command.requires_approval,
-            )
-            for command in registry.list_commands()
-            if command.category in _TOOL_CATEGORIES
-        ]
+        tools = [tool.model_dump() for tool in ToolRegistry().list_tools()]
+        permissions = PermissionContextReader(self.config).read()
+        agents = [agent.model_dump() for agent in AgentRegistry(self.workspace_path).list()]
 
         snapshot = RuntimeContextSnapshot(
             workspace=_build_workspace_info(self.workspace_path),
@@ -136,13 +100,13 @@ class RuntimeInspector:
             commands=commands,
             workflows=workflows,
             tools=tools,
-            permissions=_build_permissions(self.config),
-            agents=[],
+            permissions=permissions,
+            agents=agents,
             summary={
                 "command_count": len(commands),
                 "workflow_count": len(workflows),
                 "tool_count": len(tools),
-                "agent_count": 0,
+                "agent_count": len(agents),
                 "brain_ready": True,
                 "llm_required": False,
             },

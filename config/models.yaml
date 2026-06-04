@@ -1,0 +1,6 @@
+default_model:
+  provider: ${LLM_PROVIDER}
+  base_url: ${LLM_BASE_URL}
+  api_key_env: LLM_API_KEY
+  model: ${LLM_MODEL}
+  temperature: ${LLM_TEMPERATURE}

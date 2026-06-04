@@ -89,7 +89,7 @@ class TuiSettings:
     """Settings used to start the Dr Magu Terminal UI."""
 
     workspace_path: str
-    version: str = "0.8.2"
+    version: str = "0.9.0"
 
 
 def _build_context(workspace_path: str) -> CommandContext:
@@ -420,11 +420,12 @@ def run_tui(workspace_path: str) -> None:
                         yield Static("\nWorkspace", classes="sidebar-section")
                         yield Label(settings.workspace_path)
                         yield Static("\nProvider", classes="sidebar-section")
-                        yield Label("not configured")
+                        yield Label("opencode / deepseek-v4-flash")
                         yield Static("\nQuick Commands", classes="sidebar-section")
                         yield Label("/help     /commands")
                         yield Label("/status   /scan")
                         yield Label("/context  /workflow")
+                        yield Label("/brain    /agents")
                         yield Label("/clear    /session")
                         yield Label("fl        gs        gd")
                         yield Static("\nHistory", classes="sidebar-section")
@@ -444,12 +445,12 @@ def run_tui(workspace_path: str) -> None:
 
         def on_mount(self) -> None:
             log = self.query_one("#console", RichLog)
-            log.write("[bold cyan]Welcome to Dr Magu v0.8.2[/]")
+            log.write("[bold cyan]Welcome to Dr Magu v0.9.0[/]")
             log.write(
-                "[dim]Workspace-aware Terminal UI with persistent sessions, command history, and deterministic repository scanning, context generation, and workflow execution.[/]"
+                "[dim]Workspace-aware Terminal UI with persistent sessions, command history, and deterministic repository scanning, context generation, workflow execution, and Brain context loading.[/]"
             )
             self._write_separator(log)
-            log.write("[bold]Try:[/] /help, /commands, /session, /scan, /context, /wf repository.context")
+            log.write("[bold]Try:[/] /help, /commands, /session, /scan, /context, /wf repository.context, /brain, /agents")
             log.write("[dim]Use Arrow Up and Arrow Down to navigate commands executed in this TUI session.[/]")
             log.write(f"[dim]Persistent session:[/] {session_metadata.id}")
             self.query_one("#prompt-input", Input).focus()
@@ -565,6 +566,34 @@ def run_tui(workspace_path: str) -> None:
                 self._execute_and_render("runtime.inspect", log)
                 return
 
+            if command in {"/brain", "brain", "bc"}:
+                self._execute_and_render("brain.context", log)
+                return
+
+            if command in {"/agents", "agents", "al"}:
+                self._execute_and_render("agent.list", log)
+                return
+
+            if command in {"/tools", "tools", "tl"}:
+                self._execute_and_render("tools.list", log)
+                return
+
+            if command in {"/permissions", "permissions", "ps"}:
+                self._execute_and_render("permissions.show", log)
+                return
+
+            if command in {"/agent", "agent", "ar"}:
+                self._execute_and_render("agent.run repository-analyzer", log)
+                return
+
+            if command.startswith("/agent "):
+                self._execute_and_render("agent.run " + command.removeprefix("/agent ").strip(), log)
+                return
+
+            if command.startswith("/agent-show "):
+                self._execute_and_render("agent.show " + command.removeprefix("/agent-show ").strip(), log)
+                return
+
             if command in {"/workflow-runs", "workflow-runs", "wr"}:
                 self._execute_and_render("workflow.runs", log)
                 return
@@ -619,6 +648,11 @@ def run_tui(workspace_path: str) -> None:
                 ("/context, cg", "Generate deterministic project context files."),
                 ("/workflows", "List registered deterministic workflows."),
                 ("/runtime, ri", "Inspect runtime context for the future Orchestrator Brain."),
+                ("/brain, bc", "Load Brain context with commands, workflows, agents, tools, permissions, session, workspace, and model defaults."),
+                ("/agents, al", "List configured agents with resolved model configuration."),
+                ("/agent <id>", "Run a configured agent. Defaults to repository-analyzer."),
+                ("/tools, tl", "List formal tool registry entries."),
+                ("/permissions, ps", "Show effective permission context."),
                 ("/workflow-runs, wr", "List recent workflow runs."),
                 ("/workflow-last, wl", "Show the latest workflow run detail."),
                 ("/wf <name>", "Run a registered workflow. Defaults to repository.context."),
@@ -685,6 +719,12 @@ def run_tui(workspace_path: str) -> None:
                 "workflow.run.show": self._render_workflow_run_show,
                 "workflow.last": self._render_workflow_run_show,
                 "runtime.inspect": self._render_runtime_inspect,
+                "brain.context": self._render_brain_context,
+                "agent.list": self._render_agent_list,
+                "agent.show": self._render_agent_show,
+                "agent.run": self._render_agent_run,
+                "tools.list": self._render_tools_list,
+                "permissions.show": self._render_permissions_show,
             }.get(result.tool, self._render_generic_data)
 
             renderer(result.data, log)
@@ -992,6 +1032,73 @@ def run_tui(workspace_path: str) -> None:
                         f"[dim]{workflow.get('workflow_type', '')} | llm={workflow.get('requires_llm', False)}[/]"
                     )
 
+
+        @staticmethod
+        def _render_brain_context(data: dict[str, Any], log: RichLog) -> None:
+            summary = data.get("summary", {}) or {}
+            default_model = data.get("default_model", {}) or {}
+            log.write("[bold cyan]Brain Context[/]")
+            log.write(f"[bold]Commands:[/] {summary.get('command_count', 0)}")
+            log.write(f"[bold]Workflows:[/] {summary.get('workflow_count', 0)}")
+            log.write(f"[bold]Tools:[/] {summary.get('tool_count', 0)}")
+            log.write(f"[bold]Agents:[/] {summary.get('agent_count', 0)}")
+            log.write(f"[bold]Default Provider:[/] {default_model.get('provider', '')}")
+            log.write(f"[bold]Default Model:[/] {default_model.get('model', '')}")
+            log.write(f"[bold]Temperature:[/] {default_model.get('temperature', '')}")
+            log.write(f"[bold]API Key Configured:[/] {default_model.get('api_key_configured', False)}")
+            log.write(f"[bold]LLM Calls Enabled:[/] {summary.get('llm_calls_enabled', False)}")
+
+        @staticmethod
+        def _render_agent_list(data: dict[str, Any], log: RichLog) -> None:
+            agents = data.get("agents", []) or []
+            log.write("[bold cyan]Configured Agents[/]")
+            if not agents:
+                log.write("[yellow]No agents configured.[/]")
+                return
+            for agent in agents:
+                model = agent.get("model", {}) or {}
+                log.write(
+                    f"  [cyan]{agent.get('id', '')}[/] "
+                    f"[dim]{agent.get('workflow', '')} | enabled={agent.get('enabled', False)} | llm={agent.get('requires_llm', False)} | model={model.get('model', '')}[/]"
+                )
+                log.write(f"    {agent.get('description', '')}")
+
+        @staticmethod
+        def _render_agent_show(data: dict[str, Any], log: RichLog) -> None:
+            model = data.get("model", {}) or {}
+            log.write("[bold cyan]Agent[/]")
+            for key in ("id", "name", "role", "workflow", "enabled", "requires_llm", "description"):
+                log.write(f"[bold]{key.replace('_', ' ').title()}:[/] {data.get(key, '')}")
+            log.write(f"[bold]Model:[/] {model.get('provider', '')}/{model.get('model', '')} temp={model.get('temperature', '')}")
+            log.write(f"[bold]Model Source:[/] {model.get('source', '')}")
+
+        @staticmethod
+        def _render_agent_run(data: dict[str, Any], log: RichLog) -> None:
+            agent = data.get("agent", {}) or {}
+            workflow_result = data.get("workflow_result", {}) or {}
+            log.write("[bold cyan]Agent Run[/]")
+            log.write(f"[bold]Agent:[/] {agent.get('id', '')}")
+            log.write(f"[bold]Workflow:[/] {agent.get('workflow', '')}")
+            log.write(f"[bold]Workflow Success:[/] {data.get('workflow_success', False)}")
+            if workflow_result.get("run_id"):
+                log.write(f"[bold]Workflow Run ID:[/] {workflow_result.get('run_id')}")
+            if workflow_result.get("context_path"):
+                log.write(f"[bold green]Context:[/] {workflow_result.get('context_path')}")
+
+        @staticmethod
+        def _render_tools_list(data: dict[str, Any], log: RichLog) -> None:
+            log.write("[bold cyan]Formal Tool Registry[/]")
+            for tool in (data.get("tools", []) or [])[:80]:
+                log.write(
+                    f"  [cyan]{tool.get('name', '')}[/] "
+                    f"[dim]{tool.get('category', '')} | read_only={tool.get('read_only', True)} | approval={tool.get('requires_approval', False)}[/]"
+                )
+
+        @staticmethod
+        def _render_permissions_show(data: dict[str, Any], log: RichLog) -> None:
+            log.write("[bold cyan]Permission Context[/]")
+            for key, value in data.items():
+                log.write(f"[bold]{key.replace('_', ' ').title()}:[/] {value}")
 
         @staticmethod
         def _render_generic_data(data: dict[str, Any], log: RichLog) -> None:

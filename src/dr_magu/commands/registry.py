@@ -131,6 +131,42 @@ def handle_runtime_inspect(args: dict[str, object], context: CommandContext) -> 
     return RuntimeInspector(context.workspace_path, config=context.config).inspect_result()
 
 
+
+def handle_agent_list(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.agents.runner import AgentRunner
+
+    return AgentRunner(context.workspace_path).list_agents()
+
+
+def handle_agent_show(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.agents.runner import AgentRunner
+
+    return AgentRunner(context.workspace_path).show_agent(_get_str(args, "id", _get_str(args, "value", "")))
+
+
+def handle_agent_run(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.agents.runner import AgentRunner
+
+    return AgentRunner(context.workspace_path).run_agent(_get_str(args, "id", _get_str(args, "value", "repository-analyzer")))
+
+
+def handle_brain_context(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.brain.context_loader import BrainContextLoader
+
+    return BrainContextLoader(context.workspace_path, config=context.config).load_result()
+
+
+def handle_tools_list(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.tools.registry import ToolRegistry
+
+    return ToolResult(success=True, tool="tools.list", data=ToolRegistry().as_result_data())
+
+
+def handle_permissions_show(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.security.permission_context import PermissionContextReader
+
+    return ToolResult(success=True, tool="permissions.show", data=PermissionContextReader(context.config).read().model_dump())
+
 class CommandRegistry:
     """In-memory registry used by both direct CLI commands and the run processor."""
 
@@ -278,4 +314,48 @@ registry.register(CommandDefinition(
     description="Inspect commands, workflows, tools, permissions, session, workspace, and agent placeholders.",
     category="runtime",
     handler=handle_runtime_inspect,
+))
+
+
+registry.register(CommandDefinition(
+    name="agent.list",
+    aliases=["agents", "al"],
+    description="List configured agents with resolved model configuration.",
+    category="agent",
+    handler=handle_agent_list,
+))
+registry.register(CommandDefinition(
+    name="agent.show",
+    aliases=["as"],
+    description="Show one configured agent and its resolved model configuration.",
+    category="agent",
+    handler=handle_agent_show,
+))
+registry.register(CommandDefinition(
+    name="agent.run",
+    aliases=["ar", "agent"],
+    description="Run a configured agent by delegating to its bound workflow.",
+    category="agent",
+    handler=handle_agent_run,
+))
+registry.register(CommandDefinition(
+    name="brain.context",
+    aliases=["brain", "bc"],
+    description="Load Brain context including commands, workflows, agents, tools, permissions, session, workspace, and model defaults.",
+    category="brain",
+    handler=handle_brain_context,
+))
+registry.register(CommandDefinition(
+    name="tools.list",
+    aliases=["tools", "tl"],
+    description="List formal tool registry entries exposed to the Brain.",
+    category="tools",
+    handler=handle_tools_list,
+))
+registry.register(CommandDefinition(
+    name="permissions.show",
+    aliases=["permissions", "ps"],
+    description="Show the effective permission context used by the Brain and validator.",
+    category="permissions",
+    handler=handle_permissions_show,
 ))

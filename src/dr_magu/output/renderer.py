@@ -235,6 +235,107 @@ class ResultRenderer:
             return
 
 
+        if result.tool == "agent.list":
+            table = Table(title="Configured Agents")
+            table.add_column("ID")
+            table.add_column("Enabled")
+            table.add_column("Workflow")
+            table.add_column("Requires LLM")
+            table.add_column("Model")
+            table.add_column("Description")
+            for agent in (result.data or {}).get("agents", []):
+                model = agent.get("model", {}) or {}
+                table.add_row(
+                    str(agent.get("id", "")),
+                    str(agent.get("enabled", False)),
+                    str(agent.get("workflow", "")),
+                    str(agent.get("requires_llm", False)),
+                    f"{model.get('provider', '')}/{model.get('model', '')}",
+                    str(agent.get("description", "")),
+                )
+            self.console.print(table)
+            return
+
+        if result.tool == "agent.show":
+            data = result.data or {}
+            model = data.get("model", {}) or {}
+            table = Table(title="Agent")
+            table.add_column("Field")
+            table.add_column("Value")
+            for key in ("id", "name", "role", "workflow", "enabled", "requires_llm", "description"):
+                table.add_row(key.replace("_", " ").title(), str(data.get(key, "")))
+            table.add_row("Model Provider", str(model.get("provider", "")))
+            table.add_row("Model", str(model.get("model", "")))
+            table.add_row("Temperature", str(model.get("temperature", "")))
+            table.add_row("API Key Configured", str(model.get("api_key_configured", False)))
+            table.add_row("Model Source", str(model.get("source", "")))
+            self.console.print(table)
+            return
+
+        if result.tool == "agent.run":
+            data = result.data or {}
+            agent = data.get("agent", {}) or {}
+            workflow_result = data.get("workflow_result", {}) or {}
+            table = Table(title="Agent Run")
+            table.add_column("Field")
+            table.add_column("Value")
+            table.add_row("Agent", str(agent.get("id", "")))
+            table.add_row("Workflow", str(agent.get("workflow", "")))
+            table.add_row("Workflow Success", str(data.get("workflow_success", False)))
+            for key in ("run_id", "duration_ms", "context_path"):
+                if workflow_result.get(key):
+                    value = _format_duration(workflow_result.get(key)) if key == "duration_ms" else str(workflow_result.get(key))
+                    table.add_row(key.replace("_", " ").title(), value)
+            self.console.print(table)
+            return
+
+        if result.tool == "brain.context":
+            data = result.data or {}
+            summary = data.get("summary", {}) or {}
+            default_model = data.get("default_model", {}) or {}
+            table = Table(title="Brain Context")
+            table.add_column("Field")
+            table.add_column("Value")
+            table.add_row("Commands", str(summary.get("command_count", 0)))
+            table.add_row("Workflows", str(summary.get("workflow_count", 0)))
+            table.add_row("Tools", str(summary.get("tool_count", 0)))
+            table.add_row("Agents", str(summary.get("agent_count", 0)))
+            table.add_row("Default Provider", str(default_model.get("provider", "")))
+            table.add_row("Default Model", str(default_model.get("model", "")))
+            table.add_row("Temperature", str(default_model.get("temperature", "")))
+            table.add_row("API Key Configured", str(default_model.get("api_key_configured", False)))
+            table.add_row("LLM Calls Enabled", str(summary.get("llm_calls_enabled", False)))
+            self.console.print(table)
+            return
+
+        if result.tool == "tools.list":
+            table = Table(title="Formal Tool Registry")
+            table.add_column("Name")
+            table.add_column("Category")
+            table.add_column("Read Only")
+            table.add_column("Approval")
+            table.add_column("Description")
+            for tool in (result.data or {}).get("tools", []):
+                table.add_row(
+                    str(tool.get("name", "")),
+                    str(tool.get("category", "")),
+                    str(tool.get("read_only", True)),
+                    str(tool.get("requires_approval", False)),
+                    str(tool.get("description", "")),
+                )
+            self.console.print(table)
+            return
+
+        if result.tool == "permissions.show":
+            data = result.data or {}
+            table = Table(title="Permission Context")
+            table.add_column("Permission")
+            table.add_column("Value")
+            for key, value in data.items():
+                table.add_row(key.replace("_", " ").title(), str(value))
+            self.console.print(table)
+            return
+
         if result.tool == "runtime.inspect":
             data = result.data or {}
             workspace = data.get("workspace", {}) or {}
