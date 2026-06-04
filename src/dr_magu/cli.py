@@ -13,8 +13,9 @@ from dr_magu.sessions.manager import SessionManager
 from dr_magu.scanner.models import RepositoryScan
 from dr_magu.scanner.writers import write_latest_scan
 from dr_magu.project_context.generator import generate_project_context, get_context_path, show_project_context
+from dr_magu.workflows.runner import WorkflowRunner
 
-app = typer.Typer(help="Dr Magu CLI - Tool CLI, command processor, Terminal UI, repository scanner, and context generator")
+app = typer.Typer(help="Dr Magu CLI - Tool CLI, command processor, Terminal UI, repository scanner, context generator, and workflow runtime")
 files_app = typer.Typer(help="File system tools")
 search_app = typer.Typer(help="Code search tools")
 git_app = typer.Typer(help="Git tools")
@@ -22,6 +23,7 @@ shell_app = typer.Typer(help="Shell execution tools")
 commands_app = typer.Typer(help="Command registry tools")
 session_app = typer.Typer(help="Persistent session management")
 context_app = typer.Typer(help="Deterministic project context generation")
+workflow_app = typer.Typer(help="Deterministic workflow runtime")
 
 app.add_typer(files_app, name="files")
 app.add_typer(search_app, name="search")
@@ -30,6 +32,7 @@ app.add_typer(shell_app, name="shell")
 app.add_typer(commands_app, name="commands")
 app.add_typer(session_app, name="session")
 app.add_typer(context_app, name="context")
+app.add_typer(workflow_app, name="workflow")
 
 console = Console()
 renderer = ResultRenderer(console)
@@ -184,6 +187,70 @@ def context_path_command(
     renderer.render(result, json_output)
 
 
+@workflow_app.command("list")
+def workflow_list_command(
+    workspace: str = typer.Option(default_workspace(), "--workspace", "-w", help="Workspace root."),
+    json_output: bool = typer.Option(False, "--json", help="Return JSON output."),
+) -> None:
+    """List registered deterministic workflows."""
+    result = WorkflowRunner(workspace).list_workflows()
+    renderer.render(result, json_output)
+
+
+@workflow_app.command("show")
+def workflow_show_command(
+    name: str = typer.Argument("repository.context", help="Workflow name."),
+    workspace: str = typer.Option(default_workspace(), "--workspace", "-w", help="Workspace root."),
+    json_output: bool = typer.Option(False, "--json", help="Return JSON output."),
+) -> None:
+    """Show workflow metadata."""
+    result = WorkflowRunner(workspace).show_workflow(name)
+    renderer.render(result, json_output)
+
+
+@workflow_app.command("run")
+def workflow_run_command(
+    name: str = typer.Argument("repository.context", help="Workflow name to run."),
+    workspace: str = typer.Option(default_workspace(), "--workspace", "-w", help="Workspace root."),
+    json_output: bool = typer.Option(False, "--json", help="Return JSON output."),
+) -> None:
+    """Run a deterministic workflow and persist execution metadata."""
+    result = WorkflowRunner(workspace).run(name)
+    renderer.render(result, json_output)
+
+
+@workflow_app.command("runs")
+def workflow_runs_command(
+    workspace: str = typer.Option(default_workspace(), "--workspace", "-w", help="Workspace root."),
+    limit: int = typer.Option(20, "--limit", "-n", help="Maximum number of runs to show."),
+    json_output: bool = typer.Option(False, "--json", help="Return JSON output."),
+) -> None:
+    """List recent persisted workflow runs for the workspace."""
+    result = WorkflowRunner(workspace).list_runs(limit=limit)
+    renderer.render(result, json_output)
+
+
+@workflow_app.command("last")
+def workflow_last_command(
+    workspace: str = typer.Option(default_workspace(), "--workspace", "-w", help="Workspace root."),
+    json_output: bool = typer.Option(False, "--json", help="Return JSON output."),
+) -> None:
+    """Show the latest persisted workflow run and state."""
+    result = WorkflowRunner(workspace).show_last_run()
+    renderer.render(result, json_output)
+
+
+@workflow_app.command("run-show")
+def workflow_run_show_command(
+    run_id: str = typer.Argument(..., help="Workflow run id."),
+    workspace: str = typer.Option(default_workspace(), "--workspace", "-w", help="Workspace root."),
+    json_output: bool = typer.Option(False, "--json", help="Return JSON output."),
+) -> None:
+    """Show one persisted workflow run and state."""
+    result = WorkflowRunner(workspace).show_run(run_id)
+    renderer.render(result, json_output)
+
+
 @app.command("run")
 def run_command(
     command_line: str = typer.Argument(..., help="Internal command line, for example: 'files.read README.md'."),
@@ -310,7 +377,7 @@ def tui_command(
 
 @app.command("version")
 def version() -> None:
-    console.print("dr-magu-cli v0.7.0")
+    console.print("dr-magu-cli v0.8.1")
 
 
 if __name__ == "__main__":

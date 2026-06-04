@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dr-magu-cli"
-version = "0.7.0"
-description = "Dr Magu CLI with deterministic project context generation, repository scanner, persistent sessions, improved TUI, and command processor."
+version = "0.8.1"
+description = "Dr Magu CLI with LangGraph workflow runtime observability, deterministic project context generation, repository scanner, persistent sessions, improved TUI, and command processor."
 readme = "README.md"
 requires-python = ">=3.11"
 authors = [{ name = "Dr Magu Team" }]
@@ -15,7 +15,9 @@ dependencies = [
     "pydantic>=2.9.2",
     "python-dotenv>=1.0.1",
     "PyYAML>=6.0.2",
-    "textual>=0.85.0"
+    "textual>=0.85.0",
+    "langgraph>=0.2.60",
+    "langchain-core>=0.3.0"
 ]
 
 [project.optional-dependencies]

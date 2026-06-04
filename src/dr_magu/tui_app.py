@@ -71,12 +71,25 @@ def _format_status(status: str) -> str:
     return labels.get(status, status)
 
 
+def _format_duration_ms(duration_ms: object) -> str:
+    """Return a compact duration label for workflow observability."""
+    if duration_ms is None:
+        return ""
+    try:
+        value = int(duration_ms)
+    except (TypeError, ValueError):
+        return str(duration_ms)
+    if value < 1000:
+        return f"{value} ms"
+    return f"{value / 1000:.2f} s"
+
+
 @dataclass(frozen=True)
 class TuiSettings:
     """Settings used to start the Dr Magu Terminal UI."""
 
     workspace_path: str
-    version: str = "0.7.0"
+    version: str = "0.8.1"
 
 
 def _build_context(workspace_path: str) -> CommandContext:
@@ -411,6 +424,7 @@ def run_tui(workspace_path: str) -> None:
                         yield Static("\nQuick Commands", classes="sidebar-section")
                         yield Label("/help     /commands")
                         yield Label("/status   /scan")
+                        yield Label("/context  /workflow")
                         yield Label("/clear    /session")
                         yield Label("fl        gs        gd")
                         yield Static("\nHistory", classes="sidebar-section")
@@ -430,12 +444,12 @@ def run_tui(workspace_path: str) -> None:
 
         def on_mount(self) -> None:
             log = self.query_one("#console", RichLog)
-            log.write("[bold cyan]Welcome to Dr Magu v0.6.0[/]")
+            log.write("[bold cyan]Welcome to Dr Magu v0.8.1[/]")
             log.write(
-                "[dim]Workspace-aware Terminal UI with persistent sessions, command history, and deterministic repository scanning.[/]"
+                "[dim]Workspace-aware Terminal UI with persistent sessions, command history, and deterministic repository scanning, context generation, and workflow execution.[/]"
             )
             self._write_separator(log)
-            log.write("[bold]Try:[/] /help, /commands, /session, /scan, /status, fl, gs, gd")
+            log.write("[bold]Try:[/] /help, /commands, /session, /scan, /context, /wf repository.context")
             log.write("[dim]Use Arrow Up and Arrow Down to navigate commands executed in this TUI session.[/]")
             log.write(f"[dim]Persistent session:[/] {session_metadata.id}")
             self.query_one("#prompt-input", Input).focus()
@@ -543,6 +557,30 @@ def run_tui(workspace_path: str) -> None:
                 self._execute_and_render("context.generate --refresh true", log)
                 return
 
+            if command in {"/workflows", "workflows"}:
+                self._execute_and_render("workflow.list", log)
+                return
+
+            if command in {"/workflow-runs", "workflow-runs", "wr"}:
+                self._execute_and_render("workflow.runs", log)
+                return
+
+            if command in {"/workflow-last", "workflow-last", "wl"}:
+                self._execute_and_render("workflow.last", log)
+                return
+
+            if command in {"/workflow", "/wf", "workflow", "wf"}:
+                self._execute_and_render("workflow.run repository.context", log)
+                return
+
+            if command.startswith("/wf "):
+                self._execute_and_render("workflow.run " + command.removeprefix("/wf ").strip(), log)
+                return
+
+            if command.startswith("/workflow "):
+                self._execute_and_render("workflow.run " + command.removeprefix("/workflow ").strip(), log)
+                return
+
             if command.startswith("/") and not command.startswith("/run "):
                 command = command[1:]
 
@@ -574,6 +612,11 @@ def run_tui(workspace_path: str) -> None:
                 ("/commands", "List registered internal commands."),
                 ("/status or status", "Show Git workspace status."),
                 ("/scan, scan, rs", "Scan the workspace and persist latest scan metadata."),
+                ("/context, cg", "Generate deterministic project context files."),
+                ("/workflows", "List registered deterministic workflows."),
+                ("/workflow-runs, wr", "List recent workflow runs."),
+                ("/workflow-last, wl", "Show the latest workflow run detail."),
+                ("/wf <name>", "Run a registered workflow. Defaults to repository.context."),
                 ("/session, ss", "Open the persistent session manager popup."),
                 ("/run <command>", "Execute an internal command."),
                 ("fl, gs, gd", "Quick aliases for files.list, git.status, git.diff."),
@@ -630,6 +673,12 @@ def run_tui(workspace_path: str) -> None:
                 "context.generate": self._render_project_context,
                 "context.show": self._render_project_context,
                 "context.path": self._render_context_path,
+                "workflow.list": self._render_workflow_list,
+                "workflow.show": self._render_workflow_show,
+                "workflow.run": self._render_workflow_run,
+                "workflow.runs": self._render_workflow_runs,
+                "workflow.run.show": self._render_workflow_run_show,
+                "workflow.last": self._render_workflow_run_show,
             }.get(result.tool, self._render_generic_data)
 
             renderer(result.data, log)
@@ -805,6 +854,100 @@ def run_tui(workspace_path: str) -> None:
             log.write(f"[bold]Workspace:[/] {data.get('workspace_path', '')}")
             log.write(f"[bold]Context directory:[/] {data.get('context_dir', '')}")
             log.write(f"[bold]Exists:[/] {data.get('exists', False)}")
+
+
+        @staticmethod
+        def _render_workflow_list(data: dict[str, Any], log: RichLog) -> None:
+            log.write("[bold cyan]Registered Workflows[/]")
+            workflows = data.get("workflows", []) or []
+            if not workflows:
+                log.write("[yellow]No workflows registered.[/]")
+                return
+            for workflow in workflows:
+                requires_llm = "yes" if workflow.get("requires_llm") else "no"
+                aliases = ", ".join(workflow.get("aliases", []) or [])
+                log.write(
+                    f"  [cyan]{workflow.get('name', '')}[/] "
+                    f"[dim]{workflow.get('workflow_type', '')} | requires LLM: {requires_llm} | aliases: {aliases}[/]"
+                )
+                log.write(f"    {workflow.get('description', '')}")
+
+        @staticmethod
+        def _render_workflow_show(data: dict[str, Any], log: RichLog) -> None:
+            log.write("[bold cyan]Workflow[/]")
+            log.write(f"[bold]Name:[/] {data.get('name', '')}")
+            log.write(f"[bold]Type:[/] {data.get('workflow_type', '')}")
+            log.write(f"[bold]Requires LLM:[/] {data.get('requires_llm', False)}")
+            log.write(f"[bold]Description:[/] {data.get('description', '')}")
+            aliases = data.get("aliases", []) or []
+            if aliases:
+                log.write(f"[bold]Aliases:[/] {', '.join(aliases)}")
+
+        @staticmethod
+        def _render_workflow_run(data: dict[str, Any], log: RichLog) -> None:
+            log.write("[bold cyan]Workflow Run[/]")
+            log.write(f"[bold]Run ID:[/] {data.get('run_id', '')}")
+            log.write(f"[bold]Workflow:[/] {data.get('workflow', '')}")
+            log.write(f"[bold]Workspace:[/] {data.get('workspace_path', '')}")
+            if data.get("duration_ms") is not None:
+                log.write(f"[bold]Duration:[/] {_format_duration_ms(data.get('duration_ms'))}")
+            if data.get("scan_path"):
+                log.write(f"[bold green]Scan:[/] {data.get('scan_path')}")
+            if data.get("context_path"):
+                log.write(f"[bold green]Context:[/] {data.get('context_path')}")
+            generated_files = data.get("generated_files", []) or []
+            if generated_files:
+                log.write("[bold]Generated Files[/]")
+                for path in generated_files:
+                    log.write(f"  [cyan]{path}[/]")
+            for key in ("run_file", "state_file", "events_file"):
+                if data.get(key):
+                    log.write(f"[bold]{key.replace('_', ' ').title()}:[/] {data[key]}")
+
+        @staticmethod
+        def _render_workflow_runs(data: dict[str, Any], log: RichLog) -> None:
+            log.write("[bold cyan]Workflow Runs[/]")
+            runs = data.get("runs", []) or []
+            if not runs:
+                log.write("[yellow]No workflow runs found.[/]")
+                return
+            for run in runs[:50]:
+                duration = _format_duration_ms(run.get("duration_ms"))
+                completed = run.get("completed_at") or "running"
+                log.write(
+                    f"  [cyan]{run.get('id', '')}[/] "
+                    f"{run.get('workflow', '')} [{run.get('status', '')}] "
+                    f"[dim]{duration} | {completed}[/]"
+                )
+
+        @staticmethod
+        def _render_workflow_run_show(data: dict[str, Any], log: RichLog) -> None:
+            log.write("[bold cyan]Workflow Run Details[/]")
+            run = data.get("run", {}) or {}
+            state = data.get("state", {}) or {}
+            log.write(f"[bold]Run ID:[/] {run.get('id', '')}")
+            log.write(f"[bold]Workflow:[/] {run.get('workflow', '')}")
+            log.write(f"[bold]Status:[/] {run.get('status', '')}")
+            if run.get("duration_ms") is not None:
+                log.write(f"[bold]Duration:[/] {_format_duration_ms(run.get('duration_ms'))}")
+            if state.get("context_path"):
+                log.write(f"[bold]Context:[/] {state.get('context_path')}")
+            generated_files = state.get("generated_files", []) or []
+            if generated_files:
+                log.write("[bold]Generated Files[/]")
+                for path in generated_files:
+                    log.write(f"  [cyan]{path}[/]")
+            events = (data.get("events", []) or [])[-10:]
+            if events:
+                log.write("[bold]Recent Events[/]")
+                for event in events:
+                    duration = _format_duration_ms(event.get("duration_ms"))
+                    log.write(
+                        f"  [dim]{event.get('type', '')}[/] "
+                        f"{event.get('node', '')} "
+                        f"[dim]{duration}[/] "
+                        f"{event.get('message', '') or ''}"
+                    )
 
         @staticmethod
         def _render_generic_data(data: dict[str, Any], log: RichLog) -> None:

@@ -9,6 +9,7 @@ from dr_magu.tools.search_tools import search_code
 from dr_magu.tools.shell_tools import run_shell
 from dr_magu.scanner.repository_scanner import scan_repository
 from dr_magu.project_context.generator import generate_project_context, get_context_path, show_project_context
+from dr_magu.workflows.runner import WorkflowRunner
 
 
 def _get_str(args: dict[str, object], key: str, default: str) -> str:
@@ -97,6 +98,31 @@ def handle_context_show(args: dict[str, object], context: CommandContext) -> Too
 
 def handle_context_path(args: dict[str, object], context: CommandContext) -> ToolResult:
     return get_context_path(context.workspace_path)
+
+
+def handle_workflow_list(args: dict[str, object], context: CommandContext) -> ToolResult:
+    return WorkflowRunner(context.workspace_path).list_workflows()
+
+
+def handle_workflow_show(args: dict[str, object], context: CommandContext) -> ToolResult:
+    return WorkflowRunner(context.workspace_path).show_workflow(_get_str(args, "name", "repository.context"))
+
+
+def handle_workflow_run(args: dict[str, object], context: CommandContext) -> ToolResult:
+    return WorkflowRunner(context.workspace_path).run(_get_str(args, "name", "repository.context"))
+
+
+def handle_workflow_runs(args: dict[str, object], context: CommandContext) -> ToolResult:
+    limit = _get_int(args, "limit", 20)
+    return WorkflowRunner(context.workspace_path).list_runs(limit=limit)
+
+
+def handle_workflow_last(args: dict[str, object], context: CommandContext) -> ToolResult:
+    return WorkflowRunner(context.workspace_path).show_last_run()
+
+
+def handle_workflow_run_show(args: dict[str, object], context: CommandContext) -> ToolResult:
+    return WorkflowRunner(context.workspace_path).show_run(_get_str(args, "run_id", ""))
 
 
 class CommandRegistry:
@@ -195,4 +221,47 @@ registry.register(CommandDefinition(
     description="Show the project context directory path.",
     category="context",
     handler=handle_context_path,
+))
+
+registry.register(CommandDefinition(
+    name="workflow.list",
+    aliases=["wl"],
+    description="List registered deterministic workflows.",
+    category="workflow",
+    handler=handle_workflow_list,
+))
+registry.register(CommandDefinition(
+    name="workflow.show",
+    aliases=["ws"],
+    description="Show workflow metadata.",
+    category="workflow",
+    handler=handle_workflow_show,
+))
+registry.register(CommandDefinition(
+    name="workflow.run",
+    aliases=["wr", "wf"],
+    description="Run a registered workflow.",
+    category="workflow",
+    handler=handle_workflow_run,
+))
+registry.register(CommandDefinition(
+    name="workflow.runs",
+    aliases=["wrs"],
+    description="List persisted workflow runs for the workspace.",
+    category="workflow",
+    handler=handle_workflow_runs,
+))
+registry.register(CommandDefinition(
+    name="workflow.last",
+    aliases=["wlast"],
+    description="Show the latest persisted workflow run and state.",
+    category="workflow",
+    handler=handle_workflow_last,
+))
+registry.register(CommandDefinition(
+    name="workflow.run.show",
+    aliases=["wshow"],
+    description="Show a persisted workflow run and state.",
+    category="workflow",
+    handler=handle_workflow_run_show,
 ))

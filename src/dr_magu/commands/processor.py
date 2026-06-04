@@ -69,6 +69,17 @@ class CommandProcessor:
         elif command_name in {"context.generate", "context", "cg"}:
             if positional and positional[0] in {"--refresh", "refresh"}:
                 args.setdefault("refresh", True)
+        elif command_name in {"workflow.run", "wr", "wf"}:
+            if positional:
+                args.setdefault("name", positional[0])
+            else:
+                args.setdefault("name", "repository.context")
+        elif command_name in {"workflow.show", "ws"}:
+            if positional:
+                args.setdefault("name", positional[0])
+        elif command_name in {"workflow.run.show", "wshow"}:
+            if positional:
+                args.setdefault("run_id", positional[0])
         else:
             if positional:
                 args.setdefault("value", " ".join(positional))
