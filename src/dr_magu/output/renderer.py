@@ -235,6 +235,55 @@ class ResultRenderer:
             return
 
 
+        if result.tool == "runtime.inspect":
+            data = result.data or {}
+            workspace = data.get("workspace", {}) or {}
+            session = data.get("session", {}) or {}
+            summary = data.get("summary", {}) or {}
+            table = Table(title="Runtime Introspection")
+            table.add_column("Section")
+            table.add_column("Value")
+            table.add_row("Workspace", str(workspace.get("path", "")))
+            table.add_row("Workspace Exists", str(workspace.get("exists", False)))
+            table.add_row("Git Repository", str(workspace.get("is_git_repository", False)))
+            table.add_row("Current Session", str(session.get("id") or "none"))
+            table.add_row("Commands", str(summary.get("command_count", len(data.get("commands", []) or []))))
+            table.add_row("Workflows", str(summary.get("workflow_count", len(data.get("workflows", []) or []))))
+            table.add_row("Tools", str(summary.get("tool_count", len(data.get("tools", []) or []))))
+            table.add_row("Agents", str(summary.get("agent_count", len(data.get("agents", []) or []))))
+            table.add_row("Brain Ready", str(summary.get("brain_ready", False)))
+            self.console.print(table)
+
+            commands = data.get("commands", []) or []
+            if commands:
+                commands_table = Table(title="Registered Commands")
+                commands_table.add_column("Name")
+                commands_table.add_column("Category")
+                commands_table.add_column("Aliases")
+                for command in commands:
+                    commands_table.add_row(
+                        str(command.get("name", "")),
+                        str(command.get("category", "")),
+                        ", ".join(command.get("aliases", []) or []),
+                    )
+                self.console.print(commands_table)
+
+            workflows = data.get("workflows", []) or []
+            if workflows:
+                workflows_table = Table(title="Registered Workflows")
+                workflows_table.add_column("Name")
+                workflows_table.add_column("Type")
+                workflows_table.add_column("Requires LLM")
+                for workflow in workflows:
+                    workflows_table.add_row(
+                        str(workflow.get("name", "")),
+                        str(workflow.get("workflow_type", "")),
+                        str(workflow.get("requires_llm", False)),
+                    )
+                self.console.print(workflows_table)
+            return
+
+
         if result.tool in {"git.status", "git.diff", "shell.run"}:
             stdout = result.data.get("stdout", "")
             stderr = result.data.get("stderr", "")

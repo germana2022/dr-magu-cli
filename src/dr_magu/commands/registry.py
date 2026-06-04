@@ -125,6 +125,12 @@ def handle_workflow_run_show(args: dict[str, object], context: CommandContext) -
     return WorkflowRunner(context.workspace_path).show_run(_get_str(args, "run_id", ""))
 
 
+def handle_runtime_inspect(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.runtime.inspector import RuntimeInspector
+
+    return RuntimeInspector(context.workspace_path, config=context.config).inspect_result()
+
+
 class CommandRegistry:
     """In-memory registry used by both direct CLI commands and the run processor."""
 
@@ -264,4 +270,12 @@ registry.register(CommandDefinition(
     description="Show a persisted workflow run and state.",
     category="workflow",
     handler=handle_workflow_run_show,
+))
+
+registry.register(CommandDefinition(
+    name="runtime.inspect",
+    aliases=["runtime", "ri"],
+    description="Inspect commands, workflows, tools, permissions, session, workspace, and agent placeholders.",
+    category="runtime",
+    handler=handle_runtime_inspect,
 ))

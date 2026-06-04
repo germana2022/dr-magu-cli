@@ -14,8 +14,9 @@ from dr_magu.scanner.models import RepositoryScan
 from dr_magu.scanner.writers import write_latest_scan
 from dr_magu.project_context.generator import generate_project_context, get_context_path, show_project_context
 from dr_magu.workflows.runner import WorkflowRunner
+from dr_magu.runtime.inspector import RuntimeInspector
 
-app = typer.Typer(help="Dr Magu CLI - Tool CLI, command processor, Terminal UI, repository scanner, context generator, and workflow runtime")
+app = typer.Typer(help="Dr Magu CLI - Tool CLI, command processor, Terminal UI, repository scanner, context generator, and workflow runtime, and runtime introspection")
 files_app = typer.Typer(help="File system tools")
 search_app = typer.Typer(help="Code search tools")
 git_app = typer.Typer(help="Git tools")
@@ -23,7 +24,8 @@ shell_app = typer.Typer(help="Shell execution tools")
 commands_app = typer.Typer(help="Command registry tools")
 session_app = typer.Typer(help="Persistent session management")
 context_app = typer.Typer(help="Deterministic project context generation")
-workflow_app = typer.Typer(help="Deterministic workflow runtime")
+workflow_app = typer.Typer(help="Deterministic workflow runtime, and runtime introspection")
+runtime_app = typer.Typer(help="Runtime introspection tools")
 
 app.add_typer(files_app, name="files")
 app.add_typer(search_app, name="search")
@@ -33,6 +35,7 @@ app.add_typer(commands_app, name="commands")
 app.add_typer(session_app, name="session")
 app.add_typer(context_app, name="context")
 app.add_typer(workflow_app, name="workflow")
+app.add_typer(runtime_app, name="runtime")
 
 console = Console()
 renderer = ResultRenderer(console)
@@ -251,6 +254,16 @@ def workflow_run_show_command(
     renderer.render(result, json_output)
 
 
+@runtime_app.command("inspect")
+def runtime_inspect_command(
+    workspace: str = typer.Option(default_workspace(), "--workspace", "-w", help="Workspace root."),
+    json_output: bool = typer.Option(False, "--json", help="Return JSON output."),
+) -> None:
+    """Inspect the current Dr Magu runtime context for the future Orchestrator Brain."""
+    result = RuntimeInspector(workspace).inspect_result()
+    renderer.render(result, json_output)
+
+
 @app.command("run")
 def run_command(
     command_line: str = typer.Argument(..., help="Internal command line, for example: 'files.read README.md'."),
@@ -377,7 +390,7 @@ def tui_command(
 
 @app.command("version")
 def version() -> None:
-    console.print("dr-magu-cli v0.8.1")
+    console.print("dr-magu-cli v0.8.2")
 
 
 if __name__ == "__main__":

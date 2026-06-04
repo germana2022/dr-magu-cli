@@ -1,6 +1,6 @@
-version: "0.7.0"
-name: "dr-magu-cli-context-generator-engine"
-description: "Tool CLI, command processor, improved Terminal UI, persistent sessions, repository scanner, and deterministic context generation."
+version: "0.8.2"
+name: "dr-magu-cli-runtime-introspection-foundation"
+description: "Tool CLI, command processor, improved Terminal UI, persistent sessions, repository scanner, deterministic context generation, workflow runtime, and runtime introspection."
 
 runtime:
   default_workspace: "."
@@ -11,6 +11,8 @@ runtime:
   persistent_sessions_enabled: true
   repository_scanner_enabled: true
   context_generator_enabled: true
+  workflow_runtime_enabled: true
+  runtime_introspection_enabled: true
 
 permissions:
   file_read: true
@@ -65,6 +67,9 @@ command_registry:
     - name: "context.path"
       category: "context"
       description: "Show the project context directory path."
+    - name: "runtime.inspect"
+      category: "runtime"
+      description: "Inspect runtime context for commands, workflows, tools, permissions, session, workspace, and agents placeholder."
 
 tui:
   enabled: true
@@ -73,3 +78,5 @@ tui:
   command_history_enabled: true
   repository_scan_enabled: true
   context_generator_enabled: true
+  workflow_runtime_enabled: true
+  runtime_introspection_enabled: true

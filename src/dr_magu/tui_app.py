@@ -89,7 +89,7 @@ class TuiSettings:
     """Settings used to start the Dr Magu Terminal UI."""
 
     workspace_path: str
-    version: str = "0.8.1"
+    version: str = "0.8.2"
 
 
 def _build_context(workspace_path: str) -> CommandContext:
@@ -444,7 +444,7 @@ def run_tui(workspace_path: str) -> None:
 
         def on_mount(self) -> None:
             log = self.query_one("#console", RichLog)
-            log.write("[bold cyan]Welcome to Dr Magu v0.8.1[/]")
+            log.write("[bold cyan]Welcome to Dr Magu v0.8.2[/]")
             log.write(
                 "[dim]Workspace-aware Terminal UI with persistent sessions, command history, and deterministic repository scanning, context generation, and workflow execution.[/]"
             )
@@ -561,6 +561,10 @@ def run_tui(workspace_path: str) -> None:
                 self._execute_and_render("workflow.list", log)
                 return
 
+            if command in {"/runtime", "runtime", "ri"}:
+                self._execute_and_render("runtime.inspect", log)
+                return
+
             if command in {"/workflow-runs", "workflow-runs", "wr"}:
                 self._execute_and_render("workflow.runs", log)
                 return
@@ -614,6 +618,7 @@ def run_tui(workspace_path: str) -> None:
                 ("/scan, scan, rs", "Scan the workspace and persist latest scan metadata."),
                 ("/context, cg", "Generate deterministic project context files."),
                 ("/workflows", "List registered deterministic workflows."),
+                ("/runtime, ri", "Inspect runtime context for the future Orchestrator Brain."),
                 ("/workflow-runs, wr", "List recent workflow runs."),
                 ("/workflow-last, wl", "Show the latest workflow run detail."),
                 ("/wf <name>", "Run a registered workflow. Defaults to repository.context."),
@@ -679,6 +684,7 @@ def run_tui(workspace_path: str) -> None:
                 "workflow.runs": self._render_workflow_runs,
                 "workflow.run.show": self._render_workflow_run_show,
                 "workflow.last": self._render_workflow_run_show,
+                "runtime.inspect": self._render_runtime_inspect,
             }.get(result.tool, self._render_generic_data)
 
             renderer(result.data, log)
@@ -948,6 +954,44 @@ def run_tui(workspace_path: str) -> None:
                         f"[dim]{duration}[/] "
                         f"{event.get('message', '') or ''}"
                     )
+
+        @staticmethod
+        def _render_runtime_inspect(data: dict[str, Any], log: RichLog) -> None:
+            workspace = data.get("workspace", {}) or {}
+            session = data.get("session", {}) or {}
+            summary = data.get("summary", {}) or {}
+
+            log.write("[bold cyan]Runtime Introspection[/]")
+            log.write(f"[bold]Workspace:[/] {workspace.get('path', '')}")
+            log.write(f"[bold]Workspace exists:[/] {workspace.get('exists', False)}")
+            log.write(f"[bold]Git repository:[/] {workspace.get('is_git_repository', False)}")
+            log.write(f"[bold]Current session:[/] {session.get('id') or 'none'}")
+            log.write(
+                "[bold]Inventory:[/] "
+                f"{summary.get('command_count', 0)} commands, "
+                f"{summary.get('workflow_count', 0)} workflows, "
+                f"{summary.get('tool_count', 0)} tools, "
+                f"{summary.get('agent_count', 0)} agents"
+            )
+            log.write(f"[bold]Brain ready:[/] {summary.get('brain_ready', False)}")
+
+            commands = data.get("commands", []) or []
+            if commands:
+                log.write("\n[bold purple]Commands[/]")
+                for command in commands[:40]:
+                    aliases = command.get("aliases", []) or []
+                    alias_label = f" [dim]({', '.join(aliases)})[/]" if aliases else ""
+                    log.write(f"  [cyan]{command.get('name', '')}[/] {alias_label}")
+
+            workflows = data.get("workflows", []) or []
+            if workflows:
+                log.write("\n[bold purple]Workflows[/]")
+                for workflow in workflows:
+                    log.write(
+                        f"  [cyan]{workflow.get('name', '')}[/] "
+                        f"[dim]{workflow.get('workflow_type', '')} | llm={workflow.get('requires_llm', False)}[/]"
+                    )
+
 
         @staticmethod
         def _render_generic_data(data: dict[str, Any], log: RichLog) -> None:
