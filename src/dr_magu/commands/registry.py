@@ -226,6 +226,19 @@ def handle_plugin_validate(args: dict[str, object], context: CommandContext) -> 
     plugin_id = _get_str(args, "id", _get_str(args, "value", "")).strip() or None
     return PluginManager(context.workspace_path).validate_plugin(plugin_id)
 
+
+def handle_control_center(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.control_center.service import ControlCenterService
+
+    return ControlCenterService(context.workspace_path, config=context.config).dashboard_result()
+
+
+def handle_control_plugin(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.control_center.service import ControlCenterService
+
+    plugin_id = _get_str(args, "id", _get_str(args, "value", "")).strip()
+    return ControlCenterService(context.workspace_path, config=context.config).plugin_impact_result(plugin_id)
+
 class CommandRegistry:
     """In-memory registry used by both direct CLI commands and the run processor."""
 
@@ -485,4 +498,19 @@ registry.register(CommandDefinition(
     description="Validate one plugin or all discovered local plugins.",
     category="plugin",
     handler=handle_plugin_validate,
+))
+
+registry.register(CommandDefinition(
+    name="control.center",
+    aliases=["control", "cc", "dashboard"],
+    description="Show the Dr Magu Control Center dashboard across plugins, agents, workflows, tools, permissions, schedules, and Brain readiness.",
+    category="control",
+    handler=handle_control_center,
+))
+registry.register(CommandDefinition(
+    name="control.plugin",
+    aliases=["cplugin"],
+    description="Show one plugin impact summary from the Control Center.",
+    category="control",
+    handler=handle_control_plugin,
 ))

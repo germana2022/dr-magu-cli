@@ -1,5 +1,22 @@
 # Changelog
 
+## v0.9.3
+
+### Added
+
+- Control Center dashboard with `dr-magu control center`.
+- Plugin impact details with `dr-magu control plugin <plugin-id>`.
+- Internal commands `control.center` and `control.plugin`.
+- TUI commands `/control`, `cc`, and `/control-plugin <plugin-id>`.
+- Control Center sections for plugins, agents, workflows, tools, permissions, schedules, and Brain readiness.
+- Read-only scheduler placeholder for future cron/background task management.
+- Tests for Control Center service, command processor routing, and CLI output.
+
+### Changed
+
+- Version updated to `0.9.3`.
+- README updated with Control Center usage and current architecture.
+
 ## v0.3.0
 
 ### Added

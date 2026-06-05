@@ -422,6 +422,86 @@ class ResultRenderer:
                 self.console.print(workflows_table)
             return
 
+        if result.tool == "control.center":
+            data = result.data or {}
+            table = Table(title="Dr Magu Control Center")
+            table.add_column("Area")
+            table.add_column("Count")
+            table.add_column("Enabled")
+            table.add_column("Status")
+            table.add_column("Description")
+            for section in data.get("sections", []) or []:
+                enabled = section.get("enabled_count")
+                table.add_row(
+                    str(section.get("name", "")),
+                    str(section.get("count", 0)),
+                    "" if enabled is None else str(enabled),
+                    str(section.get("status", "")),
+                    str(section.get("description", "")),
+                )
+            self.console.print(table)
+
+            plugins = data.get("plugins", []) or []
+            if plugins:
+                plugins_table = Table(title="Plugin Impact")
+                plugins_table.add_column("Plugin")
+                plugins_table.add_column("Enabled")
+                plugins_table.add_column("Domain")
+                plugins_table.add_column("Health")
+                plugins_table.add_column("Agents")
+                plugins_table.add_column("Workflows")
+                plugins_table.add_column("Tools")
+                for plugin in plugins:
+                    plugins_table.add_row(
+                        str(plugin.get("plugin_id", "")),
+                        str(plugin.get("enabled", False)),
+                        str(plugin.get("domain", "")),
+                        str(plugin.get("status", "")),
+                        str(len(plugin.get("agents", []) or [])),
+                        str(len(plugin.get("workflows", []) or [])),
+                        str(len(plugin.get("tools", []) or [])),
+                    )
+                self.console.print(plugins_table)
+
+            brain = data.get("brain", {}) or {}
+            summary = brain.get("summary", {}) or {}
+            model = brain.get("default_model", {}) or {}
+            brain_table = Table(title="Brain Readiness")
+            brain_table.add_column("Field")
+            brain_table.add_column("Value")
+            for key in ("brain_ready", "llm_configured", "default_provider", "default_model", "llm_calls_enabled"):
+                brain_table.add_row(key.replace("_", " ").title(), str(summary.get(key, model.get(key, ""))))
+            self.console.print(brain_table)
+            return
+
+        if result.tool == "control.plugin":
+            data = result.data or {}
+            table = Table(title="Plugin Control Center Detail")
+            table.add_column("Field")
+            table.add_column("Value")
+            for key in ("plugin_id", "name", "enabled", "domain", "status"):
+                table.add_row(key.replace("_", " ").title(), str(data.get(key, "")))
+            self.console.print(table)
+            for key in ("agents", "workflows", "tools", "commands", "schedules"):
+                values = data.get(key, []) or []
+                values_table = Table(title=key.title())
+                values_table.add_column("Name")
+                for value in values:
+                    values_table.add_row(str(value))
+                self.console.print(values_table)
+            warnings = data.get("warnings", []) or []
+            errors = data.get("errors", []) or []
+            if warnings or errors:
+                health_table = Table(title="Health Details")
+                health_table.add_column("Type")
+                health_table.add_column("Message")
+                for warning in warnings:
+                    health_table.add_row("warning", str(warning))
+                for error in errors:
+                    health_table.add_row("error", str(error))
+                self.console.print(health_table)
+            return
+
 
         if result.tool in {"git.status", "git.diff", "shell.run"}:
             stdout = result.data.get("stdout", "")

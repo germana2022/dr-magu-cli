@@ -1,47 +1,52 @@
-# Dr Magu CLI v0.3.0
+# Dr Magu CLI v0.9.3
 
-Dr Magu CLI is a Python-based developer tooling foundation inspired by Claude Code and OpenCode.
+Dr Magu CLI is a Python-based agent platform foundation inspired by Claude Code, OpenCode, Codex CLI, and Gemini CLI.
 
-This version focuses on the **Terminal UI foundation**. It keeps the existing Tool CLI and Command Processor from v0.2.0, and adds a Textual/Rich TUI that can process internal commands from an interactive terminal interface.
+This version adds the **Control Center UI** on top of the existing Brain Foundation, Plugin Registry, Agent Lifecycle Management, workflow runtime, context generator, repository scanner, sessions, and TUI.
 
-## What changed in v0.3.0
+## What changed in v0.9.3
 
-- Added `dr-magu tui`.
-- Added an OpenCode-style terminal layout.
-- Added main console panel.
-- Added right context sidebar.
-- Added bottom prompt input.
-- Added status/header/footer regions.
-- Added slash commands: `/help`, `/commands`, `/status`, `/run`, `/clear`, `/exit`.
-- Connected the TUI to the existing `CommandProcessor`.
-- Kept the implementation agent-free and LLM-free for this phase.
+- Added Control Center dashboard.
+- Added `dr-magu control center`.
+- Added `dr-magu control plugin <plugin-id>`.
+- Added internal commands `control.center` and `control.plugin`.
+- Added TUI commands `/control`, `cc`, and `/control-plugin <plugin-id>`.
+- Added Control Center sections for plugins, agents, workflows, tools, permissions, schedules, and Brain readiness.
+- Added plugin impact view with agents, workflows, tools, commands, schedules, health warnings, and errors.
+- Reserved a Control Center area for future scheduler/cron task management.
+- Kept all changes deterministic and LLM-call free.
 
 ## Architecture
 
 ```text
-CLI Entry Point
+CLI / TUI
   ↓
-Terminal UI
+Control Center
   ↓
-TUI Command Handler
+Brain Context Loader
   ↓
-Command Processor
+Plugin Registry
   ↓
-Command Registry
+Agent Registry
   ↓
-Tool Layer
+Workflow Registry
   ↓
-Workspace
+Tool Registry
+  ↓
+Permission Context Reader
+  ↓
+Workspace + Sessions
 ```
 
 ## Installation
 
 Windows PowerShell:
 
-```bash
+```powershell
 python -m venv .venv
 .venv\Scripts\Activate.ps1
-pip install -e .[dev]
+python -m pip install --upgrade pip setuptools wheel
+pip install -e ".[dev]"
 ```
 
 Linux/macOS:
@@ -49,7 +54,8 @@ Linux/macOS:
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-pip install -e .[dev]
+python -m pip install --upgrade pip setuptools wheel
+pip install -e ".[dev]"
 ```
 
 ## Start the TUI
@@ -64,82 +70,86 @@ With a specific workspace:
 dr-magu tui --workspace D:\AI-DEMO\my-repo
 ```
 
-## TUI commands
+## Control Center
+
+```bash
+dr-magu control center
+```
+
+Inspect one plugin impact summary:
+
+```bash
+dr-magu control plugin software-dev
+```
 
 Inside the TUI:
 
 ```text
-/help
-/commands
-/status
-/run git.status
-/run files.list .
-/run files.read README.md
-/clear
-/exit
+/control
+cc
+/control-plugin software-dev
 ```
 
-You can also run internal commands directly:
-
-```text
-git.status
-files.list .
-search.code CommandProcessor src
-```
-
-## Direct CLI commands
+## Brain and runtime inspection
 
 ```bash
-dr-magu files list .
-dr-magu files read README.md
-dr-magu search code "CommandProcessor"
-dr-magu git status
-dr-magu git diff
-dr-magu shell run "pytest"
+dr-magu brain context
+dr-magu runtime inspect
+dr-magu tools list
+dr-magu permissions show
 ```
 
-## Command Processor mode
+## Plugin operations
 
 ```bash
-dr-magu run "files.list ."
-dr-magu run "files.read README.md"
-dr-magu run "search.code CommandProcessor src"
-dr-magu run "git.status"
-dr-magu run "git.diff"
-dr-magu run "shell.run pytest"
+dr-magu plugin list
+dr-magu plugin show software-dev
+dr-magu plugin validate software-dev
 ```
 
-## List registered commands
+## Agent operations
 
 ```bash
-dr-magu commands list
-dr-magu commands list --json
+dr-magu agent list
+dr-magu agent show repository-analyzer
+dr-magu agent run repository-analyzer
+dr-magu agent validate repository-analyzer
+dr-magu agent enable repository-analyzer
+dr-magu agent disable repository-analyzer
+dr-magu agent delete repository-analyzer
 ```
 
-## JSON output
+## Workflow operations
 
 ```bash
-dr-magu run "files.read README.md" --json
-dr-magu files list . --json
+dr-magu workflow list
+dr-magu workflow run repository.context
+dr-magu workflow runs
+dr-magu workflow last
 ```
 
-## Configuration
+## Repository intelligence
 
-The orchestration configuration is in English:
-
-```text
-config/orchestration.yaml
+```bash
+dr-magu scan
+dr-magu context generate
+dr-magu context show
+dr-magu context path
 ```
 
-Main sections:
+## Model configuration
 
-```text
-runtime
-permissions
-blocked_shell_patterns
-command_registry
-tui
+Default Brain model values can be configured with environment variables:
+
+```env
+LLM_PROVIDER=opencode
+LLM_BASE_URL=https://opencode.ai/zen/go/v1
+LLM_API_KEY=sk-XXXXXXXXXXXXXXXXXXXXXXXXX
+LLM_MODEL=deepseek-v4-flash
+LLM_TEMPERATURE=0.1
 ```
+
+Agents can override model settings, otherwise they inherit the default Brain model configuration.
 
 ## Run tests
 
@@ -150,17 +160,15 @@ pytest
 Expected result:
 
 ```text
-11 passed
+66 passed
 ```
 
 ## Roadmap
 
 ```text
-v0.1.0  Tool CLI foundation
-v0.2.0  Command Processor + Command Registry
-v0.3.0  Terminal UI Foundation
-v0.4.0  Security Layer + Approval Rules
-v0.5.0  Session Management
-v0.6.0  Repository Analyzer Engine
-v0.7.0  LangGraph Runtime
+v0.9.0  Brain Foundation
+v0.9.1  Plugin Registry Foundation
+v0.9.2  Agent Lifecycle Management
+v0.9.3  Control Center UI
+v0.10.0 AI Orchestrator Brain
 ```

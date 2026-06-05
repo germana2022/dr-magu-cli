@@ -89,7 +89,7 @@ class TuiSettings:
     """Settings used to start the Dr Magu Terminal UI."""
 
     workspace_path: str
-    version: str = "0.9.2"
+    version: str = "0.9.3"
 
 
 def _build_context(workspace_path: str) -> CommandContext:
@@ -445,7 +445,7 @@ def run_tui(workspace_path: str) -> None:
 
         def on_mount(self) -> None:
             log = self.query_one("#console", RichLog)
-            log.write("[bold cyan]Welcome to Dr Magu v0.9.2[/]")
+            log.write("[bold cyan]Welcome to Dr Magu v0.9.3[/]")
             log.write(
                 "[dim]Workspace-aware Terminal UI with persistent sessions, command history, and deterministic repository scanning, context generation, workflow execution, and Brain context loading.[/]"
             )
@@ -570,6 +570,14 @@ def run_tui(workspace_path: str) -> None:
                 self._execute_and_render("brain.context", log)
                 return
 
+            if command in {"/control", "control", "cc", "dashboard"}:
+                self._execute_and_render("control.center", log)
+                return
+
+            if command.startswith("/control-plugin "):
+                self._execute_and_render("control.plugin " + command.removeprefix("/control-plugin ").strip(), log)
+                return
+
             if command in {"/agents", "agents", "al"}:
                 self._execute_and_render("agent.list", log)
                 return
@@ -665,6 +673,8 @@ def run_tui(workspace_path: str) -> None:
                 ("/workflows", "List registered deterministic workflows."),
                 ("/runtime, ri", "Inspect runtime context for the future Orchestrator Brain."),
                 ("/brain, bc", "Load Brain context with commands, workflows, agents, tools, permissions, session, workspace, and model defaults."),
+                ("/control, cc", "Open the Control Center dashboard across plugins, agents, workflows, tools, permissions, schedules, and Brain."),
+                ("/control-plugin <id>", "Show plugin impact and dependency details."),
                 ("/agents, al", "List configured agents with resolved model configuration."),
                 ("/agent <id>", "Run a configured agent. Defaults to repository-analyzer."),
                 ("/tools, tl", "List formal tool registry entries."),
@@ -751,6 +761,8 @@ def run_tui(workspace_path: str) -> None:
                 "plugin.list": self._render_plugin_list,
                 "plugin.show": self._render_plugin_show,
                 "plugin.validate": self._render_plugin_validate,
+                "control.center": self._render_control_center,
+                "control.plugin": self._render_control_plugin,
             }.get(result.tool, self._render_generic_data)
 
             renderer(result.data, log)
@@ -1189,6 +1201,58 @@ def run_tui(workspace_path: str) -> None:
                     log.write(f"    [red]error:[/] {error}")
                 for warning in result.get("warnings", []) or []:
                     log.write(f"    [yellow]warning:[/] {warning}")
+
+
+        @staticmethod
+        def _render_control_center(data: dict[str, Any], log: RichLog) -> None:
+            log.write("[bold cyan]Dr Magu Control Center[/]")
+            log.write(f"[bold]Workspace:[/] {data.get('workspace_path', '')}")
+            log.write("[bold purple]Areas[/]")
+            for section in data.get("sections", []) or []:
+                enabled = section.get("enabled_count")
+                enabled_label = "" if enabled is None else f" | enabled={enabled}"
+                log.write(
+                    f"  [cyan]{section.get('name', ''):<12}[/] "
+                    f"[dim]count={section.get('count', 0)}{enabled_label} | status={section.get('status', '')}[/]"
+                )
+                description = section.get("description", "")
+                if description:
+                    log.write(f"    {description}")
+
+            plugins = data.get("plugins", []) or []
+            if plugins:
+                log.write("[bold purple]Plugin Impact[/]")
+                for plugin in plugins:
+                    log.write(
+                        f"  [cyan]{plugin.get('plugin_id', '')}[/] "
+                        f"[dim]enabled={plugin.get('enabled', False)} | domain={plugin.get('domain', '')} | "
+                        f"health={plugin.get('status', '')} | agents={len(plugin.get('agents', []) or [])} | "
+                        f"workflows={len(plugin.get('workflows', []) or [])} | tools={len(plugin.get('tools', []) or [])}[/]"
+                    )
+
+            brain = data.get("brain", {}) or {}
+            summary = brain.get("summary", {}) or {}
+            log.write("[bold purple]Brain Readiness[/]")
+            for key in ("brain_ready", "llm_configured", "default_provider", "default_model", "llm_calls_enabled"):
+                log.write(f"  [bold]{key.replace('_', ' ').title()}:[/] {summary.get(key, '')}")
+
+            schedules = data.get("schedules", {}) or {}
+            log.write(f"[bold purple]Schedules[/] {schedules.get('status', 'reserved')} - {schedules.get('message', '')}")
+
+        @staticmethod
+        def _render_control_plugin(data: dict[str, Any], log: RichLog) -> None:
+            log.write("[bold cyan]Plugin Control Center Detail[/]")
+            for key in ("plugin_id", "name", "enabled", "domain", "status"):
+                log.write(f"[bold]{key.replace('_', ' ').title()}:[/] {data.get(key, '')}")
+            for key in ("agents", "workflows", "tools", "commands", "schedules"):
+                values = data.get(key, []) or []
+                log.write(f"[bold purple]{key.title()}[/] [dim]({len(values)})[/]")
+                for value in values:
+                    log.write(f"  - {value}")
+            for warning in data.get("warnings", []) or []:
+                log.write(f"[yellow]warning:[/] {warning}")
+            for error in data.get("errors", []) or []:
+                log.write(f"[red]error:[/] {error}")
 
         @staticmethod
         def _render_generic_data(data: dict[str, Any], log: RichLog) -> None:

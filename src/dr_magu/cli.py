@@ -20,6 +20,7 @@ from dr_magu.brain.context_loader import BrainContextLoader
 from dr_magu.tools.registry import ToolRegistry
 from dr_magu.security.permission_context import PermissionContextReader
 from dr_magu.plugins.manager import PluginManager
+from dr_magu.control_center.service import ControlCenterService
 
 app = typer.Typer(help="Dr Magu CLI - Tool CLI, TUI, sessions, repository scanner, context generator, workflows, runtime introspection, and Brain foundation")
 files_app = typer.Typer(help="File system tools")
@@ -36,6 +37,7 @@ brain_app = typer.Typer(help="Brain context loader tools")
 tools_app = typer.Typer(help="Formal tool registry tools")
 permissions_app = typer.Typer(help="Permission context tools")
 plugin_app = typer.Typer(help="Local plugin registry tools")
+control_app = typer.Typer(help="Dr Magu Control Center tools")
 
 app.add_typer(files_app, name="files")
 app.add_typer(search_app, name="search")
@@ -51,6 +53,7 @@ app.add_typer(brain_app, name="brain")
 app.add_typer(tools_app, name="tools")
 app.add_typer(permissions_app, name="permissions")
 app.add_typer(plugin_app, name="plugin")
+app.add_typer(control_app, name="control")
 
 console = Console()
 renderer = ResultRenderer(console)
@@ -442,6 +445,29 @@ def plugin_validate_command(
 ) -> None:
     """Validate one plugin or all discovered local plugins."""
     result = PluginManager(workspace).validate_plugin(plugin_id)
+    renderer.render(result, json_output)
+
+
+
+
+@control_app.command("center")
+def control_center_command(
+    workspace: str = typer.Option(default_workspace(), "--workspace", "-w", help="Workspace root."),
+    json_output: bool = typer.Option(False, "--json", help="Return JSON output."),
+) -> None:
+    """Show the Dr Magu Control Center dashboard."""
+    result = ControlCenterService(workspace).dashboard_result()
+    renderer.render(result, json_output)
+
+
+@control_app.command("plugin")
+def control_plugin_command(
+    plugin_id: str = typer.Argument(..., help="Plugin ID to inspect."),
+    workspace: str = typer.Option(default_workspace(), "--workspace", "-w", help="Workspace root."),
+    json_output: bool = typer.Option(False, "--json", help="Return JSON output."),
+) -> None:
+    """Show one plugin impact summary in the Control Center."""
+    result = ControlCenterService(workspace).plugin_impact_result(plugin_id)
     renderer.render(result, json_output)
 
 
