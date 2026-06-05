@@ -16,16 +16,22 @@ class AgentRegistry:
         self.model_resolver = ModelResolver(self.default_model)
         self._agents = AgentConfigLoader(self.workspace_path).load()
 
-    def list(self, include_disabled: bool = True) -> list[ResolvedAgentDefinition]:
-        agents = self._agents if include_disabled else [agent for agent in self._agents if agent.enabled]
+    def list(self, include_disabled: bool = True, include_deleted: bool = False) -> list[ResolvedAgentDefinition]:
+        agents = self._agents
+        if not include_disabled:
+            agents = [agent for agent in agents if agent.enabled]
+        if not include_deleted:
+            agents = [agent for agent in agents if not agent.deleted]
         return [self._resolve(agent) for agent in agents]
 
-    def get(self, agent_id: str) -> ResolvedAgentDefinition:
+    def get(self, agent_id: str, include_deleted: bool = False) -> ResolvedAgentDefinition:
         for agent in self._agents:
+            if agent.deleted and not include_deleted:
+                continue
             names = {agent.id, *agent.aliases}
             if agent_id in names:
                 return self._resolve(agent)
-        available = ", ".join(sorted(agent.id for agent in self._agents)) or "none"
+        available = ", ".join(sorted(agent.id for agent in self._agents if include_deleted or not agent.deleted)) or "none"
         raise KeyError(f"Unknown agent '{agent_id}'. Available agents: {available}")
 
     def _resolve(self, agent: AgentDefinition) -> ResolvedAgentDefinition:
@@ -36,9 +42,11 @@ class AgentRegistry:
             role=agent.role,
             workflow=agent.workflow,
             enabled=agent.enabled,
+            deleted=agent.deleted,
             requires_llm=agent.requires_llm,
             capabilities=list(agent.capabilities),
             aliases=list(agent.aliases),
             model=self.model_resolver.resolve(agent.model),
             plugin_id=agent.plugin_id,
+            source=agent.source,
         )

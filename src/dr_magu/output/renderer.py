@@ -239,8 +239,10 @@ class ResultRenderer:
             table = Table(title="Configured Agents")
             table.add_column("ID")
             table.add_column("Enabled")
+            table.add_column("Deleted")
+            table.add_column("Source")
+            table.add_column("Plugin")
             table.add_column("Workflow")
-            table.add_column("Requires LLM")
             table.add_column("Model")
             table.add_column("Description")
             for agent in (result.data or {}).get("agents", []):
@@ -248,8 +250,10 @@ class ResultRenderer:
                 table.add_row(
                     str(agent.get("id", "")),
                     str(agent.get("enabled", False)),
+                    str(agent.get("deleted", False)),
+                    str(agent.get("source", "")),
+                    str(agent.get("plugin_id", "") or ""),
                     str(agent.get("workflow", "")),
-                    str(agent.get("requires_llm", False)),
                     f"{model.get('provider', '')}/{model.get('model', '')}",
                     str(agent.get("description", "")),
                 )
@@ -262,7 +266,7 @@ class ResultRenderer:
             table = Table(title="Agent")
             table.add_column("Field")
             table.add_column("Value")
-            for key in ("id", "name", "role", "workflow", "enabled", "requires_llm", "description"):
+            for key in ("id", "name", "role", "workflow", "enabled", "deleted", "requires_llm", "source", "plugin_id", "description"):
                 table.add_row(key.replace("_", " ").title(), str(data.get(key, "")))
             table.add_row("Model Provider", str(model.get("provider", "")))
             table.add_row("Model", str(model.get("model", "")))
@@ -287,6 +291,40 @@ class ResultRenderer:
                     value = _format_duration(workflow_result.get(key)) if key == "duration_ms" else str(workflow_result.get(key))
                     table.add_row(key.replace("_", " ").title(), value)
             self.console.print(table)
+            return
+
+
+        if result.tool in {"agent.add", "agent.update", "agent.enable", "agent.disable", "agent.delete"}:
+            data = result.data or {}
+            agent = data.get("agent", {}) or {}
+            table = Table(title=result.tool.replace(".", " ").title())
+            table.add_column("Field")
+            table.add_column("Value")
+            for key in ("id", "name", "enabled", "deleted", "source", "plugin_id", "workflow"):
+                table.add_row(key.replace("_", " ").title(), str(agent.get(key, "")))
+            if data.get("store_path"):
+                table.add_row("Store Path", str(data.get("store_path")))
+            self.console.print(table)
+            return
+
+        if result.tool == "agent.validate":
+            data = result.data or {}
+            agent = data.get("agent", {}) or {}
+            table = Table(title="Agent Validation")
+            table.add_column("Field")
+            table.add_column("Value")
+            table.add_row("Agent", str(agent.get("id", "")))
+            table.add_row("Valid", str(data.get("valid", False)))
+            table.add_row("Workflow", str(agent.get("workflow", "")))
+            table.add_row("Source", str(agent.get("source", "")))
+            self.console.print(table)
+            errors = data.get("errors", []) or []
+            if errors:
+                error_table = Table(title="Validation Errors")
+                error_table.add_column("Error")
+                for error in errors:
+                    error_table.add_row(str(error))
+                self.console.print(error_table)
             return
 
         if result.tool == "brain.context":

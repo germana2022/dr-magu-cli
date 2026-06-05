@@ -282,10 +282,11 @@ def runtime_inspect_command(
 @agent_app.command("list")
 def agent_list_command(
     workspace: str = typer.Option(default_workspace(), "--workspace", "-w", help="Workspace root."),
+    include_deleted: bool = typer.Option(False, "--include-deleted", help="Include soft-deleted agents."),
     json_output: bool = typer.Option(False, "--json", help="Return JSON output."),
 ) -> None:
     """List configured agents with resolved model configuration."""
-    result = AgentRunner(workspace).list_agents()
+    result = AgentRunner(workspace).list_agents(include_deleted=include_deleted)
     renderer.render(result, json_output)
 
 
@@ -308,6 +309,73 @@ def agent_run_command(
 ) -> None:
     """Run a configured agent by delegating to its bound workflow."""
     result = AgentRunner(workspace).run_agent(agent_id)
+    renderer.render(result, json_output)
+
+
+@agent_app.command("validate")
+def agent_validate_command(
+    agent_id: str = typer.Argument(..., help="Agent ID or alias."),
+    workspace: str = typer.Option(default_workspace(), "--workspace", "-w", help="Workspace root."),
+    json_output: bool = typer.Option(False, "--json", help="Return JSON output."),
+) -> None:
+    """Validate an agent definition and its workflow binding."""
+    result = AgentRunner(workspace).validate_agent(agent_id)
+    renderer.render(result, json_output)
+
+
+@agent_app.command("enable")
+def agent_enable_command(
+    agent_id: str = typer.Argument(..., help="Agent ID or alias."),
+    workspace: str = typer.Option(default_workspace(), "--workspace", "-w", help="Workspace root."),
+    json_output: bool = typer.Option(False, "--json", help="Return JSON output."),
+) -> None:
+    """Enable an agent using a workspace-level override."""
+    result = AgentRunner(workspace).enable_agent(agent_id)
+    renderer.render(result, json_output)
+
+
+@agent_app.command("disable")
+def agent_disable_command(
+    agent_id: str = typer.Argument(..., help="Agent ID or alias."),
+    workspace: str = typer.Option(default_workspace(), "--workspace", "-w", help="Workspace root."),
+    json_output: bool = typer.Option(False, "--json", help="Return JSON output."),
+) -> None:
+    """Disable an agent using a workspace-level override."""
+    result = AgentRunner(workspace).disable_agent(agent_id)
+    renderer.render(result, json_output)
+
+
+@agent_app.command("delete")
+def agent_delete_command(
+    agent_id: str = typer.Argument(..., help="Agent ID or alias."),
+    workspace: str = typer.Option(default_workspace(), "--workspace", "-w", help="Workspace root."),
+    json_output: bool = typer.Option(False, "--json", help="Return JSON output."),
+) -> None:
+    """Soft-delete an agent using a workspace-level override."""
+    result = AgentRunner(workspace).delete_agent(agent_id)
+    renderer.render(result, json_output)
+
+
+@agent_app.command("add")
+def agent_add_command(
+    file_path: str = typer.Option(..., "--file", "-f", help="YAML file containing one agent definition."),
+    workspace: str = typer.Option(default_workspace(), "--workspace", "-w", help="Workspace root."),
+    json_output: bool = typer.Option(False, "--json", help="Return JSON output."),
+) -> None:
+    """Add a workspace-managed agent from a YAML definition."""
+    result = AgentRunner(workspace).add_agent_from_file(file_path)
+    renderer.render(result, json_output)
+
+
+@agent_app.command("update")
+def agent_update_command(
+    agent_id: str = typer.Argument(..., help="Agent ID to update."),
+    file_path: str = typer.Option(..., "--file", "-f", help="YAML file containing the updated agent definition."),
+    workspace: str = typer.Option(default_workspace(), "--workspace", "-w", help="Workspace root."),
+    json_output: bool = typer.Option(False, "--json", help="Return JSON output."),
+) -> None:
+    """Update or override an agent from a YAML definition."""
+    result = AgentRunner(workspace).update_agent_from_file(agent_id, file_path)
     renderer.render(result, json_output)
 
 
@@ -503,7 +571,7 @@ def tui_command(
 
 @app.command("version")
 def version() -> None:
-    console.print("dr-magu-cli v0.9.1")
+    console.print("dr-magu-cli v0.9.2")
 
 
 if __name__ == "__main__":

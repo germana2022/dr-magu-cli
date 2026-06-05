@@ -89,7 +89,7 @@ class TuiSettings:
     """Settings used to start the Dr Magu Terminal UI."""
 
     workspace_path: str
-    version: str = "0.9.1"
+    version: str = "0.9.2"
 
 
 def _build_context(workspace_path: str) -> CommandContext:
@@ -445,7 +445,7 @@ def run_tui(workspace_path: str) -> None:
 
         def on_mount(self) -> None:
             log = self.query_one("#console", RichLog)
-            log.write("[bold cyan]Welcome to Dr Magu v0.9.1[/]")
+            log.write("[bold cyan]Welcome to Dr Magu v0.9.2[/]")
             log.write(
                 "[dim]Workspace-aware Terminal UI with persistent sessions, command history, and deterministic repository scanning, context generation, workflow execution, and Brain context loading.[/]"
             )
@@ -594,6 +594,22 @@ def run_tui(workspace_path: str) -> None:
                 self._execute_and_render("agent.show " + command.removeprefix("/agent-show ").strip(), log)
                 return
 
+            if command.startswith("/agent-validate "):
+                self._execute_and_render("agent.validate " + command.removeprefix("/agent-validate ").strip(), log)
+                return
+
+            if command.startswith("/agent-enable "):
+                self._execute_and_render("agent.enable " + command.removeprefix("/agent-enable ").strip(), log)
+                return
+
+            if command.startswith("/agent-disable "):
+                self._execute_and_render("agent.disable " + command.removeprefix("/agent-disable ").strip(), log)
+                return
+
+            if command.startswith("/agent-delete "):
+                self._execute_and_render("agent.delete " + command.removeprefix("/agent-delete ").strip(), log)
+                return
+
             if command in {"/workflow-runs", "workflow-runs", "wr"}:
                 self._execute_and_render("workflow.runs", log)
                 return
@@ -724,6 +740,12 @@ def run_tui(workspace_path: str) -> None:
                 "agent.list": self._render_agent_list,
                 "agent.show": self._render_agent_show,
                 "agent.run": self._render_agent_run,
+                "agent.validate": self._render_agent_validate,
+                "agent.add": self._render_agent_mutation,
+                "agent.update": self._render_agent_mutation,
+                "agent.enable": self._render_agent_mutation,
+                "agent.disable": self._render_agent_mutation,
+                "agent.delete": self._render_agent_mutation,
                 "tools.list": self._render_tools_list,
                 "permissions.show": self._render_permissions_show,
                 "plugin.list": self._render_plugin_list,
@@ -1063,7 +1085,7 @@ def run_tui(workspace_path: str) -> None:
                 model = agent.get("model", {}) or {}
                 log.write(
                     f"  [cyan]{agent.get('id', '')}[/] "
-                    f"[dim]{agent.get('workflow', '')} | enabled={agent.get('enabled', False)} | llm={agent.get('requires_llm', False)} | model={model.get('model', '')}[/]"
+                    f"[dim]{agent.get('workflow', '')} | enabled={agent.get('enabled', False)} | deleted={agent.get('deleted', False)} | source={agent.get('source', '')} | plugin={agent.get('plugin_id', '') or ''} | model={model.get('model', '')}[/]"
                 )
                 log.write(f"    {agent.get('description', '')}")
 
@@ -1071,7 +1093,7 @@ def run_tui(workspace_path: str) -> None:
         def _render_agent_show(data: dict[str, Any], log: RichLog) -> None:
             model = data.get("model", {}) or {}
             log.write("[bold cyan]Agent[/]")
-            for key in ("id", "name", "role", "workflow", "enabled", "requires_llm", "description"):
+            for key in ("id", "name", "role", "workflow", "enabled", "deleted", "requires_llm", "source", "plugin_id", "description"):
                 log.write(f"[bold]{key.replace('_', ' ').title()}:[/] {data.get(key, '')}")
             log.write(f"[bold]Model:[/] {model.get('provider', '')}/{model.get('model', '')} temp={model.get('temperature', '')}")
             log.write(f"[bold]Model Source:[/] {model.get('source', '')}")
@@ -1088,6 +1110,27 @@ def run_tui(workspace_path: str) -> None:
                 log.write(f"[bold]Workflow Run ID:[/] {workflow_result.get('run_id')}")
             if workflow_result.get("context_path"):
                 log.write(f"[bold green]Context:[/] {workflow_result.get('context_path')}")
+
+
+        @staticmethod
+        def _render_agent_mutation(data: dict[str, Any], log: RichLog) -> None:
+            agent = data.get("agent", {}) or {}
+            log.write("[bold cyan]Agent Updated[/]")
+            for key in ("id", "name", "enabled", "deleted", "source", "plugin_id", "workflow"):
+                log.write(f"[bold]{key.replace('_', ' ').title()}:[/] {agent.get(key, '')}")
+            if data.get("store_path"):
+                log.write(f"[bold green]Store:[/] {data.get('store_path')}")
+
+        @staticmethod
+        def _render_agent_validate(data: dict[str, Any], log: RichLog) -> None:
+            agent = data.get("agent", {}) or {}
+            valid = data.get("valid", False)
+            color = "green" if valid else "red"
+            log.write(f"[bold cyan]Agent Validation[/] [{color}]{valid}[/]")
+            log.write(f"[bold]Agent:[/] {agent.get('id', '')}")
+            log.write(f"[bold]Workflow:[/] {agent.get('workflow', '')}")
+            for error in data.get("errors", []) or []:
+                log.write(f"[red]error:[/] {error}")
 
         @staticmethod
         def _render_tools_list(data: dict[str, Any], log: RichLog) -> None:

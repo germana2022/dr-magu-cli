@@ -80,6 +80,17 @@ class CommandProcessor:
         elif command_name in {"workflow.run.show", "wshow"}:
             if positional:
                 args.setdefault("run_id", positional[0])
+        elif command_name in {"agent.show", "agent.run", "agent.validate", "agent.enable", "agent.disable", "agent.delete", "as", "ar", "av", "ae", "ad", "ax"}:
+            if positional:
+                args.setdefault("id", positional[0])
+        elif command_name in {"agent.add", "aa"}:
+            if positional:
+                args.setdefault("file", positional[0])
+        elif command_name in {"agent.update", "au"}:
+            if positional:
+                args.setdefault("id", positional[0])
+            if len(positional) > 1:
+                args.setdefault("file", positional[1])
         else:
             if positional:
                 args.setdefault("value", " ".join(positional))

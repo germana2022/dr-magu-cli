@@ -135,7 +135,10 @@ def handle_runtime_inspect(args: dict[str, object], context: CommandContext) -> 
 def handle_agent_list(args: dict[str, object], context: CommandContext) -> ToolResult:
     from dr_magu.agents.runner import AgentRunner
 
-    return AgentRunner(context.workspace_path).list_agents()
+    return AgentRunner(context.workspace_path).list_agents(
+        include_disabled=_get_bool(args, "include_disabled", True),
+        include_deleted=_get_bool(args, "include_deleted", False),
+    )
 
 
 def handle_agent_show(args: dict[str, object], context: CommandContext) -> ToolResult:
@@ -144,10 +147,47 @@ def handle_agent_show(args: dict[str, object], context: CommandContext) -> ToolR
     return AgentRunner(context.workspace_path).show_agent(_get_str(args, "id", _get_str(args, "value", "")))
 
 
+def handle_agent_validate(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.agents.runner import AgentRunner
+
+    return AgentRunner(context.workspace_path).validate_agent(_get_str(args, "id", _get_str(args, "value", "")))
+
+
+def handle_agent_enable(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.agents.runner import AgentRunner
+
+    return AgentRunner(context.workspace_path).enable_agent(_get_str(args, "id", _get_str(args, "value", "")))
+
+
+def handle_agent_disable(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.agents.runner import AgentRunner
+
+    return AgentRunner(context.workspace_path).disable_agent(_get_str(args, "id", _get_str(args, "value", "")))
+
+
+def handle_agent_delete(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.agents.runner import AgentRunner
+
+    return AgentRunner(context.workspace_path).delete_agent(_get_str(args, "id", _get_str(args, "value", "")))
+
+
 def handle_agent_run(args: dict[str, object], context: CommandContext) -> ToolResult:
     from dr_magu.agents.runner import AgentRunner
 
     return AgentRunner(context.workspace_path).run_agent(_get_str(args, "id", _get_str(args, "value", "repository-analyzer")))
+
+
+def handle_agent_add(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.agents.runner import AgentRunner
+
+    return AgentRunner(context.workspace_path).add_agent_from_file(_get_str(args, "file", _get_str(args, "value", "")))
+
+
+def handle_agent_update(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.agents.runner import AgentRunner
+
+    agent_id = _get_str(args, "id", "") or _get_str(args, "agent_id", "")
+    return AgentRunner(context.workspace_path).update_agent_from_file(agent_id, _get_str(args, "file", ""))
 
 
 def handle_brain_context(args: dict[str, object], context: CommandContext) -> ToolResult:
@@ -350,6 +390,52 @@ registry.register(CommandDefinition(
     category="agent",
     handler=handle_agent_show,
 ))
+
+
+registry.register(CommandDefinition(
+    name="agent.add",
+    aliases=["aa"],
+    description="Add a workspace-managed agent from a YAML file.",
+    category="agent",
+    handler=handle_agent_add,
+))
+registry.register(CommandDefinition(
+    name="agent.update",
+    aliases=["au"],
+    description="Update a workspace-managed agent from a YAML file.",
+    category="agent",
+    handler=handle_agent_update,
+))
+
+registry.register(CommandDefinition(
+    name="agent.validate",
+    aliases=["av"],
+    description="Validate one configured agent and its workflow binding.",
+    category="agent",
+    handler=handle_agent_validate,
+))
+registry.register(CommandDefinition(
+    name="agent.enable",
+    aliases=["ae"],
+    description="Enable an agent through a workspace override.",
+    category="agent",
+    handler=handle_agent_enable,
+))
+registry.register(CommandDefinition(
+    name="agent.disable",
+    aliases=["ad"],
+    description="Disable an agent through a workspace override.",
+    category="agent",
+    handler=handle_agent_disable,
+))
+registry.register(CommandDefinition(
+    name="agent.delete",
+    aliases=["ax"],
+    description="Soft-delete an agent through a workspace override.",
+    category="agent",
+    handler=handle_agent_delete,
+))
+
 registry.register(CommandDefinition(
     name="agent.run",
     aliases=["ar", "agent"],
