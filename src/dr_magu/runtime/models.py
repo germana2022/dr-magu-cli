@@ -47,7 +47,7 @@ class WorkflowRuntimeInfo(BaseModel):
 
 
 class ToolRuntimeInfo(BaseModel):
-    """Tool capability metadata derived from the command registry."""
+    """Tool capability metadata exposed through formal contracts."""
 
     name: str
     category: str
@@ -56,6 +56,12 @@ class ToolRuntimeInfo(BaseModel):
     aliases: list[str] = Field(default_factory=list)
     read_only: bool = True
     requires_approval: bool = False
+    risk_level: str = "low"
+    permission_mode: str = "allowed"
+    background_allowed: bool = True
+    interactive_only: bool = False
+    input_schema: list[dict[str, Any]] = Field(default_factory=list)
+    output_schema: list[dict[str, Any]] = Field(default_factory=list)
 
 
 class PermissionRuntimeInfo(BaseModel):
@@ -70,6 +76,8 @@ class PermissionRuntimeInfo(BaseModel):
     git_commit: bool = False
     git_push: bool = False
     blocked_shell_patterns: list[str] = Field(default_factory=list)
+    policies: dict[str, Any] = Field(default_factory=dict)
+    default_policy_mode: str = "allowed"
 
 
 class RuntimeContextSnapshot(BaseModel):
@@ -84,3 +92,4 @@ class RuntimeContextSnapshot(BaseModel):
     agents: list[dict[str, Any]] = Field(default_factory=list)
     plugins: list[dict[str, Any]] = Field(default_factory=list)
     summary: dict[str, Any] = Field(default_factory=dict)
+    contracts: dict[str, Any] = Field(default_factory=dict)

@@ -1,5 +1,24 @@
 # Changelog
 
+## v0.9.4
+
+### Added
+
+- Runtime Contracts Foundation.
+- Formal `ToolContract` model with schemas, risk levels, permission modes, approval flags, and background execution metadata.
+- `BrainPlan`, `PlanStep`, and `PlanValidator` for safe Brain-generated execution plans.
+- CLI commands `dr-magu contracts tools` and `dr-magu plan validate`.
+- Internal commands `contracts.tools` and `plan.validate`.
+- Contract metadata in runtime and Brain context snapshots.
+- Permission policy metadata for blocked, approval-required, and background-safe operations.
+- Tests for tool contracts and plan validation.
+
+### Changed
+
+- Version updated to `0.9.4`.
+- Tool Registry now exposes formal Brain-facing contracts instead of minimal command-derived metadata.
+
+
 ## v0.9.3
 
 ### Added

@@ -239,6 +239,33 @@ def handle_control_plugin(args: dict[str, object], context: CommandContext) -> T
     plugin_id = _get_str(args, "id", _get_str(args, "value", "")).strip()
     return ControlCenterService(context.workspace_path, config=context.config).plugin_impact_result(plugin_id)
 
+
+def handle_contracts_tools(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.tools.registry import ToolRegistry
+
+    return ToolResult(success=True, tool="contracts.tools", data=ToolRegistry().as_result_data())
+
+
+def handle_plan_validate(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.plans.models import BrainPlan
+    from dr_magu.plans.validator import PlanValidator
+
+    raw_plan = args.get("plan")
+    if isinstance(raw_plan, dict):
+        plan = BrainPlan.model_validate(raw_plan)
+    else:
+        # Safe sample plan used for CLI/TUI smoke checks before v0.10.0 starts
+        # producing real LLM plans.
+        plan = BrainPlan(
+            intent=str(args.get("intent", "runtime_contract_validation")),
+            language=str(args.get("language", "en")),
+            confidence=1.0,
+            steps=[],
+            explanation="No executable steps were provided.",
+        )
+    validation = PlanValidator().validate(plan)
+    return ToolResult(success=validation.valid, tool="plan.validate", data=validation.model_dump())
+
 class CommandRegistry:
     """In-memory registry used by both direct CLI commands and the run processor."""
 
@@ -513,4 +540,19 @@ registry.register(CommandDefinition(
     description="Show one plugin impact summary from the Control Center.",
     category="control",
     handler=handle_control_plugin,
+))
+
+registry.register(CommandDefinition(
+    name="contracts.tools",
+    aliases=["contracts", "ct"],
+    description="List formal runtime tool contracts exposed to the Brain plan validator.",
+    category="contracts",
+    handler=handle_contracts_tools,
+))
+registry.register(CommandDefinition(
+    name="plan.validate",
+    aliases=["pvld"],
+    description="Validate a structured Brain plan without executing it.",
+    category="plan",
+    handler=handle_plan_validate,
 ))

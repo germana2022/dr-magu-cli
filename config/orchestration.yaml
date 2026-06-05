@@ -1,5 +1,5 @@
-version: "0.9.0"
-name: "dr-magu-cli-brain-foundation"
+version: "0.9.4"
+name: "dr-magu-cli-runtime-contracts-foundation"
 description: "Tool CLI, TUI, sessions, repository scanner, context generation, workflow runtime, runtime introspection, Brain Context Loader, Agent Registry, Tool Registry, and Permission Context Reader."
 
 runtime:
@@ -17,6 +17,8 @@ runtime:
   agent_registry_enabled: true
   formal_tool_registry_enabled: true
   permission_context_reader_enabled: true
+  runtime_contracts_enabled: true
+  brain_plan_validator_enabled: true
   brain_context_loader_enabled: true
   agent_registry_enabled: true
   formal_tool_registry_enabled: true
@@ -115,3 +117,25 @@ tool_registry:
 permission_context:
   enabled: true
   source: permissions
+
+
+runtime_contracts:
+  enabled: true
+  version: "0.9.4"
+  formal_tool_contracts_enabled: true
+  brain_plan_schema_enabled: true
+  plan_validator_enabled: true
+
+permission_policies:
+  shell.run:
+    mode: approval_required
+    risk_level: high
+    background_allowed: false
+  git.push:
+    mode: blocked
+    risk_level: critical
+    background_allowed: false
+  files.delete:
+    mode: blocked
+    risk_level: critical
+    background_allowed: false

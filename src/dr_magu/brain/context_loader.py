@@ -29,7 +29,7 @@ class BrainContextLoader:
         default_model = ModelConfigLoader(self.workspace_path).default_model()
         agent_registry = AgentRegistry(self.workspace_path)
         agents = [agent.model_dump() for agent in agent_registry.list()]
-        tools = [tool.model_dump() for tool in ToolRegistry().list_tools()]
+        tools = [tool.model_dump(mode="json") for tool in ToolRegistry().list_tools()]
         permissions = PermissionContextReader(self.config).read()
         plugins = [plugin.model_dump() for plugin in PluginRegistry(self.workspace_path).list()]
 
@@ -55,9 +55,19 @@ class BrainContextLoader:
                 "default_provider": default_model.provider,
                 "default_model": default_model.model,
                 "llm_calls_enabled": False,
+                "contract_version": "0.9.4",
+                "tool_contracts_enabled": True,
+                "brain_plan_schema_enabled": True,
+                "plan_validator_enabled": True,
+            },
+            contracts={
+                "tool_contracts_enabled": True,
+                "brain_plan_schema_enabled": True,
+                "plan_validator_enabled": True,
+                "permission_policy_schema_enabled": True,
             },
         )
         return snapshot
 
     def load_result(self) -> ToolResult:
-        return ToolResult(success=True, tool="brain.context", data=self.load().model_dump())
+        return ToolResult(success=True, tool="brain.context", data=self.load().model_dump(mode="json"))

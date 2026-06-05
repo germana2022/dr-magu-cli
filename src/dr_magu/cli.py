@@ -21,6 +21,8 @@ from dr_magu.tools.registry import ToolRegistry
 from dr_magu.security.permission_context import PermissionContextReader
 from dr_magu.plugins.manager import PluginManager
 from dr_magu.control_center.service import ControlCenterService
+from dr_magu.plans.models import BrainPlan, PlanStep
+from dr_magu.plans.validator import PlanValidator
 
 app = typer.Typer(help="Dr Magu CLI - Tool CLI, TUI, sessions, repository scanner, context generator, workflows, runtime introspection, and Brain foundation")
 files_app = typer.Typer(help="File system tools")
@@ -38,6 +40,8 @@ tools_app = typer.Typer(help="Formal tool registry tools")
 permissions_app = typer.Typer(help="Permission context tools")
 plugin_app = typer.Typer(help="Local plugin registry tools")
 control_app = typer.Typer(help="Dr Magu Control Center tools")
+contracts_app = typer.Typer(help="Runtime contract inspection tools")
+plan_app = typer.Typer(help="Brain plan validation tools")
 
 app.add_typer(files_app, name="files")
 app.add_typer(search_app, name="search")
@@ -54,6 +58,8 @@ app.add_typer(tools_app, name="tools")
 app.add_typer(permissions_app, name="permissions")
 app.add_typer(plugin_app, name="plugin")
 app.add_typer(control_app, name="control")
+app.add_typer(contracts_app, name="contracts")
+app.add_typer(plan_app, name="plan")
 
 console = Console()
 renderer = ResultRenderer(console)
@@ -450,6 +456,38 @@ def plugin_validate_command(
 
 
 
+@contracts_app.command("tools")
+def contracts_tools_command(
+    json_output: bool = typer.Option(False, "--json", help="Return JSON output."),
+) -> None:
+    """Show formal tool contracts used by the Brain plan validator."""
+    from dr_magu.result import ToolResult
+
+    result = ToolResult(success=True, tool="contracts.tools", data=ToolRegistry().as_result_data())
+    renderer.render(result, json_output)
+
+
+@plan_app.command("validate")
+def plan_validate_command(
+    step: list[str] = typer.Option(None, "--step", help="Tool or command step to validate. Can be passed multiple times."),
+    intent: str = typer.Option("manual_validation", "--intent", help="Plan intent label."),
+    json_output: bool = typer.Option(False, "--json", help="Return JSON output."),
+) -> None:
+    """Validate a structured Brain plan without executing it."""
+    from dr_magu.result import ToolResult
+
+    plan = BrainPlan(
+        intent=intent,
+        language="en",
+        confidence=1.0,
+        steps=[PlanStep(name=item) for item in (step or [])],
+        explanation="CLI-created validation plan.",
+    )
+    validation = PlanValidator().validate(plan)
+    result = ToolResult(success=validation.valid, tool="plan.validate", data=validation.model_dump())
+    renderer.render(result, json_output)
+
+
 @control_app.command("center")
 def control_center_command(
     workspace: str = typer.Option(default_workspace(), "--workspace", "-w", help="Workspace root."),
@@ -597,7 +635,7 @@ def tui_command(
 
 @app.command("version")
 def version() -> None:
-    console.print("dr-magu-cli v0.9.2")
+    console.print("dr-magu-cli v0.9.4")
 
 
 if __name__ == "__main__":

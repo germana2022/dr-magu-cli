@@ -33,3 +33,4 @@ class BrainContextSnapshot(BaseModel):
     plugins: list[dict[str, Any]] = Field(default_factory=list)
     default_model: dict[str, Any] = Field(default_factory=dict)
     summary: dict[str, Any] = Field(default_factory=dict)
+    contracts: dict[str, Any] = Field(default_factory=dict)

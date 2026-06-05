@@ -1,19 +1,19 @@
-# Dr Magu CLI v0.9.3
+# Dr Magu CLI v0.9.4
 
 Dr Magu CLI is a Python-based agent platform foundation inspired by Claude Code, OpenCode, Codex CLI, and Gemini CLI.
 
-This version adds the **Control Center UI** on top of the existing Brain Foundation, Plugin Registry, Agent Lifecycle Management, workflow runtime, context generator, repository scanner, sessions, and TUI.
+This version adds the **Runtime Contracts Foundation** on top of the existing Control Center UI, Brain Foundation, Plugin Registry, Agent Lifecycle Management, workflow runtime, context generator, repository scanner, sessions, and TUI.
 
-## What changed in v0.9.3
+## What changed in v0.9.4
 
-- Added Control Center dashboard.
-- Added `dr-magu control center`.
-- Added `dr-magu control plugin <plugin-id>`.
-- Added internal commands `control.center` and `control.plugin`.
-- Added TUI commands `/control`, `cc`, and `/control-plugin <plugin-id>`.
-- Added Control Center sections for plugins, agents, workflows, tools, permissions, schedules, and Brain readiness.
-- Added plugin impact view with agents, workflows, tools, commands, schedules, health warnings, and errors.
-- Reserved a Control Center area for future scheduler/cron task management.
+- Added Runtime Contracts Foundation.
+- Added formal `ToolContract` metadata with input schemas, output schemas, risk levels, permission modes, and background execution flags.
+- Added `BrainPlan`, `PlanStep`, and `PlanValidator` as the safe execution contract for the future AI Orchestrator Brain.
+- Added `dr-magu contracts tools` to inspect Brain-facing tool contracts.
+- Added `dr-magu plan validate --step <tool>` to validate a structured plan without executing it.
+- Added internal commands `contracts.tools` and `plan.validate`.
+- Extended Brain and Runtime snapshots with contract readiness metadata.
+- Added permission policy metadata for high-risk and blocked operations.
 - Kept all changes deterministic and LLM-call free.
 
 ## Architecture
@@ -22,6 +22,8 @@ This version adds the **Control Center UI** on top of the existing Brain Foundat
 CLI / TUI
   ↓
 Control Center
+  ↓
+Runtime Contracts + Plan Validator
   ↓
 Brain Context Loader
   ↓
@@ -37,6 +39,25 @@ Permission Context Reader
   ↓
 Workspace + Sessions
 ```
+
+
+## Runtime Contracts
+
+Inspect formal tool contracts exposed to the future Orchestrator Brain:
+
+```bash
+dr-magu contracts tools
+dr-magu contracts tools --json
+```
+
+Validate a structured Brain plan without executing it:
+
+```bash
+dr-magu plan validate --step repo.scan --step context.generate
+dr-magu plan validate --step shell.run
+```
+
+The validator can mark a plan as valid while still requiring approval for high-risk tools such as `shell.run`.
 
 ## Installation
 

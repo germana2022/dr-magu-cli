@@ -91,7 +91,7 @@ class RuntimeInspector:
             for workflow in workflow_registry.list()
         ]
 
-        tools = [tool.model_dump() for tool in ToolRegistry().list_tools()]
+        tools = [tool.model_dump(mode="json") for tool in ToolRegistry().list_tools()]
         permissions = PermissionContextReader(self.config).read()
         agents = [agent.model_dump() for agent in AgentRegistry(self.workspace_path).list()]
         plugins = [plugin.model_dump() for plugin in PluginRegistry(self.workspace_path).list()]
@@ -114,6 +114,13 @@ class RuntimeInspector:
                 "enabled_plugin_count": len([plugin for plugin in plugins if plugin.get("enabled")]),
                 "brain_ready": True,
                 "llm_required": False,
+                "contract_version": "0.9.4",
+            },
+            contracts={
+                "tool_contracts_enabled": True,
+                "brain_plan_schema_enabled": True,
+                "plan_validator_enabled": True,
+                "permission_policy_schema_enabled": True,
             },
         )
         return snapshot
@@ -123,5 +130,5 @@ class RuntimeInspector:
         return ToolResult(
             success=True,
             tool="runtime.inspect",
-            data=snapshot.model_dump(),
+            data=snapshot.model_dump(mode="json"),
         )
