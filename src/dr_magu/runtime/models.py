@@ -82,4 +82,5 @@ class RuntimeContextSnapshot(BaseModel):
     tools: list[ToolRuntimeInfo] = Field(default_factory=list)
     permissions: PermissionRuntimeInfo
     agents: list[dict[str, Any]] = Field(default_factory=list)
+    plugins: list[dict[str, Any]] = Field(default_factory=list)
     summary: dict[str, Any] = Field(default_factory=dict)

@@ -1,0 +1,30 @@
+id: software-dev
+name: Software Development
+version: 0.1.0
+enabled: true
+domain: software_development
+description: Core software development lifecycle resources for repository scanning, context generation, and workflow orchestration.
+
+provides:
+  agents:
+    - repository-analyzer
+  workflows:
+    - repository.context
+  tools:
+    - repo.scan
+    - context.generate
+    - workflow.run
+    - git.status
+    - git.diff
+  commands:
+    - repo.scan
+    - context.generate
+    - workflow.run
+  schedules: []
+
+permissions:
+  shell: restricted
+  write_files: approval_required
+  delete_files: blocked
+  git_push: blocked
+  external_network: restricted

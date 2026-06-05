@@ -167,6 +167,25 @@ def handle_permissions_show(args: dict[str, object], context: CommandContext) ->
 
     return ToolResult(success=True, tool="permissions.show", data=PermissionContextReader(context.config).read().model_dump())
 
+
+def handle_plugin_list(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.plugins.manager import PluginManager
+
+    return PluginManager(context.workspace_path).list_plugins()
+
+
+def handle_plugin_show(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.plugins.manager import PluginManager
+
+    return PluginManager(context.workspace_path).show_plugin(_get_str(args, "id", _get_str(args, "value", "")))
+
+
+def handle_plugin_validate(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.plugins.manager import PluginManager
+
+    plugin_id = _get_str(args, "id", _get_str(args, "value", "")).strip() or None
+    return PluginManager(context.workspace_path).validate_plugin(plugin_id)
+
 class CommandRegistry:
     """In-memory registry used by both direct CLI commands and the run processor."""
 
@@ -358,4 +377,26 @@ registry.register(CommandDefinition(
     description="Show the effective permission context used by the Brain and validator.",
     category="permissions",
     handler=handle_permissions_show,
+))
+
+registry.register(CommandDefinition(
+    name="plugin.list",
+    aliases=["plugins", "pl"],
+    description="List discovered local plugins and the resources they provide.",
+    category="plugin",
+    handler=handle_plugin_list,
+))
+registry.register(CommandDefinition(
+    name="plugin.show",
+    aliases=["pshow"],
+    description="Show one discovered local plugin manifest.",
+    category="plugin",
+    handler=handle_plugin_show,
+))
+registry.register(CommandDefinition(
+    name="plugin.validate",
+    aliases=["pv"],
+    description="Validate one plugin or all discovered local plugins.",
+    category="plugin",
+    handler=handle_plugin_validate,
 ))

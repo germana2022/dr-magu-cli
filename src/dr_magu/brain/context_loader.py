@@ -10,6 +10,7 @@ from dr_magu.result import ToolResult
 from dr_magu.runtime.inspector import RuntimeInspector
 from dr_magu.security.permission_context import PermissionContextReader
 from dr_magu.tools.registry import ToolRegistry
+from dr_magu.plugins.registry import PluginRegistry
 
 
 class BrainContextLoader:
@@ -30,6 +31,7 @@ class BrainContextLoader:
         agents = [agent.model_dump() for agent in agent_registry.list()]
         tools = [tool.model_dump() for tool in ToolRegistry().list_tools()]
         permissions = PermissionContextReader(self.config).read()
+        plugins = [plugin.model_dump() for plugin in PluginRegistry(self.workspace_path).list()]
 
         snapshot = BrainContextSnapshot(
             workspace=runtime.workspace.model_dump(),
@@ -39,12 +41,15 @@ class BrainContextLoader:
             tools=tools,
             permissions=permissions.model_dump(),
             agents=agents,
+            plugins=plugins,
             default_model=default_model.model_dump(),
             summary={
                 "command_count": len(runtime.commands),
                 "workflow_count": len(runtime.workflows),
                 "tool_count": len(tools),
                 "agent_count": len(agents),
+                "plugin_count": len(plugins),
+                "enabled_plugin_count": len([plugin for plugin in plugins if plugin.get("enabled")]),
                 "brain_ready": True,
                 "llm_configured": default_model.api_key_configured,
                 "default_provider": default_model.provider,

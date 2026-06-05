@@ -1,0 +1,10 @@
+tools:
+  repo.scan:
+    description: Scan the current workspace and detect repository metadata.
+    read_only: true
+  context.generate:
+    description: Generate deterministic project context files.
+    read_only: false
+  workflow.run:
+    description: Run a registered workflow.
+    read_only: false

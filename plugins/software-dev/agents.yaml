@@ -1,0 +1,20 @@
+agents:
+  repository-analyzer:
+    name: Repository Analyzer
+    description: Analyze repository structure and generate deterministic project context.
+    role: repository_analysis
+    workflow: repository.context
+    enabled: true
+    requires_llm: false
+    capabilities:
+      - scan_repository
+      - generate_context
+      - summarize_project_structure
+    aliases:
+      - repo-analyzer
+      - ra
+    model:
+      provider: null
+      base_url: null
+      model: null
+      temperature: null

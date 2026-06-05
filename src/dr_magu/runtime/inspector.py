@@ -16,6 +16,7 @@ from dr_magu.runtime.models import (
 )
 from dr_magu.security.permission_context import PermissionContextReader
 from dr_magu.sessions.manager import SessionManager
+from dr_magu.plugins.registry import PluginRegistry
 from dr_magu.tools.registry import ToolRegistry
 from dr_magu.workflows.registry import workflow_registry
 
@@ -93,6 +94,7 @@ class RuntimeInspector:
         tools = [tool.model_dump() for tool in ToolRegistry().list_tools()]
         permissions = PermissionContextReader(self.config).read()
         agents = [agent.model_dump() for agent in AgentRegistry(self.workspace_path).list()]
+        plugins = [plugin.model_dump() for plugin in PluginRegistry(self.workspace_path).list()]
 
         snapshot = RuntimeContextSnapshot(
             workspace=_build_workspace_info(self.workspace_path),
@@ -102,11 +104,14 @@ class RuntimeInspector:
             tools=tools,
             permissions=permissions,
             agents=agents,
+            plugins=plugins,
             summary={
                 "command_count": len(commands),
                 "workflow_count": len(workflows),
                 "tool_count": len(tools),
                 "agent_count": len(agents),
+                "plugin_count": len(plugins),
+                "enabled_plugin_count": len([plugin for plugin in plugins if plugin.get("enabled")]),
                 "brain_ready": True,
                 "llm_required": False,
             },

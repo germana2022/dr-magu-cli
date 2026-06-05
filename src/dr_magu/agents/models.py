@@ -18,6 +18,7 @@ class AgentDefinition(BaseModel):
     capabilities: list[str] = Field(default_factory=list)
     aliases: list[str] = Field(default_factory=list)
     model: dict[str, object] = Field(default_factory=dict)
+    plugin_id: str | None = None
 
 
 class ResolvedAgentDefinition(BaseModel):
@@ -33,3 +34,4 @@ class ResolvedAgentDefinition(BaseModel):
     capabilities: list[str] = Field(default_factory=list)
     aliases: list[str] = Field(default_factory=list)
     model: ResolvedModelConfig
+    plugin_id: str | None = None

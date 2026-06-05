@@ -19,6 +19,7 @@ from dr_magu.agents.runner import AgentRunner
 from dr_magu.brain.context_loader import BrainContextLoader
 from dr_magu.tools.registry import ToolRegistry
 from dr_magu.security.permission_context import PermissionContextReader
+from dr_magu.plugins.manager import PluginManager
 
 app = typer.Typer(help="Dr Magu CLI - Tool CLI, TUI, sessions, repository scanner, context generator, workflows, runtime introspection, and Brain foundation")
 files_app = typer.Typer(help="File system tools")
@@ -34,6 +35,7 @@ agent_app = typer.Typer(help="Agent registry tools")
 brain_app = typer.Typer(help="Brain context loader tools")
 tools_app = typer.Typer(help="Formal tool registry tools")
 permissions_app = typer.Typer(help="Permission context tools")
+plugin_app = typer.Typer(help="Local plugin registry tools")
 
 app.add_typer(files_app, name="files")
 app.add_typer(search_app, name="search")
@@ -48,6 +50,7 @@ app.add_typer(agent_app, name="agent")
 app.add_typer(brain_app, name="brain")
 app.add_typer(tools_app, name="tools")
 app.add_typer(permissions_app, name="permissions")
+app.add_typer(plugin_app, name="plugin")
 
 console = Console()
 renderer = ResultRenderer(console)
@@ -342,6 +345,38 @@ def permissions_show_command(
     renderer.render(result, json_output)
 
 
+@plugin_app.command("list")
+def plugin_list_command(
+    workspace: str = typer.Option(default_workspace(), "--workspace", "-w", help="Workspace root."),
+    json_output: bool = typer.Option(False, "--json", help="Return JSON output."),
+) -> None:
+    """List discovered local plugins and provided resources."""
+    result = PluginManager(workspace).list_plugins()
+    renderer.render(result, json_output)
+
+
+@plugin_app.command("show")
+def plugin_show_command(
+    plugin_id: str = typer.Argument(..., help="Plugin ID."),
+    workspace: str = typer.Option(default_workspace(), "--workspace", "-w", help="Workspace root."),
+    json_output: bool = typer.Option(False, "--json", help="Return JSON output."),
+) -> None:
+    """Show one discovered local plugin manifest."""
+    result = PluginManager(workspace).show_plugin(plugin_id)
+    renderer.render(result, json_output)
+
+
+@plugin_app.command("validate")
+def plugin_validate_command(
+    plugin_id: str | None = typer.Argument(None, help="Optional plugin ID. When omitted, all plugins are validated."),
+    workspace: str = typer.Option(default_workspace(), "--workspace", "-w", help="Workspace root."),
+    json_output: bool = typer.Option(False, "--json", help="Return JSON output."),
+) -> None:
+    """Validate one plugin or all discovered local plugins."""
+    result = PluginManager(workspace).validate_plugin(plugin_id)
+    renderer.render(result, json_output)
+
+
 @app.command("run")
 def run_command(
     command_line: str = typer.Argument(..., help="Internal command line, for example: 'files.read README.md'."),
@@ -468,7 +503,7 @@ def tui_command(
 
 @app.command("version")
 def version() -> None:
-    console.print("dr-magu-cli v0.9.0")
+    console.print("dr-magu-cli v0.9.1")
 
 
 if __name__ == "__main__":

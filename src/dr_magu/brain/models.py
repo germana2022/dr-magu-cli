@@ -30,5 +30,6 @@ class BrainContextSnapshot(BaseModel):
     tools: list[dict[str, Any]] = Field(default_factory=list)
     permissions: dict[str, Any] = Field(default_factory=dict)
     agents: list[dict[str, Any]] = Field(default_factory=list)
+    plugins: list[dict[str, Any]] = Field(default_factory=list)
     default_model: dict[str, Any] = Field(default_factory=dict)
     summary: dict[str, Any] = Field(default_factory=dict)

@@ -17,7 +17,7 @@ class ToolDefinition(BaseModel):
     requires_approval: bool = False
 
 
-_TOOL_CATEGORIES = {"files", "git", "search", "shell", "repository", "context", "workflow", "runtime", "agent", "brain", "tools", "permissions"}
+_TOOL_CATEGORIES = {"files", "git", "search", "shell", "repository", "context", "workflow", "runtime", "agent", "brain", "tools", "permissions", "plugin"}
 _MUTATING_TOOLS = {"shell.run", "agent.run", "workflow.run"}
 
 

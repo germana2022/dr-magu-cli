@@ -89,7 +89,7 @@ class TuiSettings:
     """Settings used to start the Dr Magu Terminal UI."""
 
     workspace_path: str
-    version: str = "0.9.0"
+    version: str = "0.9.1"
 
 
 def _build_context(workspace_path: str) -> CommandContext:
@@ -445,7 +445,7 @@ def run_tui(workspace_path: str) -> None:
 
         def on_mount(self) -> None:
             log = self.query_one("#console", RichLog)
-            log.write("[bold cyan]Welcome to Dr Magu v0.9.0[/]")
+            log.write("[bold cyan]Welcome to Dr Magu v0.9.1[/]")
             log.write(
                 "[dim]Workspace-aware Terminal UI with persistent sessions, command history, and deterministic repository scanning, context generation, workflow execution, and Brain context loading.[/]"
             )
@@ -662,6 +662,7 @@ def run_tui(workspace_path: str) -> None:
                 ("Arrow Up", "Show previous command from the current TUI session."),
                 ("Arrow Down", "Show next command from the current TUI session."),
                 ("/clear", "Clear console."),
+                ("/plugins", "List discovered local plugins."),
                 ("/exit", "Exit the TUI."),
             ]
             for command, description in rows:
@@ -725,6 +726,9 @@ def run_tui(workspace_path: str) -> None:
                 "agent.run": self._render_agent_run,
                 "tools.list": self._render_tools_list,
                 "permissions.show": self._render_permissions_show,
+                "plugin.list": self._render_plugin_list,
+                "plugin.show": self._render_plugin_show,
+                "plugin.validate": self._render_plugin_validate,
             }.get(result.tool, self._render_generic_data)
 
             renderer(result.data, log)
@@ -1099,6 +1103,49 @@ def run_tui(workspace_path: str) -> None:
             log.write("[bold cyan]Permission Context[/]")
             for key, value in data.items():
                 log.write(f"[bold]{key.replace('_', ' ').title()}:[/] {value}")
+
+
+        @staticmethod
+        def _render_plugin_list(data: dict[str, Any], log: RichLog) -> None:
+            log.write("[bold cyan]Plugin Registry[/]")
+            plugins = data.get("plugins", []) or []
+            if not plugins:
+                log.write("[yellow]No plugins discovered.[/]")
+                return
+            for plugin in plugins[:80]:
+                provides = plugin.get("provides", {}) or {}
+                log.write(
+                    f"  [cyan]{plugin.get('id', '')}[/] "
+                    f"[dim]enabled={plugin.get('enabled', False)} | domain={plugin.get('domain', '')} | "
+                    f"agents={len(provides.get('agents', []) or [])} | workflows={len(provides.get('workflows', []) or [])} | "
+                    f"tools={len(provides.get('tools', []) or [])}[/]"
+                )
+                description = plugin.get("description", "")
+                if description:
+                    log.write(f"    {description}")
+
+        @staticmethod
+        def _render_plugin_show(data: dict[str, Any], log: RichLog) -> None:
+            log.write("[bold cyan]Plugin[/]")
+            for key in ("id", "name", "version", "enabled", "domain", "description", "path"):
+                log.write(f"[bold]{key.replace('_', ' ').title()}:[/] {data.get(key, '')}")
+            provides = data.get("provides", {}) or {}
+            for key in ("agents", "workflows", "tools", "commands", "schedules"):
+                values = provides.get(key, []) or []
+                log.write(f"[bold]{key.title()}[/] [dim]({len(values)})[/]")
+                for value in values:
+                    log.write(f"  - {value}")
+
+        @staticmethod
+        def _render_plugin_validate(data: dict[str, Any], log: RichLog) -> None:
+            log.write("[bold cyan]Plugin Validation[/]")
+            log.write(f"[bold]Valid:[/] {data.get('valid', False)}")
+            for result in data.get("results", []) or []:
+                log.write(f"  [cyan]{result.get('plugin_id', '')}[/] valid={result.get('valid', False)}")
+                for error in result.get("errors", []) or []:
+                    log.write(f"    [red]error:[/] {error}")
+                for warning in result.get("warnings", []) or []:
+                    log.write(f"    [yellow]warning:[/] {warning}")
 
         @staticmethod
         def _render_generic_data(data: dict[str, Any], log: RichLog) -> None:

@@ -40,4 +40,5 @@ class AgentRegistry:
             capabilities=list(agent.capabilities),
             aliases=list(agent.aliases),
             model=self.model_resolver.resolve(agent.model),
+            plugin_id=agent.plugin_id,
         )

@@ -1,0 +1,5 @@
+workflows:
+  repository.context:
+    description: Run repository scan and generate deterministic project context.
+    type: deterministic
+    requires_llm: false
