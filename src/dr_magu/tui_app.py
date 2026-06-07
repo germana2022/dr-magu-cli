@@ -11,6 +11,7 @@ from dr_magu.commands.processor import CommandProcessor
 from dr_magu.commands.registry import registry
 from dr_magu.config import load_config
 from dr_magu.result import ToolResult
+from dr_magu.tui.models import TuiSettings
 from dr_magu.sessions.manager import SessionManager
 from dr_magu.scanner.models import RepositoryScan
 from dr_magu.scanner.writers import write_latest_scan
@@ -445,7 +446,7 @@ def run_tui(workspace_path: str) -> None:
 
         def on_mount(self) -> None:
             log = self.query_one("#console", RichLog)
-            log.write("[bold cyan]Welcome to Dr Magu v0.9.3[/]")
+            log.write("[bold cyan]Welcome to Dr Magu v0.9.5[/]")
             log.write(
                 "[dim]Workspace-aware Terminal UI with persistent sessions, command history, and deterministic repository scanning, context generation, workflow execution, and Brain context loading.[/]"
             )

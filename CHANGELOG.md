@@ -1,3 +1,11 @@
+## v0.9.5 - TUI Modularization
+
+- Added a dedicated `dr_magu.tui` package.
+- Added reusable TUI models, command helpers, renderers, screen helpers and widget helpers.
+- Preserved the current `dr_magu.tui_app` entry point for backward compatibility.
+- Prepared the TUI architecture for the upcoming AI Orchestrator Brain.
+- Added tests for the new TUI modules.
+
 # Changelog
 
 ## v0.9.4

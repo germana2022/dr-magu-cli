@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dr-magu-cli"
-version = "0.9.4"
-description = "Dr Magu CLI with Runtime Contracts Foundation, Control Center UI, Agent Lifecycle Management, Plugin Registry Foundation, Brain Context Loader, Tool Registry, Permission Context Reader, configurable model defaults, workflow runtime, context generation, scanner, sessions, and TUI."
+version = "0.9.5"
+description = "Dr Magu CLI with modular TUI architecture and runtime contracts foundation."
 readme = "README.md"
 requires-python = ">=3.11"
 authors = [{ name = "Dr Magu Team" }]

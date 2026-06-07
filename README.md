@@ -1,4 +1,4 @@
-# Dr Magu CLI v0.9.4
+# Dr Magu CLI v0.9.5
 
 Dr Magu CLI is a Python-based agent platform foundation inspired by Claude Code, OpenCode, Codex CLI, and Gemini CLI.
 
@@ -193,3 +193,19 @@ v0.9.2  Agent Lifecycle Management
 v0.9.3  Control Center UI
 v0.10.0 AI Orchestrator Brain
 ```
+
+
+## v0.9.5 - TUI Modularization
+
+This release starts extracting the Terminal UI into a maintainable package structure.
+
+Highlights:
+
+- Added `src/dr_magu/tui/` package.
+- Added shared TUI models.
+- Added TUI command normalization helpers.
+- Added reusable result summary helpers.
+- Added screen metadata modules for Control Center, Session Manager and Agent Manager.
+- Added widget label helpers.
+- Kept backward compatibility with the current `dr_magu.tui_app` entry point.
+- Prepared the TUI for future AI Orchestrator Brain views.
