@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dr-magu-cli"
-version = "0.9.6"
+version = "0.9.7"
 description = "Dr Magu CLI with modular TUI architecture and runtime contracts foundation."
 readme = "README.md"
 requires-python = ">=3.11"

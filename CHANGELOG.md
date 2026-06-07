@@ -1,3 +1,10 @@
+## v0.9.7 - Plugin Resource Contracts
+
+- Added formal PluginResources contract.
+- Added resource validation.
+- Added prompts, schedules and templates resource categories.
+- Prepared plugin metadata for AI Brain integration.
+
 ## v0.9.5 - TUI Modularization
 
 - Added a dedicated `dr_magu.tui` package.
