@@ -1,3 +1,11 @@
+## v0.9.9 - Pre-v0.10 Stabilization
+
+- Added architecture health checks.
+- Added configuration and plugin readiness validation.
+- Added release cleanliness validation.
+- Added `dr-magu health` command.
+- Prepared the runtime for v0.10.0 AI Orchestrator Brain.
+
 ## v0.9.7 - Plugin Resource Contracts
 
 - Added formal PluginResources contract.

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import typer
+from dr_magu.health.commands import health_check_text
 from rich.console import Console
 from rich.table import Table
 
@@ -640,3 +641,10 @@ def version() -> None:
 
 if __name__ == "__main__":
     app()
+
+
+
+@app.command("health")
+def health(workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace/project root to validate.")) -> None:
+    """Run pre-v0.10 architecture health checks."""
+    typer.echo(health_check_text(workspace))
