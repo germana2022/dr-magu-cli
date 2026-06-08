@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import typer
-from dr_magu.health.commands import health_check_text
+from dr_magu.brain.commands import brain_plan, brain_execute, render_brain_result
 from rich.console import Console
 from rich.table import Table
 
@@ -644,7 +644,19 @@ if __name__ == "__main__":
 
 
 
-@app.command("health")
-def health(workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace/project root to validate.")) -> None:
-    """Run pre-v0.10 architecture health checks."""
-    typer.echo(health_check_text(workspace))
+@app.command("ask")
+def ask(prompt: str, workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path.")) -> None:
+    """Ask Dr Magu Brain to plan and execute a safe workspace action."""
+    typer.echo(render_brain_result(brain_execute(prompt, workspace)))
+
+
+@app.command("brain-plan")
+def brain_plan_command(prompt: str, workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path.")) -> None:
+    """Create a Brain plan without executing it."""
+    typer.echo(render_brain_result(brain_plan(prompt, workspace)))
+
+
+@app.command("brain-execute")
+def brain_execute_command(prompt: str, workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path.")) -> None:
+    """Create, validate and execute a Brain plan."""
+    typer.echo(render_brain_result(brain_execute(prompt, workspace)))

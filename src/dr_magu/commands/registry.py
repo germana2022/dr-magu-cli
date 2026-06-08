@@ -556,5 +556,3 @@ registry.register(CommandDefinition(
     category="plan",
     handler=handle_plan_validate,
 ))
-
-# v0.9.9 readiness: health.check is implemented in dr_magu.health.commands.

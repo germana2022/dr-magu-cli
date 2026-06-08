@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dr-magu-cli"
-version = "0.9.9"
-description = "Dr Magu CLI pre-v0.10 stabilization with architecture health checks and AI Brain readiness validation."
+version = "0.10.0"
+description = "Dr Magu CLI with AI Orchestrator Brain foundation, prompt planning, plan validation and safe execution."
 readme = "README.md"
 requires-python = ">=3.11"
 authors = [{ name = "Dr Magu Team" }]

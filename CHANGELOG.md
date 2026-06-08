@@ -1,10 +1,12 @@
-## v0.9.9 - Pre-v0.10 Stabilization
+## v0.10.0 - AI Orchestrator Brain
 
-- Added architecture health checks.
-- Added configuration and plugin readiness validation.
-- Added release cleanliness validation.
-- Added `dr-magu health` command.
-- Prepared the runtime for v0.10.0 AI Orchestrator Brain.
+- Added Brain Context Loader.
+- Added deterministic multilingual Brain Planner.
+- Added BrainPlan and BrainPlanStep schema.
+- Added Plan Validator.
+- Added safe Plan Executor through existing runtime boundaries.
+- Added `dr-magu ask`, `dr-magu brain-plan` and `dr-magu brain-execute`.
+- Prepared the platform for future LLM-backed planning while keeping the LLM as planner only.
 
 ## v0.9.7 - Plugin Resource Contracts
 

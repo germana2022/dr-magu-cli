@@ -1,4 +1,4 @@
-# Dr Magu CLI v0.9.9
+# Dr Magu CLI v0.10.0
 
 Dr Magu CLI is a Python-based agent platform foundation inspired by Claude Code, OpenCode, Codex CLI, and Gemini CLI.
 
@@ -211,16 +211,35 @@ Highlights:
 - Prepared the TUI for future AI Orchestrator Brain views.
 
 
-## v0.9.9 - Pre-v0.10 Stabilization
+## v0.10.0 - AI Orchestrator Brain
 
-This release adds architecture health checks before introducing the AI Orchestrator Brain.
+This release introduces the first AI Orchestrator Brain foundation.
 
 Highlights:
 
-- Added `dr_magu.health` package.
-- Added project structure validation.
-- Added configuration validation.
-- Added default plugin validation.
-- Added release cleanliness validation.
-- Added `dr-magu health`.
-- Kept the ZIP clean from `__pycache__` and `.pyc` artifacts.
+- Added Brain Context Loader.
+- Added deterministic multilingual prompt planner.
+- Added BrainPlan and BrainPlanStep models.
+- Added Plan Validator.
+- Added safe Plan Executor.
+- Added `dr-magu ask`.
+- Added `dr-magu brain-plan`.
+- Added `dr-magu brain-execute`.
+- Kept the LLM as planner-only architecture.
+- Kept direct tool execution behind the existing Command Processor and validators.
+
+Example:
+
+```bash
+dr-magu ask "analiza este repositorio y genera contexto tecnico"
+```
+
+Safety model:
+
+```text
+User Prompt
+  -> Brain Planner
+  -> BrainPlan
+  -> Plan Validator
+  -> Command Processor / Workflow Runtime / Agent Runner
+```
