@@ -1,3 +1,12 @@
+## v0.11.0 - Intent Router
+
+- Added deterministic Intent Router.
+- Added route categories for general chat, workspace actions, research, documents, software and schedules.
+- Added multilingual keyword routing for English and Spanish prompts.
+- Added `dr-magu brain-route`.
+- Added `brain.route` internal command.
+- Prepared the Brain for future domain-specific agents and plugins.
+
 ## v0.10.0 - AI Orchestrator Brain
 
 - Added Brain Context Loader.

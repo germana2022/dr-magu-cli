@@ -1,4 +1,4 @@
-# Dr Magu CLI v0.10.0
+# Dr Magu CLI v0.11.0
 
 Dr Magu CLI is a Python-based agent platform foundation inspired by Claude Code, OpenCode, Codex CLI, and Gemini CLI.
 
@@ -243,3 +243,27 @@ User Prompt
   -> Plan Validator
   -> Command Processor / Workflow Runtime / Agent Runner
 ```
+
+
+## v0.11.0 - Intent Router
+
+This release introduces the Intent Router foundation for the AI Agent Platform.
+
+Supported route categories:
+
+- `general_chat`
+- `workspace_action`
+- `research_action`
+- `document_action`
+- `software_action`
+- `schedule_action`
+
+New commands:
+
+```bash
+dr-magu brain-route "search the web for five sites about LangGraph"
+dr-magu brain-route "generate a PDF report"
+dr-magu brain-route "schedule a daily research report"
+```
+
+The router is deterministic in this version and prepares Dr Magu for future LLM-backed routing.

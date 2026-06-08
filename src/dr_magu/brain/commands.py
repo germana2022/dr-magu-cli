@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from .intent_router import classify_prompt
 
 from .context_loader import load_brain_context
 from .orchestrator import create_plan, execute_prompt
@@ -20,3 +21,9 @@ def brain_execute(prompt: str, workspace_path: str | None = None) -> dict:
 
 def render_brain_result(payload: dict) -> str:
     return json.dumps(payload, indent=2, ensure_ascii=False)
+
+
+
+def brain_route(prompt: str) -> dict:
+    """Classify a natural-language prompt using the Intent Router."""
+    return classify_prompt(prompt).to_dict()

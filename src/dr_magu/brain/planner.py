@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from .models import BrainPlan, BrainPlanStep, BrainResponse
+from .intent_router import classify_prompt
 
 
 def _detect_language(text: str) -> str:
@@ -56,8 +57,9 @@ def plan_prompt(user_prompt: str) -> BrainResponse:
         )
         return BrainResponse(mode="workspace_action", message="Workflow execution plan created.", plan=plan)
 
+    classification = classify_prompt(user_prompt)
     return BrainResponse(
-        mode="general_chat",
-        message="General assistant mode detected. Full LLM general chat responses are reserved for a later version.",
+        mode=classification.intent,
+        message=f"Intent Router selected {classification.intent}. Full LLM response/execution for this domain is reserved for a later version.",
         plan=None,
     )

@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dr-magu-cli"
-version = "0.10.0"
-description = "Dr Magu CLI with AI Orchestrator Brain foundation, prompt planning, plan validation and safe execution."
+version = "0.11.0"
+description = "Dr Magu CLI with Intent Router foundation for AI Agent Platform routing."
 readme = "README.md"
 requires-python = ">=3.11"
 authors = [{ name = "Dr Magu Team" }]

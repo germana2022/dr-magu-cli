@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import typer
-from dr_magu.brain.commands import brain_plan, brain_execute, render_brain_result
+from dr_magu.brain.commands import brain_plan, brain_execute, brain_route, render_brain_result
 from rich.console import Console
 from rich.table import Table
 
@@ -660,3 +660,10 @@ def brain_plan_command(prompt: str, workspace: str = typer.Option(".", "--worksp
 def brain_execute_command(prompt: str, workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path.")) -> None:
     """Create, validate and execute a Brain plan."""
     typer.echo(render_brain_result(brain_execute(prompt, workspace)))
+
+
+
+@app.command("brain-route")
+def brain_route_command(prompt: str) -> None:
+    """Classify a prompt through the Dr Magu Intent Router."""
+    typer.echo(render_brain_result(brain_route(prompt)))

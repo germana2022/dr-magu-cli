@@ -196,6 +196,13 @@ def handle_brain_context(args: dict[str, object], context: CommandContext) -> To
     return BrainContextLoader(context.workspace_path, config=context.config).load_result()
 
 
+
+def handle_brain_route(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.brain.commands import brain_route
+
+    prompt = _get_str(args, "prompt", _get_str(args, "value", ""))
+    return ToolResult(success=True, tool="brain.route", data=brain_route(prompt))
+
 def handle_tools_list(args: dict[str, object], context: CommandContext) -> ToolResult:
     from dr_magu.tools.registry import ToolRegistry
 
@@ -483,6 +490,15 @@ registry.register(CommandDefinition(
     category="agent",
     handler=handle_agent_run,
 ))
+
+registry.register(CommandDefinition(
+    name="brain.route",
+    aliases=["route", "intent"],
+    description="Classify a natural-language prompt with the Intent Router.",
+    category="brain",
+    handler=handle_brain_route,
+))
+
 registry.register(CommandDefinition(
     name="brain.context",
     aliases=["brain", "bc"],
