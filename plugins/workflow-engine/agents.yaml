@@ -1,0 +1,12 @@
+agents:
+  workflow-runner:
+    name: Workflow Runner
+    description: Execute workflow definitions with persisted state, context and history.
+    role: orchestration
+    workflow: workflow.engine.run
+    enabled: true
+    requires_llm: false
+    capabilities:
+      - run_workflow
+      - inspect_workflow_state
+      - inspect_workflow_history

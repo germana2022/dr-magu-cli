@@ -1,0 +1,29 @@
+tools:
+  workflow.engine.run:
+    description: Run a stateful workflow.
+    category: workflow-engine
+    read_only: false
+    risk_level: medium
+    approval_required: false
+    background_allowed: false
+  workflow.engine.status:
+    description: Inspect workflow state and context.
+    category: workflow-engine
+    read_only: true
+    risk_level: low
+    approval_required: false
+    background_allowed: true
+  workflow.engine.history:
+    description: Inspect workflow history.
+    category: workflow-engine
+    read_only: true
+    risk_level: low
+    approval_required: false
+    background_allowed: true
+  workflow.engine.runs:
+    description: List workflow runs.
+    category: workflow-engine
+    read_only: true
+    risk_level: low
+    approval_required: false
+    background_allowed: true

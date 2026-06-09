@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import typer
+from dr_magu.workflow_engine.runner import WorkflowRunner
 from dr_magu.website_builder.workflow import WebsiteBuilderWorkflow
 from dr_magu.filesystem_tools.runner import FilesystemToolRunner
 from dr_magu.shell_tools.runner import ShellToolRunner
@@ -796,4 +797,45 @@ def website_build(
 ) -> None:
     """Generate website proposal, architecture options, approval request and report."""
     result = WebsiteBuilderWorkflow(workspace).generate(topic=topic, research_limit=limit)
+    typer.echo(result.data if result.success else result.errors)
+
+
+
+@app.command("workflow-engine-run")
+def workflow_engine_run(
+    workflow_id: str = typer.Argument("website-builder"),
+    topic: str = typer.Option("", "--topic", "-t", help="Workflow topic/input."),
+    workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path."),
+) -> None:
+    """Run a stateful workflow through the Workflow Engine."""
+    result = WorkflowRunner(workspace).run(workflow_id, topic=topic)
+    typer.echo(result.data if result.success else result.errors)
+
+
+@app.command("workflow-engine-status")
+def workflow_engine_status(
+    run_id: str,
+    workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path."),
+) -> None:
+    """Inspect workflow state and context."""
+    result = WorkflowRunner(workspace).status(run_id)
+    typer.echo(result.data if result.success else result.errors)
+
+
+@app.command("workflow-engine-history")
+def workflow_engine_history(
+    run_id: str,
+    workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path."),
+) -> None:
+    """Inspect workflow history."""
+    result = WorkflowRunner(workspace).history(run_id)
+    typer.echo(result.data if result.success else result.errors)
+
+
+@app.command("workflow-engine-runs")
+def workflow_engine_runs(
+    workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path."),
+) -> None:
+    """List workflow engine runs."""
+    result = WorkflowRunner(workspace).list_runs()
     typer.echo(result.data if result.success else result.errors)

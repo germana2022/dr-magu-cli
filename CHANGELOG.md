@@ -1,3 +1,13 @@
+## v0.19.0 - Workflow Engine Foundation
+
+- Added Workflow Engine package.
+- Added WorkflowDefinition, WorkflowStep, WorkflowRunState and WorkflowHistoryEvent models.
+- Added WorkflowContext.
+- Added WorkflowRunStore persistence under `.dr-magu/workflow-runs/`.
+- Added WorkflowRunner for deterministic stateful workflow execution.
+- Added workflow engine commands and CLI entries.
+- Added Workflow Engine plugin metadata.
+
 ## v0.18.0 - Website Builder Workflow
 
 - Added Website Builder plugin metadata.

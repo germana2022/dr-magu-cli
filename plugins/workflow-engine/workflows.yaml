@@ -1,0 +1,10 @@
+workflows:
+  workflow.engine.run:
+    name: Workflow Engine Run
+    description: Execute a stateful workflow through the workflow runner.
+    enabled: true
+    deterministic: true
+    tools:
+      - workflow.engine.run
+      - workflow.engine.status
+      - workflow.engine.history

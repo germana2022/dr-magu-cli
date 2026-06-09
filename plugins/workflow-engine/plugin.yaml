@@ -1,0 +1,24 @@
+id: workflow-engine
+name: Workflow Engine
+version: 0.19.0
+enabled: true
+domain: orchestration
+description: Stateful workflow engine foundation with context, state and history.
+
+provides:
+  agents:
+    - workflow-runner
+  workflows:
+    - workflow.engine.run
+  tools:
+    - workflow.engine.run
+    - workflow.engine.status
+    - workflow.engine.history
+    - workflow.engine.runs
+  prompts:
+    - workflow-summary
+  schedules: []
+  templates:
+    - workflow-state
+permissions:
+  file_write: restricted

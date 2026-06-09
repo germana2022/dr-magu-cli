@@ -1,4 +1,4 @@
-# Dr Magu CLI v0.18.0
+# Dr Magu CLI v0.19.0
 
 Dr Magu CLI is a Python-based agent platform foundation inspired by Claude Code, OpenCode, Codex CLI, and Gemini CLI.
 
@@ -403,3 +403,36 @@ dr-magu website-build "AI developer tools landing page" --limit 5
 ```
 
 This version intentionally stops before code generation. Code generation should be executed only after a human selects an architecture option.
+
+
+## v0.19.0 - Workflow Engine Foundation
+
+This release introduces the Workflow Engine Foundation.
+
+Components:
+
+- workflow-engine
+- workflow-runner
+- workflow-state
+- workflow-context
+- workflow-history
+
+New commands:
+
+```bash
+dr-magu workflow-engine-run website-builder --topic "AI developer tools website"
+dr-magu workflow-engine-runs
+dr-magu workflow-engine-status <run-id>
+dr-magu workflow-engine-history <run-id>
+```
+
+Persistence:
+
+```text
+.dr-magu/workflow-runs/<run-id>/
+  state.json
+  context.json
+  history.json
+```
+
+This version provides a deterministic, stateful workflow foundation before advanced retry/resume/cancel capabilities.

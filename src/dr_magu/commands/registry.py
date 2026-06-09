@@ -267,6 +267,34 @@ def handle_approval_list(args: dict[str, object], context: CommandContext) -> To
     return ApprovalEngine(context.workspace_path).list(include_resolved=True)
 
 
+
+def handle_workflow_engine_run(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.workflow_engine.runner import WorkflowRunner
+
+    workflow_id = _get_str(args, "workflow", _get_str(args, "id", _get_str(args, "value", "website-builder")))
+    topic = _get_str(args, "topic", "")
+    return WorkflowRunner(context.workspace_path).run(workflow_id, topic=topic)
+
+
+def handle_workflow_engine_status(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.workflow_engine.runner import WorkflowRunner
+
+    run_id = _get_str(args, "run_id", _get_str(args, "id", _get_str(args, "value", "")))
+    return WorkflowRunner(context.workspace_path).status(run_id)
+
+
+def handle_workflow_engine_history(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.workflow_engine.runner import WorkflowRunner
+
+    run_id = _get_str(args, "run_id", _get_str(args, "id", _get_str(args, "value", "")))
+    return WorkflowRunner(context.workspace_path).history(run_id)
+
+
+def handle_workflow_engine_runs(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.workflow_engine.runner import WorkflowRunner
+
+    return WorkflowRunner(context.workspace_path).list_runs()
+
 def handle_website_build(args: dict[str, object], context: CommandContext) -> ToolResult:
     from dr_magu.website_builder.workflow import WebsiteBuilderWorkflow
 
@@ -816,6 +844,36 @@ registry.register(CommandDefinition(
     handler=handle_approval_list,
 ))
 
+
+
+registry.register(CommandDefinition(
+    name="workflow.engine.run",
+    aliases=["workflow.engine", "we.run"],
+    description="Run a stateful workflow through the Workflow Engine.",
+    category="workflow-engine",
+    handler=handle_workflow_engine_run,
+))
+registry.register(CommandDefinition(
+    name="workflow.engine.status",
+    aliases=["we.status"],
+    description="Inspect workflow state and context.",
+    category="workflow-engine",
+    handler=handle_workflow_engine_status,
+))
+registry.register(CommandDefinition(
+    name="workflow.engine.history",
+    aliases=["we.history"],
+    description="Inspect workflow history.",
+    category="workflow-engine",
+    handler=handle_workflow_engine_history,
+))
+registry.register(CommandDefinition(
+    name="workflow.engine.runs",
+    aliases=["we.runs"],
+    description="List workflow engine runs.",
+    category="workflow-engine",
+    handler=handle_workflow_engine_runs,
+))
 
 registry.register(CommandDefinition(
     name="website.build",
