@@ -205,6 +205,46 @@ def handle_brain_route(args: dict[str, object], context: CommandContext) -> Tool
 
 
 
+
+def handle_approval_request(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.hitl.engine import ApprovalEngine
+
+    title = _get_str(args, "title", _get_str(args, "value", "Approval Request"))
+    description = _get_str(args, "description", "")
+    action = _get_str(args, "action", "manual.review")
+    risk_level = _get_str(args, "risk", "medium")
+    return ApprovalEngine(context.workspace_path).request(
+        title=title,
+        description=description,
+        action=action,
+        risk_level=risk_level,
+    )
+
+
+def handle_approval_approve(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.hitl.engine import ApprovalEngine
+
+    request_id = _get_str(args, "id", _get_str(args, "value", ""))
+    selected_option_id = _get_str(args, "option", "")
+    return ApprovalEngine(context.workspace_path).approve(
+        request_id=request_id,
+        selected_option_id=selected_option_id or None,
+    )
+
+
+def handle_approval_reject(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.hitl.engine import ApprovalEngine
+
+    request_id = _get_str(args, "id", _get_str(args, "value", ""))
+    return ApprovalEngine(context.workspace_path).reject(request_id=request_id)
+
+
+def handle_approval_list(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.hitl.engine import ApprovalEngine
+
+    include_resolved = bool(args.get("include_resolved", True))
+    return ApprovalEngine(context.workspace_path).list(include_resolved=include_resolved)
+
 def handle_report_create(args: dict[str, object], context: CommandContext) -> ToolResult:
     from dr_magu.reports.generator import ReportGenerator
     from dr_magu.reports.models import ReportSection
@@ -525,6 +565,36 @@ registry.register(CommandDefinition(
 ))
 
 
+
+
+registry.register(CommandDefinition(
+    name="approval.request",
+    aliases=["approval", "approve.request", "hitl.request"],
+    description="Create a human-in-the-loop approval request.",
+    category="approval",
+    handler=handle_approval_request,
+))
+registry.register(CommandDefinition(
+    name="approval.approve",
+    aliases=["approval.approve", "hitl.approve"],
+    description="Approve a pending approval request.",
+    category="approval",
+    handler=handle_approval_approve,
+))
+registry.register(CommandDefinition(
+    name="approval.reject",
+    aliases=["approval.reject", "hitl.reject"],
+    description="Reject a pending approval request.",
+    category="approval",
+    handler=handle_approval_reject,
+))
+registry.register(CommandDefinition(
+    name="approval.list",
+    aliases=["approvals", "hitl.list"],
+    description="List human-in-the-loop approval requests.",
+    category="approval",
+    handler=handle_approval_list,
+))
 
 registry.register(CommandDefinition(
     name="report.create",

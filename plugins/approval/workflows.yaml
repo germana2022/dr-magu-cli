@@ -1,0 +1,10 @@
+workflows:
+  approval.review:
+    name: Approval Review
+    description: Review pending human-in-the-loop approval requests.
+    enabled: true
+    deterministic: true
+    tools:
+      - approval.list
+      - approval.approve
+      - approval.reject

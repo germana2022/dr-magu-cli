@@ -1,3 +1,14 @@
+## v0.14.0 - HITL Approval Engine Foundation
+
+- Added Approval plugin metadata.
+- Added `approval-manager` agent definition.
+- Added approval request models.
+- Added approval persistence under `.dr-magu/approvals/`.
+- Added `approval.request`, `approval.approve`, `approval.reject`, and `approval.list`.
+- Added CLI commands for approval lifecycle management.
+- Added approval guard helpers for sensitive actions.
+- Prepared HITL option selection for future website builder workflows.
+
 ## v0.13.0 - Report Generator Plugin Foundation
 
 - Added Reporting plugin metadata.

@@ -1,0 +1,29 @@
+tools:
+  approval.request:
+    description: Create a human approval request.
+    category: approval
+    read_only: false
+    risk_level: low
+    approval_required: false
+    background_allowed: true
+  approval.approve:
+    description: Approve a pending approval request.
+    category: approval
+    read_only: false
+    risk_level: medium
+    approval_required: false
+    background_allowed: false
+  approval.reject:
+    description: Reject a pending approval request.
+    category: approval
+    read_only: false
+    risk_level: medium
+    approval_required: false
+    background_allowed: false
+  approval.list:
+    description: List approval requests.
+    category: approval
+    read_only: true
+    risk_level: low
+    approval_required: false
+    background_allowed: true
