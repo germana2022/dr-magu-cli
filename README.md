@@ -470,3 +470,4 @@ Persistence remains under:
   history.md
   history-export.json
 ```
+\n\n## v0.21.0 - Background Worker Daemon\n- Background worker foundation\n- Queue/job runtime foundation\n- Scheduler integration preparation\n

@@ -1,0 +1,16 @@
+id: background-worker
+name: Background Worker
+version: 0.21.0
+enabled: true
+domain: runtime
+description: Background worker daemon foundation.
+
+provides:
+  agents:
+    - background-worker
+  workflows:
+    - worker.run
+  tools:
+    - worker.status
+    - worker.jobs
+    - worker.enqueue
