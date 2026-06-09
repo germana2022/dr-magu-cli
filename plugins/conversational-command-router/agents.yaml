@@ -1,0 +1,13 @@
+agents:
+  conversational-command-router:
+    name: Conversational Command Router
+    description: Resolve natural-language requests into explicit Dr Magu commands.
+    role: router
+    workflow: router.execute
+    enabled: true
+    requires_llm: false
+    capabilities:
+      - intent_detection
+      - command_routing
+      - capability_resolution
+      - command_execution

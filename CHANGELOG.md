@@ -1,3 +1,15 @@
+## v1.5.0 - Conversational Command Router
+
+- Added `conversational_router` package.
+- Added deterministic route model and router.
+- Added `router.route` and `router.execute` commands.
+- Added `dr-magu route` and `dr-magu route-execute`.
+- Integrated the router into `brain.ask`.
+- Added routing for website analysis, repository analysis, research, filesystem search and SDLC agents.
+- Added `conversational-command-router` plugin metadata.
+- Moved CLI `if __name__ == "__main__"` block to the end to avoid late-command registration issues.
+- Added tests for natural-language command routing.
+
 ## v1.3.0 - Real MCP Integrations
 
 - Added MCP templates for Playwright, Brave Search, GitHub and Filesystem.

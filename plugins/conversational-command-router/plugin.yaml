@@ -1,0 +1,25 @@
+id: conversational-command-router
+name: Conversational Command Router
+version: 1.5.0
+enabled: true
+domain: router
+description: Route natural-language prompts to explicit Dr Magu commands.
+
+provides:
+  agents:
+    - conversational-command-router
+  workflows:
+    - router.route
+    - router.execute
+  tools:
+    - router.route
+    - router.execute
+    - brain.ask
+  prompts:
+    - command-routing
+    - capability-resolution
+  schedules: []
+  templates:
+    - routed-command
+permissions:
+  command_execute: restricted

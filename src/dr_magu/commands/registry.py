@@ -236,6 +236,28 @@ def handle_web_search(args: dict[str, object], context: CommandContext) -> ToolR
     limit = _get_int(args, "limit", 5)
     return MCPIntegrationRuntime(context.workspace_path).web_search(query, limit=limit)
 
+
+
+def handle_router_route(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.conversational_router.router import route_prompt
+
+    prompt = _get_str(args, "prompt", _get_str(args, "value", ""))
+    route = route_prompt(prompt)
+    return ToolResult(success=True, tool="router.route", data=route.to_dict())
+
+
+def handle_router_execute(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.conversational_router.router import route_prompt
+    from dr_magu.commands.processor import CommandProcessor
+
+    prompt = _get_str(args, "prompt", _get_str(args, "value", ""))
+    route = route_prompt(prompt)
+    if not route.command:
+        return ToolResult(success=False, tool="router.execute", data={"routing": route.to_dict()}, errors=["No executable command was resolved."])
+    result = CommandProcessor(registry).execute_line(route.command, context)
+    data = {"routing": route.to_dict(), "result": {"success": result.success, "tool": result.tool, "data": result.data, "errors": result.errors}}
+    return ToolResult(success=result.success, tool="router.execute", data=data, errors=result.errors)
+
 def handle_mcp_servers(args: dict[str, object], context: CommandContext) -> ToolResult:
     from dr_magu.mcp_runtime.registry import MCPServerRegistry
 
@@ -1189,6 +1211,22 @@ registry.register(CommandDefinition(
     description="Send a prompt to the configured default LLM model.",
     category="llm",
     handler=handle_llm_chat,
+))
+
+
+registry.register(CommandDefinition(
+    name="router.route",
+    aliases=["route", "cr.route"],
+    description="Route a natural-language prompt to a Dr Magu command without executing it.",
+    category="router",
+    handler=handle_router_route,
+))
+registry.register(CommandDefinition(
+    name="router.execute",
+    aliases=["route.execute", "cr.exec"],
+    description="Route and execute a natural-language prompt through the Conversational Command Router.",
+    category="router",
+    handler=handle_router_execute,
 ))
 
 registry.register(CommandDefinition(

@@ -1,0 +1,15 @@
+tools:
+  router.route:
+    description: Route a natural-language prompt to a command without executing it.
+    category: router
+    read_only: true
+    risk_level: low
+    approval_required: false
+    background_allowed: true
+  router.execute:
+    description: Route and execute a natural-language prompt.
+    category: router
+    read_only: false
+    risk_level: medium
+    approval_required: false
+    background_allowed: true

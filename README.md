@@ -1,4 +1,4 @@
-# Dr Magu CLI v1.3.0
+# Dr Magu CLI v1.5.0
 
 Dr Magu CLI is a Python-based agent platform foundation inspired by Claude Code, OpenCode, Codex CLI, and Gemini CLI.
 
@@ -784,3 +784,49 @@ Workspace configuration:
 ```
 
 v1.3.0 keeps deterministic simulation available for tests and offline development, while defining the contracts needed to attach real MCP servers.
+
+
+## v1.5.0 - Conversational Command Router
+
+This release adds natural-language command routing.
+
+Instead of requiring users to know explicit commands:
+
+```text
+website.analyze https://hubspot.com
+repository.read microsoft/vscode
+research.search "CRM systems"
+filesystem.search src
+```
+
+users can write natural requests:
+
+```text
+Analyze hubspot.com and summarize its business model
+Analyze repository https://github.com/microsoft/vscode
+Research the top 10 CRM systems for small businesses
+Find files in src
+```
+
+New commands:
+
+```bash
+dr-magu route "Analyze hubspot.com"
+dr-magu route-execute "Analyze hubspot.com"
+```
+
+Command mode:
+
+```text
+router.route Analyze hubspot.com
+router.execute Analyze hubspot.com
+```
+
+The router resolves:
+
+- website analysis → `website.analyze`
+- repository analysis → `repository.read`
+- web/research → `research.search` or `web.search`
+- filesystem search → `filesystem.search`
+- software development prompts → SDLC agents
+- general chat → LLM chat

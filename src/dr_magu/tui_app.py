@@ -90,7 +90,7 @@ class TuiSettings:
     """Settings used to start the Dr Magu Terminal UI."""
 
     workspace_path: str
-    version: str = "1.3.0"
+    version: str = "1.5.0"
 
 
 def _build_context(workspace_path: str) -> CommandContext:
@@ -1312,3 +1312,5 @@ def run_tui(workspace_path: str) -> None:
 # v1.2.0: MCP Research Runtime adds MCP server registry and MCP-backed research provider foundation.
 
 # v1.3.0: Real MCP Integrations adds Playwright, Brave Search, GitHub and Filesystem MCP contracts.
+
+# v1.5.0: Conversational Command Router maps natural-language prompts to explicit commands.

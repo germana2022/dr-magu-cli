@@ -1,0 +1,15 @@
+workflows:
+  router.route:
+    name: Route Prompt
+    description: Convert a natural-language prompt into a command.
+    enabled: true
+    deterministic: true
+    tools:
+      - router.route
+  router.execute:
+    name: Route and Execute Prompt
+    description: Convert a natural-language prompt into a command and execute it.
+    enabled: true
+    deterministic: true
+    tools:
+      - router.execute

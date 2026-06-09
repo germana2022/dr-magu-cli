@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import typer
+from dr_magu.conversational_router.router import route_prompt
 from dr_magu.mcp_integrations.runtime import MCPIntegrationRuntime
 from dr_magu.chat_ux.renderer import render_user_facing_result
 from dr_magu.mcp_runtime.registry import MCPServerRegistry
@@ -652,7 +653,7 @@ def tui_command(
 
 @app.command("version")
 def version() -> None:
-    console.print("dr-magu-cli v0.9.4")
+    console.print("dr-magu-cli v1.5.0")
 
 
 
@@ -727,8 +728,25 @@ def repository_read_command(
     typer.echo(result.data if result.success else result.errors)
 
 
-if __name__ == "__main__":
-    app()
+
+@app.command("route")
+def route_command(prompt: str) -> None:
+    """Route a natural-language prompt to the command Dr Magu would execute."""
+    typer.echo(route_prompt(prompt).to_dict())
+
+
+@app.command("route-execute")
+def route_execute_command(
+    prompt: str,
+    workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path."),
+) -> None:
+    """Route and execute a natural-language prompt."""
+    from dr_magu.brain.conversation import ConversationalBrain
+    from dr_magu.chat_ux.renderer import render_user_facing_result
+
+    result = ConversationalBrain(workspace).ask(prompt)
+    typer.echo(render_user_facing_result(result))
+
 
 
 
@@ -1047,3 +1065,6 @@ def execution_list(
     """List execution plans."""
     result = ExecutionExecutor(workspace).list_plans()
     typer.echo(result.data if result.success else result.errors)
+
+if __name__ == "__main__":
+    app()

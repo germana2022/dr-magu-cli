@@ -16,6 +16,7 @@ from dr_magu.commands.context import CommandContext
 from dr_magu.commands.processor import CommandProcessor
 from dr_magu.commands.registry import registry
 from dr_magu.config import load_config
+from dr_magu.conversational_router.router import route_prompt
 from dr_magu.llm_runtime.runtime import LLMRuntime
 from dr_magu.llm_runtime.sanitizer import debug_response_payload, user_response_payload
 from dr_magu.result import ToolResult
@@ -24,7 +25,7 @@ from dr_magu.result import ToolResult
 class ConversationalBrain:
     """Natural-language entry point for Dr Magu.
 
-    v1.1.1 is deterministic and model-aware. It resolves the configured default
+    v1.5.0 is conversational-router aware and model-aware. It resolves the configured default
     model and exposes it in responses, but it does not call the LLM yet.
     """
 
@@ -38,7 +39,8 @@ class ConversationalBrain:
 
         classification = classify_prompt(prompt)
         model = ModelConfigLoader(self.workspace_path).default_model().to_dict()
-        routed_command = self._command_for_intent(classification.intent, prompt)
+        routing = route_prompt(prompt)
+        routed_command = routing.command or self._command_for_intent(classification.intent, prompt)
 
         if routed_command:
             command_context = CommandContext(
@@ -56,6 +58,7 @@ class ConversationalBrain:
                     "default_model": model,
                     "llm_used": False,
                     "llm_ready": bool(model.get("model")),
+                    "routing": routing.to_dict(),
                     "routed_command": routed_command,
                     "route_result": {
                         "success": route_result.success,
@@ -81,6 +84,7 @@ class ConversationalBrain:
                     "default_model": model,
                     "llm_used": True,
                     "llm_ready": bool(model.get("model")),
+                    "routing": routing.to_dict(),
                     "response": user_payload.get("content", ""),
                     "llm_response": user_payload,
                     "debug": {
@@ -98,6 +102,7 @@ class ConversationalBrain:
                 "default_model": model,
                 "llm_used": False,
                 "llm_ready": bool(model.get("model")),
+                "routing": routing.to_dict(),
                 "message": "General chat mode was detected, but the LLM runtime request failed.",
             },
             errors=llm_result.errors,
