@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dr-magu-cli"
-version = "0.15.0"
-description = "Dr Magu CLI with Human-in-the-Loop approval engine foundation."
+version = "0.16.0"
+description = "Dr Magu CLI with Scheduler Runtime foundation for background-ready task orchestration."
 readme = "README.md"
 requires-python = ">=3.11"
 authors = [{ name = "Dr Magu Team" }]

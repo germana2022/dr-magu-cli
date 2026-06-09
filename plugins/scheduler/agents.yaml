@@ -1,0 +1,20 @@
+agents:
+  scheduler-manager:
+    name: Scheduler Manager
+    description: Manage persisted scheduled Dr Magu commands.
+    role: automation
+    workflow: schedule.execute
+    enabled: true
+    requires_llm: false
+    capabilities:
+      - create_schedule
+      - list_schedules
+      - enable_schedule
+      - disable_schedule
+      - delete_schedule
+      - run_schedule_once
+    model:
+      provider: null
+      base_url: null
+      model: null
+      temperature: null

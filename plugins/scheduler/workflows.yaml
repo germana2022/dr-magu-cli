@@ -1,0 +1,8 @@
+workflows:
+  schedule.execute:
+    name: Schedule Execute
+    description: Execute a persisted scheduled command once through the runtime.
+    enabled: true
+    deterministic: true
+    tools:
+      - schedule.run

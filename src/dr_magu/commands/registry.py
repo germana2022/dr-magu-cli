@@ -204,69 +204,64 @@ def handle_brain_route(args: dict[str, object], context: CommandContext) -> Tool
     return ToolResult(success=True, tool="brain.route", data=brain_route(prompt))
 
 
-
-
-def handle_approval_request(args: dict[str, object], context: CommandContext) -> ToolResult:
-    from dr_magu.hitl.engine import ApprovalEngine
-
-    title = _get_str(args, "title", _get_str(args, "value", "Approval Request"))
-    description = _get_str(args, "description", "")
-    action = _get_str(args, "action", "manual.review")
-    risk_level = _get_str(args, "risk", "medium")
-    return ApprovalEngine(context.workspace_path).request(
-        title=title,
-        description=description,
-        action=action,
-        risk_level=risk_level,
-    )
-
-
-def handle_approval_approve(args: dict[str, object], context: CommandContext) -> ToolResult:
-    from dr_magu.hitl.engine import ApprovalEngine
-
-    request_id = _get_str(args, "id", _get_str(args, "value", ""))
-    selected_option_id = _get_str(args, "option", "")
-    return ApprovalEngine(context.workspace_path).approve(
-        request_id=request_id,
-        selected_option_id=selected_option_id or None,
-    )
-
-
-def handle_approval_reject(args: dict[str, object], context: CommandContext) -> ToolResult:
-    from dr_magu.hitl.engine import ApprovalEngine
-
-    request_id = _get_str(args, "id", _get_str(args, "value", ""))
-    return ApprovalEngine(context.workspace_path).reject(request_id=request_id)
-
-
-def handle_approval_list(args: dict[str, object], context: CommandContext) -> ToolResult:
-    from dr_magu.hitl.engine import ApprovalEngine
-
-    include_resolved = bool(args.get("include_resolved", True))
-    return ApprovalEngine(context.workspace_path).list(include_resolved=include_resolved)
-
-def handle_report_create(args: dict[str, object], context: CommandContext) -> ToolResult:
-    from dr_magu.reports.generator import ReportGenerator
-    from dr_magu.reports.models import ReportSection
-
-    title = _get_str(args, "title", _get_str(args, "value", "Report"))
-    summary = _get_str(args, "summary", "")
-    section_text = _get_str(args, "section", "")
-    sections = [ReportSection(title="Details", body=section_text)] if section_text else []
-    return ReportGenerator(context.workspace_path).generate(title=title, summary=summary, sections=sections)
-
-
-def handle_report_from_research(args: dict[str, object], context: CommandContext) -> ToolResult:
-    from dr_magu.reports.generator import ReportGenerator
-
-    return ReportGenerator(context.workspace_path).generate_from_latest_research()
-
 def handle_research_search(args: dict[str, object], context: CommandContext) -> ToolResult:
     from dr_magu.research.runner import WebResearchRunner
 
     topic = _get_str(args, "topic", _get_str(args, "value", ""))
     limit = int(args.get("limit", 5) or 5)
     return WebResearchRunner(context.workspace_path).search(topic, limit=limit)
+
+
+def handle_schedule_create(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.scheduler.runtime import SchedulerRuntime
+
+    name = _get_str(args, "name", _get_str(args, "value", ""))
+    command = _get_str(args, "command", "")
+    cron = _get_str(args, "cron", "@daily")
+    timezone_name = _get_str(args, "timezone", "UTC")
+    description = _get_str(args, "description", "")
+    return SchedulerRuntime(context.workspace_path).create(
+        name=name,
+        command=command,
+        cron=cron,
+        timezone_name=timezone_name,
+        description=description,
+    )
+
+
+def handle_schedule_list(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.scheduler.runtime import SchedulerRuntime
+
+    include_deleted = bool(args.get("include_deleted", False))
+    return SchedulerRuntime(context.workspace_path).list(include_deleted=include_deleted)
+
+
+def handle_schedule_enable(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.scheduler.runtime import SchedulerRuntime
+
+    task_id = _get_str(args, "id", _get_str(args, "value", ""))
+    return SchedulerRuntime(context.workspace_path).enable(task_id)
+
+
+def handle_schedule_disable(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.scheduler.runtime import SchedulerRuntime
+
+    task_id = _get_str(args, "id", _get_str(args, "value", ""))
+    return SchedulerRuntime(context.workspace_path).disable(task_id)
+
+
+def handle_schedule_delete(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.scheduler.runtime import SchedulerRuntime
+
+    task_id = _get_str(args, "id", _get_str(args, "value", ""))
+    return SchedulerRuntime(context.workspace_path).delete(task_id)
+
+
+def handle_schedule_run(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.scheduler.runtime import SchedulerRuntime
+
+    task_id = _get_str(args, "id", _get_str(args, "value", ""))
+    return SchedulerRuntime(context.workspace_path).run_once(task_id)
 
 def handle_tools_list(args: dict[str, object], context: CommandContext) -> ToolResult:
     from dr_magu.tools.registry import ToolRegistry
@@ -565,52 +560,6 @@ registry.register(CommandDefinition(
 ))
 
 
-
-
-registry.register(CommandDefinition(
-    name="approval.request",
-    aliases=["approval", "approve.request", "hitl.request"],
-    description="Create a human-in-the-loop approval request.",
-    category="approval",
-    handler=handle_approval_request,
-))
-registry.register(CommandDefinition(
-    name="approval.approve",
-    aliases=["approval.approve", "hitl.approve"],
-    description="Approve a pending approval request.",
-    category="approval",
-    handler=handle_approval_approve,
-))
-registry.register(CommandDefinition(
-    name="approval.reject",
-    aliases=["approval.reject", "hitl.reject"],
-    description="Reject a pending approval request.",
-    category="approval",
-    handler=handle_approval_reject,
-))
-registry.register(CommandDefinition(
-    name="approval.list",
-    aliases=["approvals", "hitl.list"],
-    description="List human-in-the-loop approval requests.",
-    category="approval",
-    handler=handle_approval_list,
-))
-
-registry.register(CommandDefinition(
-    name="report.create",
-    aliases=["report", "report.create", "rc"],
-    description="Generate Markdown, HTML and JSON report artifacts.",
-    category="reporting",
-    handler=handle_report_create,
-))
-registry.register(CommandDefinition(
-    name="report.from_research",
-    aliases=["report.research", "rr"],
-    description="Generate a report from the latest research output.",
-    category="reporting",
-    handler=handle_report_from_research,
-))
-
 registry.register(CommandDefinition(
     name="research.search",
     aliases=["research", "web.search", "rs"],
@@ -692,3 +641,48 @@ registry.register(CommandDefinition(
     category="plan",
     handler=handle_plan_validate,
 ))
+
+
+registry.register(CommandDefinition(
+    name="schedule.create",
+    aliases=["schedule", "sc"],
+    description="Create a persisted scheduled command.",
+    category="scheduler",
+    handler=handle_schedule_create,
+))
+registry.register(CommandDefinition(
+    name="schedule.list",
+    aliases=["schedules", "sl"],
+    description="List persisted scheduled commands.",
+    category="scheduler",
+    handler=handle_schedule_list,
+))
+registry.register(CommandDefinition(
+    name="schedule.enable",
+    aliases=["schedule.enable", "se"],
+    description="Enable a scheduled command.",
+    category="scheduler",
+    handler=handle_schedule_enable,
+))
+registry.register(CommandDefinition(
+    name="schedule.disable",
+    aliases=["schedule.disable", "sd"],
+    description="Disable a scheduled command.",
+    category="scheduler",
+    handler=handle_schedule_disable,
+))
+registry.register(CommandDefinition(
+    name="schedule.delete",
+    aliases=["schedule.delete", "sx"],
+    description="Soft-delete a scheduled command.",
+    category="scheduler",
+    handler=handle_schedule_delete,
+))
+registry.register(CommandDefinition(
+    name="schedule.run",
+    aliases=["schedule.run", "sr"],
+    description="Execute a scheduled command once.",
+    category="scheduler",
+    handler=handle_schedule_run,
+))
+

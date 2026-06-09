@@ -1,24 +1,11 @@
-## v0.14.0 - HITL Approval Engine Foundation
+## v0.16.0 - Scheduler Runtime Foundation
 
-- Added Approval plugin metadata.
-- Added `approval-manager` agent definition.
-- Added approval request models.
-- Added approval persistence under `.dr-magu/approvals/`.
-- Added `approval.request`, `approval.approve`, `approval.reject`, and `approval.list`.
-- Added CLI commands for approval lifecycle management.
-- Added approval guard helpers for sensitive actions.
-- Prepared HITL option selection for future website builder workflows.
-
-## v0.13.0 - Report Generator Plugin Foundation
-
-- Added Reporting plugin metadata.
-- Added `report-generator` agent definition.
-- Added report document models.
-- Added Markdown, HTML and JSON report renderers.
-- Added `report.create` and `report.from_research` command boundaries.
-- Added `dr-magu report` and `dr-magu report-from-research`.
-- Added report persistence under `.dr-magu/reports/`.
-- Prepared future PDF and email report workflows.
+- Added formal scheduled task model.
+- Added persisted scheduler runtime operations.
+- Added schedule create/list/enable/disable/delete/run commands.
+- Added common cron next-run estimation.
+- Added run-once command execution through the existing Command Processor.
+- Prepared scheduler runtime for future daemon/background workers.
 
 ## v0.12.0 - Web Research Plugin Foundation
 

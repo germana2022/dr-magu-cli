@@ -1,1 +1,1 @@
-"""Scheduler foundation."""
+"""Scheduler runtime foundation for Dr Magu."""

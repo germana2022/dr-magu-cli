@@ -1,8 +1,7 @@
 from __future__ import annotations
 
 import typer
-from dr_magu.hitl.engine import ApprovalEngine
-from dr_magu.reports.generator import ReportGenerator
+from dr_magu.scheduler.runtime import SchedulerRuntime
 from dr_magu.research.runner import WebResearchRunner
 from dr_magu.brain.commands import brain_plan, brain_execute, brain_route, render_brain_result
 from rich.console import Console
@@ -681,59 +680,53 @@ def research(topic: str, limit: int = typer.Option(5, "--limit", "-n", help="Num
 
 
 
-@app.command("report")
-def report(title: str, summary: str = typer.Option("", "--summary", "-s", help="Report summary."), workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path.")) -> None:
-    """Generate a Markdown, HTML and JSON report."""
-    result = ReportGenerator(workspace).generate(title=title, summary=summary)
-    typer.echo(result.data if result.success else result.errors)
-
-
-@app.command("report-from-research")
-def report_from_research(workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path.")) -> None:
-    """Generate a report from the latest research output."""
-    result = ReportGenerator(workspace).generate_from_latest_research()
-    typer.echo(result.data if result.success else result.errors)
-
-
-
-@app.command("approval-request")
-def approval_request(
-    title: str,
-    action: str = typer.Option("manual.review", "--action", "-a", help="Action that needs approval."),
-    description: str = typer.Option("", "--description", "-d", help="Approval request description."),
-    risk: str = typer.Option("medium", "--risk", "-r", help="Risk level."),
+@app.command("schedule-create")
+def schedule_create(
+    name: str,
+    command: str = typer.Option(..., "--command", "-c", help="Dr Magu command to execute."),
+    cron: str = typer.Option("@daily", "--cron", help="Cron expression or shortcut."),
+    timezone_name: str = typer.Option("UTC", "--timezone", help="Schedule timezone."),
+    description: str = typer.Option("", "--description", "-d", help="Schedule description."),
     workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path."),
 ) -> None:
-    """Create a human-in-the-loop approval request."""
-    result = ApprovalEngine(workspace).request(title=title, description=description, action=action, risk_level=risk)
+    """Create a persisted scheduled command."""
+    result = SchedulerRuntime(workspace).create(name, command, cron, timezone_name, description)
     typer.echo(result.data if result.success else result.errors)
 
 
-@app.command("approval-approve")
-def approval_approve(
-    request_id: str,
-    option: str = typer.Option("", "--option", "-o", help="Selected option id."),
+@app.command("schedule-list")
+def schedule_list(
+    include_deleted: bool = typer.Option(False, "--include-deleted", help="Include soft-deleted tasks."),
     workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path."),
 ) -> None:
-    """Approve a human-in-the-loop approval request."""
-    result = ApprovalEngine(workspace).approve(request_id, selected_option_id=option or None)
+    """List persisted scheduled commands."""
+    result = SchedulerRuntime(workspace).list(include_deleted=include_deleted)
     typer.echo(result.data if result.success else result.errors)
 
 
-@app.command("approval-reject")
-def approval_reject(
-    request_id: str,
-    workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path."),
-) -> None:
-    """Reject a human-in-the-loop approval request."""
-    result = ApprovalEngine(workspace).reject(request_id)
+@app.command("schedule-enable")
+def schedule_enable(task_id: str, workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path.")) -> None:
+    """Enable a scheduled command."""
+    result = SchedulerRuntime(workspace).enable(task_id)
     typer.echo(result.data if result.success else result.errors)
 
 
-@app.command("approval-list")
-def approval_list(
-    workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path."),
-) -> None:
-    """List human-in-the-loop approval requests."""
-    result = ApprovalEngine(workspace).list()
+@app.command("schedule-disable")
+def schedule_disable(task_id: str, workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path.")) -> None:
+    """Disable a scheduled command."""
+    result = SchedulerRuntime(workspace).disable(task_id)
+    typer.echo(result.data if result.success else result.errors)
+
+
+@app.command("schedule-delete")
+def schedule_delete(task_id: str, workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path.")) -> None:
+    """Soft-delete a scheduled command."""
+    result = SchedulerRuntime(workspace).delete(task_id)
+    typer.echo(result.data if result.success else result.errors)
+
+
+@app.command("schedule-run")
+def schedule_run(task_id: str, workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path.")) -> None:
+    """Execute a scheduled command once."""
+    result = SchedulerRuntime(workspace).run_once(task_id)
     typer.echo(result.data if result.success else result.errors)
