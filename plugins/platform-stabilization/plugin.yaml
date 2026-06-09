@@ -1,0 +1,21 @@
+id: platform-stabilization
+name: Platform Stabilization
+version: 0.22.0
+enabled: true
+domain: platform
+description: Platform readiness and stabilization checks before v1.0.0.
+
+provides:
+  agents:
+    - platform-stabilizer
+  workflows:
+    - platform.stabilize
+  tools:
+    - platform.stabilize
+  prompts:
+    - platform-readiness
+  schedules: []
+  templates:
+    - stabilization-report
+permissions:
+  file_write: restricted

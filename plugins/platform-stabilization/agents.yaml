@@ -1,0 +1,13 @@
+agents:
+  platform-stabilizer:
+    name: Platform Stabilizer
+    description: Validate platform readiness before v1.0.0.
+    role: platform
+    workflow: platform.stabilize
+    enabled: true
+    requires_llm: false
+    capabilities:
+      - validate_packages
+      - validate_plugins
+      - validate_commands
+      - validate_release_cleanliness

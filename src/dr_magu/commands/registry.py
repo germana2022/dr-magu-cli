@@ -269,6 +269,13 @@ def handle_approval_list(args: dict[str, object], context: CommandContext) -> To
 
 
 
+
+def handle_platform_stabilize(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.stabilization.commands import run_stabilization_checks
+
+    output_format = _get_str(args, "format", "text")
+    return run_stabilization_checks(context.workspace_path, output_format=output_format)
+
 def handle_workflow_runtime_inspect(args: dict[str, object], context: CommandContext) -> ToolResult:
     from dr_magu.workflow_engine.runtime import WorkflowRuntime
 
@@ -327,6 +334,13 @@ def handle_workflow_engine_history(args: dict[str, object], context: CommandCont
     return WorkflowRunner(context.workspace_path).history(run_id)
 
 
+
+
+def handle_platform_stabilize(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.stabilization.commands import run_stabilization_checks
+
+    output_format = _get_str(args, "format", "text")
+    return run_stabilization_checks(context.workspace_path, output_format=output_format)
 
 def handle_workflow_runtime_inspect(args: dict[str, object], context: CommandContext) -> ToolResult:
     from dr_magu.workflow_engine.runtime import WorkflowRuntime
@@ -920,6 +934,15 @@ registry.register(CommandDefinition(
 
 
 
+
+
+registry.register(CommandDefinition(
+    name="platform.stabilize",
+    aliases=["stabilize", "readiness"],
+    description="Run platform readiness checks before v1.0.0.",
+    category="platform",
+    handler=handle_platform_stabilize,
+))
 
 registry.register(CommandDefinition(
     name="workflow.runtime.inspect",

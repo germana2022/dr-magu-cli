@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import typer
+from dr_magu.stabilization.commands import run_stabilization_checks
 from dr_magu.workflow_engine.runtime import WorkflowRuntime
 from dr_magu.workflow_engine.runner import WorkflowRunner
 from dr_magu.website_builder.workflow import WebsiteBuilderWorkflow
@@ -892,4 +893,15 @@ def workflow_runtime_export(
 ) -> None:
     """Export workflow history as JSON or Markdown."""
     result = WorkflowRuntime(workspace).export_history(run_id, output_format=output_format)
+    typer.echo(result.data if result.success else result.errors)
+
+
+
+@app.command("stabilize")
+def stabilize(
+    output_format: str = typer.Option("text", "--format", "-f", help="Output format: text or json."),
+    workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace/project root path."),
+) -> None:
+    """Run platform readiness checks before v1.0.0."""
+    result = run_stabilization_checks(workspace, output_format=output_format)
     typer.echo(result.data if result.success else result.errors)

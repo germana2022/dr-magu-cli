@@ -1,4 +1,4 @@
-# Dr Magu CLI v0.20.0
+# Dr Magu CLI v0.22.0
 
 Dr Magu CLI is a Python-based agent platform foundation inspired by Claude Code, OpenCode, Codex CLI, and Gemini CLI.
 
@@ -471,3 +471,32 @@ Persistence remains under:
   history-export.json
 ```
 \n\n## v0.21.0 - Background Worker Daemon\n- Background worker foundation\n- Queue/job runtime foundation\n- Scheduler integration preparation\n
+
+## v0.22.0 - Platform Stabilization
+
+This release adds platform readiness checks before v1.0.0.
+
+New capability:
+
+```bash
+dr-magu stabilize
+dr-magu stabilize --format json
+```
+
+Checks:
+
+- Required runtime packages
+- Required plugin manifests
+- Required command registry entries
+- Clean release artifacts
+- README and CHANGELOG presence
+- Validation files presence
+
+Generated outputs:
+
+```text
+.dr-magu/stabilization/stabilization-report.txt
+.dr-magu/stabilization/stabilization-report.json
+```
+
+This version prepares Dr Magu for the `v1.0.0 Stable AI Agent Platform` release.

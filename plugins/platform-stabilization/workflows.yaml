@@ -1,0 +1,8 @@
+workflows:
+  platform.stabilize:
+    name: Platform Stabilize
+    description: Run platform readiness checks.
+    enabled: true
+    deterministic: true
+    tools:
+      - platform.stabilize

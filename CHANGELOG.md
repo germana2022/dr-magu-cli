@@ -1,3 +1,13 @@
+## v0.22.0 - Platform Stabilization
+
+- Added Platform Stabilization package.
+- Added v1.0.0 readiness checks.
+- Added `platform.stabilize` command boundary.
+- Added `dr-magu stabilize` CLI command.
+- Added platform-stabilization plugin metadata.
+- Added stabilization report rendering in text and JSON.
+- Added stabilization report persistence under `.dr-magu/stabilization/`.
+
 ## v0.20.0 - Workflow Runtime & History
 
 - Added WorkflowRuntime operations.

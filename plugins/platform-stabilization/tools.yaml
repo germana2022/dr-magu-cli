@@ -1,0 +1,8 @@
+tools:
+  platform.stabilize:
+    description: Run platform readiness checks before v1.0.0.
+    category: platform
+    read_only: false
+    risk_level: low
+    approval_required: false
+    background_allowed: true
