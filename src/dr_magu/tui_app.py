@@ -90,7 +90,7 @@ class TuiSettings:
     """Settings used to start the Dr Magu Terminal UI."""
 
     workspace_path: str
-    version: str = "1.1.3"
+    version: str = "1.1.4"
 
 
 def _build_context(workspace_path: str) -> CommandContext:
@@ -1306,3 +1306,5 @@ def run_tui(workspace_path: str) -> None:
 # v1.1.2: LLM Runtime Integration enables default-model chat through brain.ask for general chat.
 
 # v1.1.3: OpenCode Provider Compatibility Fix adds provider-compatible headers for LLM runtime requests.
+
+# v1.1.4: LLM Response Sanitization hides raw provider payloads during normal chat rendering.

@@ -30,6 +30,7 @@ def test_llm_runtime_chat_uses_provider(tmp_path: Path):
     assert result.success is True
     assert result.tool == "llm.chat"
     assert result.data["llm_used"] is True
+    assert "raw" not in result.data["response"]
     assert "fake response" in result.data["response"]["content"]
 
 

@@ -7,6 +7,7 @@ from dr_magu.result import ToolResult
 
 from .models import LLMMessage
 from .openai_compatible import OpenAICompatibleProvider
+from .sanitizer import debug_response_payload, user_response_payload
 
 
 SYSTEM_PROMPT = """You are Dr Magu, an AI Agent Platform assistant. Be concise, helpful, and explain when an action requires a command, workflow, or approval."""
@@ -36,9 +37,11 @@ class LLMRuntime:
             success=response.success,
             tool="llm.chat",
             data={
-                "response": response.to_dict(),
+                "response": user_response_payload(response),
+                "debug": {"response": debug_response_payload(response)},
                 "default_model": model_config.to_dict(),
                 "llm_used": response.success,
             },
             errors=[] if response.success else [response.error or "LLM request failed."],
+            metadata={"response_object": response},
         )

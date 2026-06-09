@@ -1,3 +1,12 @@
+## v1.1.4 - LLM Response Sanitization
+
+- Added LLM response sanitizer.
+- Hid raw provider payloads from normal chat output.
+- Removed `reasoning_content`, token usage, logprobs and system fingerprints from debug payloads.
+- Added `--debug` support for `dr-magu llm-chat`.
+- Updated `brain.ask` to expose clean user-facing LLM responses.
+- Added sanitization regression tests.
+
 ## v1.1.3 - OpenCode Provider Compatibility Fix
 
 - Added provider-compatible headers to OpenAI-compatible LLM requests.

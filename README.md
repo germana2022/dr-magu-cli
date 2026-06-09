@@ -1,4 +1,4 @@
-# Dr Magu CLI v1.1.3
+# Dr Magu CLI v1.1.4
 
 Dr Magu CLI is a Python-based agent platform foundation inspired by Claude Code, OpenCode, Codex CLI, and Gemini CLI.
 
@@ -663,3 +663,33 @@ LLM_EXTRA_HEADERS={"X-Client":"dr-magu"}
 ```
 
 This addresses provider-side blocks such as Cloudflare `Error 1010: browser_signature_banned` caused by Python's default HTTP client signature.
+
+
+## v1.1.4 - LLM Response Sanitization
+
+This release improves the chat user experience by separating user-facing LLM output from provider internals.
+
+Normal output hides:
+
+- provider raw payload
+- `reasoning_content`
+- token usage
+- logprobs
+- system fingerprints
+- nested provider debug fields
+
+New behavior:
+
+```bash
+dr-magu llm-chat "hi"
+```
+
+prints only the assistant response.
+
+Debug mode remains available:
+
+```bash
+dr-magu llm-chat "hi" --debug
+```
+
+Debug output is still sanitized to avoid exposing chain-of-thought style provider fields.

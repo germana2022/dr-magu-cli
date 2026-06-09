@@ -671,10 +671,18 @@ def llm_chat_command(
     prompt: str,
     timeout_seconds: int = typer.Option(60, "--timeout", help="LLM request timeout in seconds."),
     workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path."),
+    debug: bool = typer.Option(False, "--debug", help="Show sanitized debug metadata."),
 ) -> None:
     """Send a prompt to the configured default LLM model."""
     result = LLMRuntime(workspace).chat(prompt, timeout_seconds=timeout_seconds)
-    typer.echo(result.data if result.success else result.errors)
+    if result.success:
+        response = result.data.get("response", {})
+        if debug:
+            typer.echo(result.data)
+        else:
+            typer.echo(response.get("content", ""))
+    else:
+        typer.echo(result.errors)
 
 
 if __name__ == "__main__":

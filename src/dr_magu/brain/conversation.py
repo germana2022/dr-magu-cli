@@ -17,6 +17,7 @@ from dr_magu.commands.processor import CommandProcessor
 from dr_magu.commands.registry import registry
 from dr_magu.config import load_config
 from dr_magu.llm_runtime.runtime import LLMRuntime
+from dr_magu.llm_runtime.sanitizer import debug_response_payload, user_response_payload
 from dr_magu.result import ToolResult
 
 
@@ -68,6 +69,9 @@ class ConversationalBrain:
 
         llm_result = LLMRuntime(self.workspace_path).chat(prompt)
         if llm_result.success:
+            response = llm_result.metadata.get("response_object")
+            user_payload = user_response_payload(response) if response else llm_result.data.get("response", {})
+            debug_payload = debug_response_payload(response) if response else llm_result.data.get("response", {})
             return ToolResult(
                 success=True,
                 tool="brain.ask",
@@ -77,8 +81,11 @@ class ConversationalBrain:
                     "default_model": model,
                     "llm_used": True,
                     "llm_ready": bool(model.get("model")),
-                    "response": llm_result.data["response"]["content"],
-                    "llm_response": llm_result.data["response"],
+                    "response": user_payload.get("content", ""),
+                    "llm_response": user_payload,
+                    "debug": {
+                        "llm_response": debug_payload,
+                    },
                 },
             )
 
