@@ -90,7 +90,7 @@ class TuiSettings:
     """Settings used to start the Dr Magu Terminal UI."""
 
     workspace_path: str
-    version: str = "0.22.0"
+    version: str = "1.1.0"
 
 
 def _build_context(workspace_path: str) -> CommandContext:
@@ -446,7 +446,7 @@ def run_tui(workspace_path: str) -> None:
 
         def on_mount(self) -> None:
             log = self.query_one("#console", RichLog)
-            log.write("[bold cyan]Welcome to Dr Magu v0.21.0[/]")
+            log.write("[bold cyan]Welcome to Dr Magu v1.1.0[/]")
             log.write(
                 "[dim]Workspace-aware Terminal UI with persistent sessions, command history, and deterministic repository scanning, context generation, workflow execution, and Brain context loading.[/]"
             )
@@ -1286,3 +1286,5 @@ def run_tui(workspace_path: str) -> None:
 # v0.20.0: Workflow Runtime & History adds inspect, cancel, retry, resume and export operations.
 
 # v0.22.0: Platform Stabilization adds v1.0.0 readiness checks.
+
+# v1.1.0: Execution Runtime Layer adds plans, permissions, filesystem, terminal and git runtimes.

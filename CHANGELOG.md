@@ -1,3 +1,15 @@
+## v1.1.0 - Execution Runtime Layer
+
+- Added Execution Runtime Layer package.
+- Added ExecutionPlan, ExecutionAction and ExecutionEvent models.
+- Added ExecutionPermissions.
+- Added execution plan persistence and logs.
+- Added FilesystemRuntime, TerminalRuntime and GitRuntime.
+- Added ExecutionPlanner and ExecutionExecutor.
+- Added HITL approval request flow for sensitive execution plans.
+- Added execution-runtime plugin metadata.
+- Added command registry and CLI commands for plan creation, execution, inspection and listing.
+
 ## v0.22.0 - Platform Stabilization
 
 - Added Platform Stabilization package.

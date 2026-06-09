@@ -1,0 +1,29 @@
+tools:
+  execution.plan.create:
+    description: Create an execution plan.
+    category: execution
+    read_only: false
+    risk_level: low
+    approval_required: false
+    background_allowed: true
+  execution.plan.execute:
+    description: Execute an execution plan.
+    category: execution
+    read_only: false
+    risk_level: high
+    approval_required: true
+    background_allowed: false
+  execution.plan.inspect:
+    description: Inspect an execution plan and log.
+    category: execution
+    read_only: true
+    risk_level: low
+    approval_required: false
+    background_allowed: true
+  execution.plan.list:
+    description: List execution plans.
+    category: execution
+    read_only: true
+    risk_level: low
+    approval_required: false
+    background_allowed: true

@@ -270,6 +270,44 @@ def handle_approval_list(args: dict[str, object], context: CommandContext) -> To
 
 
 
+
+def handle_execution_plan_create(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.execution.planner import ExecutionPlanner
+
+    kind = _get_str(args, "kind", "file")
+    target = _get_str(args, "target", _get_str(args, "value", ""))
+    content = _get_str(args, "content", "")
+    command = _get_str(args, "command", "")
+    message = _get_str(args, "message", "")
+
+    planner = ExecutionPlanner(context.workspace_path)
+    if kind == "terminal":
+        return planner.simple_terminal_plan(command or target)
+    if kind == "git-commit":
+        return planner.simple_git_commit_plan(message or target)
+    return planner.simple_file_plan(target, content)
+
+
+def handle_execution_plan_execute(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.execution.executor import ExecutionExecutor
+
+    plan_id = _get_str(args, "plan_id", _get_str(args, "id", _get_str(args, "value", "")))
+    approved = bool(args.get("approved", False))
+    return ExecutionExecutor(context.workspace_path).execute(plan_id, approved=approved)
+
+
+def handle_execution_plan_inspect(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.execution.executor import ExecutionExecutor
+
+    plan_id = _get_str(args, "plan_id", _get_str(args, "id", _get_str(args, "value", "")))
+    return ExecutionExecutor(context.workspace_path).inspect(plan_id)
+
+
+def handle_execution_plan_list(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.execution.executor import ExecutionExecutor
+
+    return ExecutionExecutor(context.workspace_path).list_plans()
+
 def handle_platform_stabilize(args: dict[str, object], context: CommandContext) -> ToolResult:
     from dr_magu.stabilization.commands import run_stabilization_checks
 
@@ -335,6 +373,44 @@ def handle_workflow_engine_history(args: dict[str, object], context: CommandCont
 
 
 
+
+
+def handle_execution_plan_create(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.execution.planner import ExecutionPlanner
+
+    kind = _get_str(args, "kind", "file")
+    target = _get_str(args, "target", _get_str(args, "value", ""))
+    content = _get_str(args, "content", "")
+    command = _get_str(args, "command", "")
+    message = _get_str(args, "message", "")
+
+    planner = ExecutionPlanner(context.workspace_path)
+    if kind == "terminal":
+        return planner.simple_terminal_plan(command or target)
+    if kind == "git-commit":
+        return planner.simple_git_commit_plan(message or target)
+    return planner.simple_file_plan(target, content)
+
+
+def handle_execution_plan_execute(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.execution.executor import ExecutionExecutor
+
+    plan_id = _get_str(args, "plan_id", _get_str(args, "id", _get_str(args, "value", "")))
+    approved = bool(args.get("approved", False))
+    return ExecutionExecutor(context.workspace_path).execute(plan_id, approved=approved)
+
+
+def handle_execution_plan_inspect(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.execution.executor import ExecutionExecutor
+
+    plan_id = _get_str(args, "plan_id", _get_str(args, "id", _get_str(args, "value", "")))
+    return ExecutionExecutor(context.workspace_path).inspect(plan_id)
+
+
+def handle_execution_plan_list(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.execution.executor import ExecutionExecutor
+
+    return ExecutionExecutor(context.workspace_path).list_plans()
 
 def handle_platform_stabilize(args: dict[str, object], context: CommandContext) -> ToolResult:
     from dr_magu.stabilization.commands import run_stabilization_checks
@@ -935,6 +1011,36 @@ registry.register(CommandDefinition(
 
 
 
+
+
+registry.register(CommandDefinition(
+    name="execution.plan.create",
+    aliases=["exec.plan", "execution.create"],
+    description="Create an execution plan.",
+    category="execution",
+    handler=handle_execution_plan_create,
+))
+registry.register(CommandDefinition(
+    name="execution.plan.execute",
+    aliases=["exec.run", "execution.execute"],
+    description="Execute an execution plan.",
+    category="execution",
+    handler=handle_execution_plan_execute,
+))
+registry.register(CommandDefinition(
+    name="execution.plan.inspect",
+    aliases=["exec.inspect", "execution.inspect"],
+    description="Inspect an execution plan and log.",
+    category="execution",
+    handler=handle_execution_plan_inspect,
+))
+registry.register(CommandDefinition(
+    name="execution.plan.list",
+    aliases=["exec.list", "execution.list"],
+    description="List execution plans.",
+    category="execution",
+    handler=handle_execution_plan_list,
+))
 
 registry.register(CommandDefinition(
     name="platform.stabilize",

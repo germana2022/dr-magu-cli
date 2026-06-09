@@ -1,0 +1,39 @@
+id: execution-runtime
+name: Execution Runtime
+version: 1.1.0
+enabled: true
+domain: execution
+description: Execution Runtime Layer for filesystem, terminal and git execution plans.
+
+provides:
+  agents:
+    - execution-planner
+    - execution-executor
+  workflows:
+    - execution.plan
+    - execution.execute
+  tools:
+    - execution.plan.create
+    - execution.plan.execute
+    - execution.plan.inspect
+    - execution.plan.list
+    - filesystem.read
+    - filesystem.write
+    - filesystem.delete
+    - terminal.run
+    - git.status
+    - git.diff
+    - git.log
+    - git.branch
+    - git.commit
+  prompts:
+    - execution-plan
+  schedules: []
+  templates:
+    - execution-plan
+    - execution-log
+permissions:
+  filesystem_write: restricted
+  terminal_execute: approval_required
+  git_commit: approval_required
+  git_push: blocked

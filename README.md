@@ -1,4 +1,4 @@
-# Dr Magu CLI v0.22.0
+# Dr Magu CLI v1.1.0
 
 Dr Magu CLI is a Python-based agent platform foundation inspired by Claude Code, OpenCode, Codex CLI, and Gemini CLI.
 
@@ -500,3 +500,70 @@ Generated outputs:
 ```
 
 This version prepares Dr Magu for the `v1.0.0 Stable AI Agent Platform` release.
+
+
+## v1.1.0 - Execution Runtime Layer
+
+This release introduces the Execution Runtime Layer.
+
+Core concepts:
+
+- Execution Planner
+- Execution Executor
+- Execution Permissions
+- Execution Plans
+- Execution Logs
+- Execution History
+- HITL integration for sensitive actions
+
+Runtime capabilities:
+
+- `filesystem.read`
+- `filesystem.write`
+- `filesystem.delete`
+- `terminal.run`
+- `git.status`
+- `git.diff`
+- `git.log`
+- `git.branch`
+- `git.commit`
+
+New CLI commands:
+
+```bash
+dr-magu execution-plan-file docs/demo.md "hello"
+dr-magu execution-plan-terminal "pytest"
+dr-magu execution-plan-git-commit "docs: update generated docs"
+dr-magu execution-run <plan-id> --approved
+dr-magu execution-inspect <plan-id>
+dr-magu execution-list
+```
+
+Persistence:
+
+```text
+.dr-magu/execution/<plan-id>/
+  execution-plan.json
+  execution-log.json
+  execution-result.json
+```
+
+Security model:
+
+```yaml
+filesystem:
+  read: true
+  write: true
+  delete: false
+
+terminal:
+  execute: true
+
+git:
+  read: true
+  commit: true
+  push: false
+
+network:
+  outbound: false
+```

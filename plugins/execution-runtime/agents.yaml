@@ -1,0 +1,23 @@
+agents:
+  execution-planner:
+    name: Execution Planner
+    description: Create explicit execution plans before runtime actions.
+    role: execution
+    workflow: execution.plan
+    enabled: true
+    requires_llm: false
+    capabilities:
+      - create_execution_plan
+      - request_human_approval
+
+  execution-executor:
+    name: Execution Executor
+    description: Execute approved execution plans through runtime boundaries.
+    role: execution
+    workflow: execution.execute
+    enabled: true
+    requires_llm: false
+    capabilities:
+      - execute_plan
+      - inspect_plan
+      - list_plans

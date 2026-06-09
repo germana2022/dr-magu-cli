@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import typer
+from dr_magu.execution.executor import ExecutionExecutor
+from dr_magu.execution.planner import ExecutionPlanner
 from dr_magu.stabilization.commands import run_stabilization_checks
 from dr_magu.workflow_engine.runtime import WorkflowRuntime
 from dr_magu.workflow_engine.runner import WorkflowRunner
@@ -904,4 +906,66 @@ def stabilize(
 ) -> None:
     """Run platform readiness checks before v1.0.0."""
     result = run_stabilization_checks(workspace, output_format=output_format)
+    typer.echo(result.data if result.success else result.errors)
+
+
+
+@app.command("execution-plan-file")
+def execution_plan_file(
+    target: str,
+    content: str,
+    workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path."),
+) -> None:
+    """Create a filesystem write execution plan."""
+    result = ExecutionPlanner(workspace).simple_file_plan(target, content)
+    typer.echo(result.data if result.success else result.errors)
+
+
+@app.command("execution-plan-terminal")
+def execution_plan_terminal(
+    command: str,
+    workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path."),
+) -> None:
+    """Create a terminal execution plan."""
+    result = ExecutionPlanner(workspace).simple_terminal_plan(command)
+    typer.echo(result.data if result.success else result.errors)
+
+
+@app.command("execution-plan-git-commit")
+def execution_plan_git_commit(
+    message: str,
+    workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path."),
+) -> None:
+    """Create a git commit execution plan."""
+    result = ExecutionPlanner(workspace).simple_git_commit_plan(message)
+    typer.echo(result.data if result.success else result.errors)
+
+
+@app.command("execution-run")
+def execution_run(
+    plan_id: str,
+    approved: bool = typer.Option(False, "--approved", help="Execute actions that require approval."),
+    workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path."),
+) -> None:
+    """Execute an execution plan."""
+    result = ExecutionExecutor(workspace).execute(plan_id, approved=approved)
+    typer.echo(result.data if result.success else result.errors)
+
+
+@app.command("execution-inspect")
+def execution_inspect(
+    plan_id: str,
+    workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path."),
+) -> None:
+    """Inspect an execution plan."""
+    result = ExecutionExecutor(workspace).inspect(plan_id)
+    typer.echo(result.data if result.success else result.errors)
+
+
+@app.command("execution-list")
+def execution_list(
+    workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path."),
+) -> None:
+    """List execution plans."""
+    result = ExecutionExecutor(workspace).list_plans()
     typer.echo(result.data if result.success else result.errors)

@@ -1,0 +1,16 @@
+workflows:
+  execution.plan:
+    name: Execution Plan
+    description: Create execution plans before runtime operations.
+    enabled: true
+    deterministic: true
+    tools:
+      - execution.plan.create
+  execution.execute:
+    name: Execution Execute
+    description: Execute approved execution plans.
+    enabled: true
+    deterministic: true
+    tools:
+      - execution.plan.execute
+      - execution.plan.inspect
