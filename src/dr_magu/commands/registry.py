@@ -309,6 +309,14 @@ def handle_execution_plan_list(args: dict[str, object], context: CommandContext)
     return ExecutionExecutor(context.workspace_path).list_plans()
 
 
+
+def handle_llm_chat(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.llm_runtime.runtime import LLMRuntime
+
+    prompt = _get_str(args, "prompt", _get_str(args, "value", ""))
+    timeout_seconds = _get_int(args, "timeout_seconds", 60)
+    return LLMRuntime(context.workspace_path).chat(prompt, timeout_seconds=timeout_seconds)
+
 def handle_brain_ask(args: dict[str, object], context: CommandContext) -> ToolResult:
     from dr_magu.brain.conversation import ConversationalBrain
 
@@ -423,6 +431,14 @@ def handle_execution_plan_list(args: dict[str, object], context: CommandContext)
 
     return ExecutionExecutor(context.workspace_path).list_plans()
 
+
+
+def handle_llm_chat(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.llm_runtime.runtime import LLMRuntime
+
+    prompt = _get_str(args, "prompt", _get_str(args, "value", ""))
+    timeout_seconds = _get_int(args, "timeout_seconds", 60)
+    return LLMRuntime(context.workspace_path).chat(prompt, timeout_seconds=timeout_seconds)
 
 def handle_brain_ask(args: dict[str, object], context: CommandContext) -> ToolResult:
     from dr_magu.brain.conversation import ConversationalBrain
@@ -1064,6 +1080,15 @@ registry.register(CommandDefinition(
     handler=handle_execution_plan_list,
 ))
 
+
+
+registry.register(CommandDefinition(
+    name="llm.chat",
+    aliases=["llm", "model.chat"],
+    description="Send a prompt to the configured default LLM model.",
+    category="llm",
+    handler=handle_llm_chat,
+))
 
 registry.register(CommandDefinition(
     name="brain.ask",

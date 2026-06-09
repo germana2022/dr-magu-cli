@@ -1,0 +1,8 @@
+workflows:
+  llm.chat:
+    name: LLM Chat
+    description: Send a prompt to the configured default LLM model.
+    enabled: true
+    deterministic: false
+    tools:
+      - llm.chat

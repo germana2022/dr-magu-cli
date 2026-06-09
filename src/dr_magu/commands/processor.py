@@ -83,6 +83,9 @@ class CommandProcessor:
         elif command_name in {"brain.ask", "brain.chat", "ask", "chat"}:
             if positional:
                 args.setdefault("prompt", " ".join(positional))
+        elif command_name in {"llm.chat", "llm", "model.chat"}:
+            if positional:
+                args.setdefault("prompt", " ".join(positional))
         elif command_name in {"agent.show", "agent.run", "agent.validate", "agent.enable", "agent.disable", "agent.delete", "as", "ar", "av", "ae", "ad", "ax"}:
             if positional:
                 args.setdefault("id", positional[0])

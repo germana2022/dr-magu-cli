@@ -1,0 +1,22 @@
+id: llm-runtime
+name: LLM Runtime
+version: 1.1.2
+enabled: true
+domain: llm
+description: Default-model LLM runtime with OpenAI-compatible chat completions.
+
+provides:
+  agents:
+    - llm-chat
+  workflows:
+    - llm.chat
+  tools:
+    - llm.chat
+  prompts:
+    - general-chat
+    - intent-response
+  schedules: []
+  templates:
+    - llm-response
+permissions:
+  network_outbound: restricted

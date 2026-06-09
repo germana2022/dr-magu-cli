@@ -1,0 +1,11 @@
+agents:
+  llm-chat:
+    name: LLM Chat
+    description: Execute general chat prompts using the configured default model.
+    role: llm
+    workflow: llm.chat
+    enabled: true
+    requires_llm: true
+    capabilities:
+      - default_model_chat
+      - openai_compatible_chat_completions

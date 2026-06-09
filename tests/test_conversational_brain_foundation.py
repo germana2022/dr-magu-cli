@@ -30,13 +30,16 @@ def test_conversational_brain_routes_crm_question_to_research(tmp_path: Path):
     assert "default_model" in result.data
 
 
-def test_conversational_brain_general_chat_returns_model_context(tmp_path: Path):
+def test_conversational_brain_general_chat_returns_model_context(tmp_path: Path, monkeypatch):
+    monkeypatch.delenv("LLM_API_KEY", raising=False)
+
     result = ConversationalBrain(tmp_path).ask("Hello there")
 
-    assert result.success is True
+    assert result.success is False
     assert result.data["classification"]["intent"] == "general_chat"
     assert result.data["llm_used"] is False
     assert "default_model" in result.data
+    assert "Missing API key" in result.errors[0]
 
 
 def test_command_processor_routes_brain_ask(tmp_path: Path):

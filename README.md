@@ -1,4 +1,4 @@
-# Dr Magu CLI v1.1.1
+# Dr Magu CLI v1.1.2
 
 Dr Magu CLI is a Python-based agent platform foundation inspired by Claude Code, OpenCode, Codex CLI, and Gemini CLI.
 
@@ -598,3 +598,38 @@ What are the best CRM systems for small businesses?
 ```
 
 v1.1.1 resolves the configured default model and returns its context, but live LLM calls remain reserved for the upcoming LLM Runtime implementation.
+
+
+## v1.1.2 - LLM Runtime Integration
+
+This release adds real default-model LLM chat execution.
+
+New capabilities:
+
+- `llm_runtime` package
+- OpenAI-compatible chat completions provider
+- `llm.chat` command
+- `dr-magu llm-chat`
+- `brain.ask` uses the LLM Runtime for `general_chat`
+- Default model integration through `ModelConfigLoader`
+- Timeout and error handling
+- Missing API key validation
+
+Example:
+
+```bash
+dr-magu llm-chat "hello"
+dr-magu brain-ask "hello"
+```
+
+Environment:
+
+```env
+LLM_PROVIDER=opencode
+LLM_BASE_URL=https://opencode.ai/zen/go/v1
+LLM_API_KEY=sk-...
+LLM_MODEL=deepseek-v4-flash
+LLM_TEMPERATURE=0.1
+```
+
+Action-oriented prompts such as research, website generation, workflow execution, and repository analysis still route to commands/workflows. General chat now attempts an LLM call.

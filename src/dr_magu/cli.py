@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import typer
+from dr_magu.llm_runtime.runtime import LLMRuntime
 from dr_magu.execution.executor import ExecutionExecutor
 from dr_magu.execution.planner import ExecutionPlanner
 from dr_magu.stabilization.commands import run_stabilization_checks
@@ -662,6 +663,18 @@ def brain_ask_command(prompt: str, workspace: str = typer.Option(".", "--workspa
 def brain_chat_command(prompt: str, workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path.")) -> None:
     """Alias for Conversational Brain prompts."""
     typer.echo(render_brain_result(brain_chat(prompt, workspace)))
+
+
+
+@app.command("llm-chat")
+def llm_chat_command(
+    prompt: str,
+    timeout_seconds: int = typer.Option(60, "--timeout", help="LLM request timeout in seconds."),
+    workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path."),
+) -> None:
+    """Send a prompt to the configured default LLM model."""
+    result = LLMRuntime(workspace).chat(prompt, timeout_seconds=timeout_seconds)
+    typer.echo(result.data if result.success else result.errors)
 
 
 if __name__ == "__main__":

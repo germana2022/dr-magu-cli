@@ -16,6 +16,7 @@ from dr_magu.commands.context import CommandContext
 from dr_magu.commands.processor import CommandProcessor
 from dr_magu.commands.registry import registry
 from dr_magu.config import load_config
+from dr_magu.llm_runtime.runtime import LLMRuntime
 from dr_magu.result import ToolResult
 
 
@@ -65,8 +66,24 @@ class ConversationalBrain:
                 errors=route_result.errors,
             )
 
+        llm_result = LLMRuntime(self.workspace_path).chat(prompt)
+        if llm_result.success:
+            return ToolResult(
+                success=True,
+                tool="brain.ask",
+                data={
+                    "prompt": prompt,
+                    "classification": classification.to_dict(),
+                    "default_model": model,
+                    "llm_used": True,
+                    "llm_ready": bool(model.get("model")),
+                    "response": llm_result.data["response"]["content"],
+                    "llm_response": llm_result.data["response"],
+                },
+            )
+
         return ToolResult(
-            success=True,
+            success=False,
             tool="brain.ask",
             data={
                 "prompt": prompt,
@@ -74,11 +91,9 @@ class ConversationalBrain:
                 "default_model": model,
                 "llm_used": False,
                 "llm_ready": bool(model.get("model")),
-                "message": (
-                    "General chat mode was detected. The default model is resolved, "
-                    "but live LLM chat execution is reserved for the LLM Runtime version."
-                ),
+                "message": "General chat mode was detected, but the LLM runtime request failed.",
             },
+            errors=llm_result.errors,
         )
 
     def _command_for_intent(self, intent: str, prompt: str) -> str | None:

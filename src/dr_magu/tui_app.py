@@ -90,7 +90,7 @@ class TuiSettings:
     """Settings used to start the Dr Magu Terminal UI."""
 
     workspace_path: str
-    version: str = "1.1.1"
+    version: str = "1.1.2"
 
 
 def _build_context(workspace_path: str) -> CommandContext:
@@ -1302,3 +1302,5 @@ def run_tui(workspace_path: str) -> None:
 # v1.1.0: Execution Runtime Layer adds plans, permissions, filesystem, terminal and git runtimes.
 
 # v1.1.1: Conversational Brain Foundation routes unknown natural-language TUI input through brain.ask.
+
+# v1.1.2: LLM Runtime Integration enables default-model chat through brain.ask for general chat.

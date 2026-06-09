@@ -1,3 +1,14 @@
+## v1.1.2 - LLM Runtime Integration
+
+- Added `llm_runtime` package.
+- Added OpenAI-compatible provider.
+- Added normalized LLM message and response models.
+- Added `llm.chat` command and `dr-magu llm-chat`.
+- Integrated `brain.ask` with the LLM runtime for `general_chat` prompts.
+- Preserved deterministic routing for action-oriented prompts.
+- Added timeout, API key and provider error handling.
+- Added `llm-runtime` plugin metadata.
+
 ## v1.1.1 - Conversational Brain Foundation
 
 - Added Conversational Brain module.

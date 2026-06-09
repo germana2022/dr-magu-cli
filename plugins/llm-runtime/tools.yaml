@@ -1,0 +1,8 @@
+tools:
+  llm.chat:
+    description: Send a prompt to the configured default LLM model.
+    category: llm
+    read_only: false
+    risk_level: medium
+    approval_required: false
+    background_allowed: true
