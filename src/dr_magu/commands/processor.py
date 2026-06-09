@@ -89,6 +89,18 @@ class CommandProcessor:
         elif command_name in {"mcp.call"}:
             if positional:
                 args.setdefault("query", " ".join(positional))
+        elif command_name in {"website.analyze", "site.analyze", "web.analyze"}:
+            if positional:
+                args.setdefault("url", " ".join(positional))
+        elif command_name in {"repository.read", "repo.read", "github.repository"}:
+            if positional:
+                args.setdefault("repository", " ".join(positional))
+        elif command_name in {"filesystem.search", "mcp.fs.search"}:
+            if positional:
+                args.setdefault("path", " ".join(positional))
+        elif command_name in {"web.search", "brave.search"}:
+            if positional:
+                args.setdefault("query", " ".join(positional))
         elif command_name in {"agent.show", "agent.run", "agent.validate", "agent.enable", "agent.disable", "agent.delete", "as", "ar", "av", "ae", "ad", "ax"}:
             if positional:
                 args.setdefault("id", positional[0])

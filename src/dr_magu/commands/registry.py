@@ -206,6 +206,36 @@ def handle_brain_route(args: dict[str, object], context: CommandContext) -> Tool
 
 
 
+
+
+def handle_website_analyze(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.mcp_integrations.runtime import MCPIntegrationRuntime
+
+    url = _get_str(args, "url", _get_str(args, "value", ""))
+    return MCPIntegrationRuntime(context.workspace_path).website_analyze(url)
+
+
+def handle_repository_read(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.mcp_integrations.runtime import MCPIntegrationRuntime
+
+    repository = _get_str(args, "repository", _get_str(args, "value", ""))
+    return MCPIntegrationRuntime(context.workspace_path).repository_read(repository)
+
+
+def handle_mcp_filesystem_search(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.mcp_integrations.runtime import MCPIntegrationRuntime
+
+    path = _get_str(args, "path", _get_str(args, "value", "."))
+    return MCPIntegrationRuntime(context.workspace_path).filesystem_search(path)
+
+
+def handle_web_search(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.mcp_integrations.runtime import MCPIntegrationRuntime
+
+    query = _get_str(args, "query", _get_str(args, "value", ""))
+    limit = _get_int(args, "limit", 5)
+    return MCPIntegrationRuntime(context.workspace_path).web_search(query, limit=limit)
+
 def handle_mcp_servers(args: dict[str, object], context: CommandContext) -> ToolResult:
     from dr_magu.mcp_runtime.registry import MCPServerRegistry
 
@@ -943,6 +973,36 @@ registry.register(CommandDefinition(
 ))
 
 
+
+
+registry.register(CommandDefinition(
+    name="website.analyze",
+    aliases=["site.analyze", "web.analyze"],
+    description="Analyze a website through Playwright MCP.",
+    category="mcp",
+    handler=handle_website_analyze,
+))
+registry.register(CommandDefinition(
+    name="repository.read",
+    aliases=["repo.read", "github.repository"],
+    description="Read repository metadata through GitHub MCP.",
+    category="mcp",
+    handler=handle_repository_read,
+))
+registry.register(CommandDefinition(
+    name="filesystem.search",
+    aliases=["mcp.fs.search"],
+    description="Search workspace files through Filesystem MCP.",
+    category="mcp",
+    handler=handle_mcp_filesystem_search,
+))
+registry.register(CommandDefinition(
+    name="web.search",
+    aliases=["brave.search"],
+    description="Search the web through a configured MCP search server.",
+    category="mcp",
+    handler=handle_web_search,
+))
 
 registry.register(CommandDefinition(
     name="mcp.servers",

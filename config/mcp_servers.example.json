@@ -1,0 +1,40 @@
+{
+  "servers": [
+    {
+      "id": "playwright",
+      "name": "Playwright MCP",
+      "transport": "stdio",
+      "command": "npx",
+      "args": ["@playwright/mcp"],
+      "enabled": true,
+      "capabilities": ["browser", "web_scraping", "website_analysis", "screenshot", "web_search"]
+    },
+    {
+      "id": "brave-search",
+      "name": "Brave Search MCP",
+      "transport": "stdio",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-brave-search"],
+      "enabled": false,
+      "capabilities": ["web_search", "research", "news_search"]
+    },
+    {
+      "id": "github",
+      "name": "GitHub MCP",
+      "transport": "stdio",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "enabled": false,
+      "capabilities": ["github", "repository", "pull_request", "issues"]
+    },
+    {
+      "id": "filesystem",
+      "name": "Filesystem MCP",
+      "transport": "stdio",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "."],
+      "enabled": false,
+      "capabilities": ["filesystem", "files_read", "files_write", "workspace"]
+    }
+  ]
+}

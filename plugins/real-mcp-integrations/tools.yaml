@@ -1,0 +1,29 @@
+tools:
+  website.analyze:
+    description: Analyze a website through Playwright MCP.
+    category: mcp
+    read_only: true
+    risk_level: medium
+    approval_required: false
+    background_allowed: true
+  repository.read:
+    description: Read repository metadata through GitHub MCP.
+    category: mcp
+    read_only: true
+    risk_level: medium
+    approval_required: false
+    background_allowed: true
+  filesystem.search:
+    description: Search filesystem through Filesystem MCP.
+    category: mcp
+    read_only: true
+    risk_level: low
+    approval_required: false
+    background_allowed: true
+  web.search:
+    description: Search the web through MCP.
+    category: mcp
+    read_only: true
+    risk_level: medium
+    approval_required: false
+    background_allowed: true

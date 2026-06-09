@@ -1,0 +1,22 @@
+workflows:
+  website.analyze:
+    name: Website Analyze
+    description: Analyze a website through Playwright MCP.
+    enabled: true
+    deterministic: false
+    tools:
+      - website.analyze
+  repository.read:
+    name: Repository Read
+    description: Read repository metadata through GitHub MCP.
+    enabled: true
+    deterministic: false
+    tools:
+      - repository.read
+  web.search:
+    name: Web Search
+    description: Search the web through Brave Search or Playwright MCP.
+    enabled: true
+    deterministic: false
+    tools:
+      - web.search

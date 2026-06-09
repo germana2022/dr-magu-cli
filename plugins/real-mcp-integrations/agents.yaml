@@ -1,0 +1,46 @@
+agents:
+  mcp-web-researcher:
+    name: MCP Web Researcher
+    description: Search the web through Brave Search or Playwright MCP.
+    role: research
+    workflow: web.search
+    enabled: true
+    requires_llm: false
+    capabilities:
+      - web_search
+      - source_collection
+
+  website-analyzer:
+    name: Website Analyzer
+    description: Analyze website structure through Playwright MCP.
+    role: research
+    workflow: website.analyze
+    enabled: true
+    requires_llm: false
+    capabilities:
+      - website_analysis
+      - navigation_extraction
+      - cta_extraction
+
+  repository-reader:
+    name: Repository Reader
+    description: Read repository metadata through GitHub MCP.
+    role: software-development
+    workflow: repository.read
+    enabled: true
+    requires_llm: false
+    capabilities:
+      - repository_metadata
+      - issue_context
+      - pull_request_context
+
+  filesystem-agent:
+    name: Filesystem Agent
+    description: Read/search workspace content through Filesystem MCP.
+    role: filesystem
+    workflow: filesystem.search
+    enabled: true
+    requires_llm: false
+    capabilities:
+      - file_search
+      - file_read

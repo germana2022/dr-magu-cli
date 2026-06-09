@@ -1,3 +1,14 @@
+## v1.3.0 - Real MCP Integrations
+
+- Added MCP templates for Playwright, Brave Search, GitHub and Filesystem.
+- Added high-level MCP integration runtime.
+- Added website analysis command.
+- Added repository read command.
+- Added filesystem search and web search MCP command boundaries.
+- Added `config/mcp_servers.example.json`.
+- Added `real-mcp-integrations` plugin metadata.
+- Added tests for Playwright/GitHub/Filesystem integration contracts.
+
 ## v1.2.0 - MCP Research Runtime
 
 - Added `mcp_runtime` package.

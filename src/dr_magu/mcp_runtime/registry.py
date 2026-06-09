@@ -7,16 +7,56 @@ from pathlib import Path
 from .models import MCPServerConfig
 
 
+def _env_args(name: str) -> list[str]:
+    raw = os.getenv(name)
+    if not raw:
+        return []
+    try:
+        parsed = json.loads(raw)
+        if isinstance(parsed, list):
+            return [str(item) for item in parsed]
+    except json.JSONDecodeError:
+        pass
+    return [part for part in raw.split(" ") if part]
+
+
 DEFAULT_MCP_SERVERS = [
     MCPServerConfig(
-        id="web-search",
-        name="Web Search MCP",
+        id="playwright",
+        name="Playwright MCP",
         transport="stdio",
-        command=os.getenv("MCP_WEB_SEARCH_COMMAND"),
-        args=[],
-        enabled=bool(os.getenv("MCP_WEB_SEARCH_COMMAND")),
-        capabilities=["web_search", "research"],
-    )
+        command=os.getenv("MCP_PLAYWRIGHT_COMMAND") or "npx",
+        args=_env_args("MCP_PLAYWRIGHT_ARGS") or ["@playwright/mcp"],
+        enabled=os.getenv("MCP_PLAYWRIGHT_ENABLED", "false").lower() in {"1", "true", "yes", "on"},
+        capabilities=["browser", "web_scraping", "website_analysis", "screenshot", "web_search"],
+    ),
+    MCPServerConfig(
+        id="brave-search",
+        name="Brave Search MCP",
+        transport="stdio",
+        command=os.getenv("MCP_BRAVE_SEARCH_COMMAND"),
+        args=_env_args("MCP_BRAVE_SEARCH_ARGS"),
+        enabled=bool(os.getenv("MCP_BRAVE_SEARCH_COMMAND")) or os.getenv("MCP_BRAVE_SEARCH_ENABLED", "false").lower() in {"1", "true", "yes", "on"},
+        capabilities=["web_search", "research", "news_search"],
+    ),
+    MCPServerConfig(
+        id="github",
+        name="GitHub MCP",
+        transport="stdio",
+        command=os.getenv("MCP_GITHUB_COMMAND"),
+        args=_env_args("MCP_GITHUB_ARGS"),
+        enabled=bool(os.getenv("MCP_GITHUB_COMMAND")) or os.getenv("MCP_GITHUB_ENABLED", "false").lower() in {"1", "true", "yes", "on"},
+        capabilities=["github", "repository", "pull_request", "issues"],
+    ),
+    MCPServerConfig(
+        id="filesystem",
+        name="Filesystem MCP",
+        transport="stdio",
+        command=os.getenv("MCP_FILESYSTEM_COMMAND"),
+        args=_env_args("MCP_FILESYSTEM_ARGS"),
+        enabled=bool(os.getenv("MCP_FILESYSTEM_COMMAND")) or os.getenv("MCP_FILESYSTEM_ENABLED", "false").lower() in {"1", "true", "yes", "on"},
+        capabilities=["filesystem", "files_read", "files_write", "workspace"],
+    ),
 ]
 
 
@@ -51,6 +91,12 @@ class MCPServerRegistry:
     def find_server(self, capability: str) -> MCPServerConfig | None:
         for server in self.enabled_servers():
             if capability in server.capabilities:
+                return server
+        return None
+
+    def find_by_id(self, server_id: str) -> MCPServerConfig | None:
+        for server in self.list_servers():
+            if server.id == server_id:
                 return server
         return None
 

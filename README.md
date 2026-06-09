@@ -1,4 +1,4 @@
-# Dr Magu CLI v1.2.0
+# Dr Magu CLI v1.3.0
 
 Dr Magu CLI is a Python-based agent platform foundation inspired by Claude Code, OpenCode, Codex CLI, and Gemini CLI.
 
@@ -743,3 +743,44 @@ Example:
 ```
 
 v1.2.0 includes a deterministic MCP simulation boundary for tests and offline development. A future version can replace the simulated call with a real MCP transport without changing the research workflow contract.
+
+
+## v1.3.0 - Real MCP Integrations
+
+This release adds first-class MCP integration contracts for:
+
+- Playwright MCP
+- Brave Search MCP
+- GitHub MCP
+- Filesystem MCP
+
+New commands:
+
+```bash
+dr-magu mcp-servers
+dr-magu website-analyze "https://example.com"
+dr-magu repository-read "owner/repo"
+```
+
+Command mode:
+
+```text
+website.analyze https://example.com
+repository.read owner/repo
+filesystem.search src
+web.search "AI agent platforms"
+```
+
+Configuration template:
+
+```text
+config/mcp_servers.example.json
+```
+
+Workspace configuration:
+
+```text
+.dr-magu/config/mcp_servers.json
+```
+
+v1.3.0 keeps deterministic simulation available for tests and offline development, while defining the contracts needed to attach real MCP servers.

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import typer
+from dr_magu.mcp_integrations.runtime import MCPIntegrationRuntime
 from dr_magu.chat_ux.renderer import render_user_facing_result
 from dr_magu.mcp_runtime.registry import MCPServerRegistry
 from dr_magu.llm_runtime.runtime import LLMRuntime
@@ -703,6 +704,27 @@ def llm_chat_command(
 def mcp_servers_command(workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path.")) -> None:
     """List configured MCP servers."""
     typer.echo(MCPServerRegistry(workspace).to_dict())
+
+
+
+@app.command("website-analyze")
+def website_analyze_command(
+    url: str,
+    workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path."),
+) -> None:
+    """Analyze a website through Playwright MCP."""
+    result = MCPIntegrationRuntime(workspace).website_analyze(url)
+    typer.echo(result.data if result.success else result.errors)
+
+
+@app.command("repository-read")
+def repository_read_command(
+    repository: str,
+    workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path."),
+) -> None:
+    """Read repository metadata through GitHub MCP."""
+    result = MCPIntegrationRuntime(workspace).repository_read(repository)
+    typer.echo(result.data if result.success else result.errors)
 
 
 if __name__ == "__main__":

@@ -42,7 +42,7 @@ class MCPClient:
         query = str(arguments.get("query") or arguments.get("topic") or "")
         limit = int(arguments.get("limit") or 5)
 
-        if tool_name in {"web.search", "search"}:
+        if tool_name in {"web.search", "search", "brave.search"}:
             results = [
                 {
                     "title": f"{query} MCP result {index}",
@@ -57,6 +57,52 @@ class MCPClient:
                 server_id=server.id,
                 tool_name=tool_name,
                 data={"query": query, "results": results, "count": len(results)},
+                simulated=True,
+            )
+
+        if tool_name in {"browser.analyze", "website.analyze"}:
+            url = str(arguments.get("url") or arguments.get("query") or "")
+            return MCPToolResult(
+                success=True,
+                server_id=server.id,
+                tool_name=tool_name,
+                data={
+                    "url": url,
+                    "title": f"Simulated analysis for {url}",
+                    "headings": ["Hero", "Features", "Pricing", "Contact"],
+                    "navigation": ["Home", "Product", "Pricing", "Resources"],
+                    "ctas": ["Get started", "Book a demo"],
+                    "summary": "Simulated website analysis. Configure Playwright MCP for real browser extraction.",
+                },
+                simulated=True,
+            )
+
+        if tool_name in {"github.repository", "repository.read"}:
+            repository = str(arguments.get("repository") or arguments.get("query") or "")
+            return MCPToolResult(
+                success=True,
+                server_id=server.id,
+                tool_name=tool_name,
+                data={
+                    "repository": repository,
+                    "summary": "Simulated GitHub repository metadata. Configure GitHub MCP for live repository access.",
+                    "files": ["README.md", "src/", "tests/"],
+                    "topics": ["ai-agent-platform", "cli"],
+                },
+                simulated=True,
+            )
+
+        if tool_name in {"filesystem.search", "filesystem.read"}:
+            target = str(arguments.get("path") or arguments.get("query") or ".")
+            return MCPToolResult(
+                success=True,
+                server_id=server.id,
+                tool_name=tool_name,
+                data={
+                    "path": target,
+                    "matches": [],
+                    "summary": "Simulated filesystem MCP result. Configure Filesystem MCP for live workspace access.",
+                },
                 simulated=True,
             )
 

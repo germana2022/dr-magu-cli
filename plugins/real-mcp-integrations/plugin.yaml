@@ -1,0 +1,34 @@
+id: real-mcp-integrations
+name: Real MCP Integrations
+version: 1.3.0
+enabled: true
+domain: mcp
+description: MCP integration contracts for Playwright, Brave Search, GitHub and Filesystem.
+
+provides:
+  agents:
+    - mcp-web-researcher
+    - website-analyzer
+    - repository-reader
+    - filesystem-agent
+  workflows:
+    - website.analyze
+    - repository.read
+    - web.search
+  tools:
+    - website.analyze
+    - repository.read
+    - filesystem.search
+    - web.search
+  prompts:
+    - website-analysis
+    - repository-reading
+    - web-research
+  schedules: []
+  templates:
+    - website-analysis-report
+    - repository-summary
+permissions:
+  network_outbound: restricted
+  browser_automation: approval_required
+  filesystem_write: restricted

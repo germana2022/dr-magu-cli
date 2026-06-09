@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dr-magu-cli"
-version = "1.2.0"
-description = "Dr Magu CLI with MCP Research Runtime foundation."
+version = "1.3.0"
+description = "Dr Magu CLI with real MCP integration contracts for Playwright, GitHub, Filesystem and Brave Search."
 readme = "README.md"
 requires-python = ">=3.11"
 authors = [{ name = "Dr Magu Team" }]
