@@ -1,3 +1,16 @@
+## v1.2.0 - MCP Research Runtime
+
+- Added `mcp_runtime` package.
+- Added MCP server registry.
+- Added MCP tool call/result models.
+- Added MCP client boundary with deterministic simulation mode.
+- Added MCP-backed research provider.
+- Updated `research.search` to default to MCP provider.
+- Added `mcp.servers` and `mcp.call` commands.
+- Added `dr-magu mcp-servers`.
+- Added `mcp-research-runtime` plugin metadata.
+- Added MCP research runtime tests.
+
 ## v1.1.4 - LLM Response Sanitization
 
 - Added LLM response sanitizer.

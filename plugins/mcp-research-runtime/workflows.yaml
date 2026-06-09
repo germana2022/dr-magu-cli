@@ -1,0 +1,9 @@
+workflows:
+  mcp.research:
+    name: MCP Research
+    description: Search sources through the MCP research provider.
+    enabled: true
+    deterministic: false
+    tools:
+      - mcp.servers
+      - research.search

@@ -1,0 +1,24 @@
+id: mcp-research-runtime
+name: MCP Research Runtime
+version: 1.2.0
+enabled: true
+domain: mcp
+description: MCP runtime foundation and MCP-backed research provider.
+
+provides:
+  agents:
+    - mcp-researcher
+  workflows:
+    - mcp.research
+  tools:
+    - mcp.servers
+    - mcp.call
+    - research.search
+  prompts:
+    - mcp-research
+  schedules: []
+  templates:
+    - mcp-research-report
+permissions:
+  network_outbound: restricted
+  process_execute: restricted

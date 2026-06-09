@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dr-magu-cli"
-version = "1.1.4"
-description = "Dr Magu CLI with sanitized LLM responses and debug-safe chat rendering."
+version = "1.2.0"
+description = "Dr Magu CLI with MCP Research Runtime foundation."
 readme = "README.md"
 requires-python = ">=3.11"
 authors = [{ name = "Dr Magu Team" }]

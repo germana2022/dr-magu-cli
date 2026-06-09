@@ -70,7 +70,7 @@ def test_cli_exposes_brain_ask_command():
     result = CliRunner().invoke(app, ["brain-ask", "What are the best CRM systems for small businesses?"])
 
     assert result.exit_code == 0
-    assert "research.search" in result.output
+    assert "Output saved to" in result.output
 
 
 def test_conversational_brain_plugin_is_discovered():

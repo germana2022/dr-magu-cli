@@ -1,0 +1,15 @@
+tools:
+  mcp.servers:
+    description: List configured MCP servers.
+    category: mcp
+    read_only: true
+    risk_level: low
+    approval_required: false
+    background_allowed: true
+  mcp.call:
+    description: Call a tool through the MCP runtime boundary.
+    category: mcp
+    read_only: false
+    risk_level: medium
+    approval_required: false
+    background_allowed: true

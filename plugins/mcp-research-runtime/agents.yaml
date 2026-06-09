@@ -1,0 +1,12 @@
+agents:
+  mcp-researcher:
+    name: MCP Researcher
+    description: Run research through an MCP web-search boundary.
+    role: research
+    workflow: mcp.research
+    enabled: true
+    requires_llm: false
+    capabilities:
+      - mcp_server_discovery
+      - mcp_web_search
+      - research_report_generation

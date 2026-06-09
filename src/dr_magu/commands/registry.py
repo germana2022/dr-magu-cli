@@ -204,6 +204,31 @@ def handle_brain_route(args: dict[str, object], context: CommandContext) -> Tool
     return ToolResult(success=True, tool="brain.route", data=brain_route(prompt))
 
 
+
+
+def handle_mcp_servers(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.mcp_runtime.registry import MCPServerRegistry
+
+    registry_data = MCPServerRegistry(context.workspace_path).to_dict()
+    return ToolResult(success=True, tool="mcp.servers", data=registry_data)
+
+
+def handle_mcp_call(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.mcp_runtime.client import MCPClient
+    from dr_magu.mcp_runtime.registry import MCPServerRegistry
+
+    capability = _get_str(args, "capability", "web_search")
+    tool_name = _get_str(args, "tool", _get_str(args, "tool_name", "web.search"))
+    query = _get_str(args, "query", _get_str(args, "value", ""))
+    limit = _get_int(args, "limit", 5)
+
+    server = MCPServerRegistry(context.workspace_path).find_server(capability)
+    if not server:
+        return ToolResult(success=False, tool="mcp.call", errors=[f"No enabled MCP server found for capability: {capability}"])
+
+    result = MCPClient(context.workspace_path).call_tool(server, tool_name, {"query": query, "limit": limit})
+    return ToolResult(success=result.success, tool="mcp.call", data=result.to_dict(), errors=[] if result.success else [result.error or "MCP call failed."])
+
 def handle_research_search(args: dict[str, object], context: CommandContext) -> ToolResult:
     from dr_magu.research.runner import WebResearchRunner
 
@@ -917,6 +942,22 @@ registry.register(CommandDefinition(
     handler=handle_brain_route,
 ))
 
+
+
+registry.register(CommandDefinition(
+    name="mcp.servers",
+    aliases=["mcp", "mcp.list"],
+    description="List configured MCP servers.",
+    category="mcp",
+    handler=handle_mcp_servers,
+))
+registry.register(CommandDefinition(
+    name="mcp.call",
+    aliases=["mcp.call"],
+    description="Call an MCP tool through the MCP runtime boundary.",
+    category="mcp",
+    handler=handle_mcp_call,
+))
 
 registry.register(CommandDefinition(
     name="research.search",

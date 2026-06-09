@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import typer
+from dr_magu.chat_ux.renderer import render_user_facing_result
+from dr_magu.mcp_runtime.registry import MCPServerRegistry
 from dr_magu.llm_runtime.runtime import LLMRuntime
 from dr_magu.execution.executor import ExecutionExecutor
 from dr_magu.execution.planner import ExecutionPlanner
@@ -654,17 +656,28 @@ def version() -> None:
 
 
 @app.command("brain-ask")
-def brain_ask_command(prompt: str, workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path.")) -> None:
+def brain_ask_command(
+    prompt: str,
+    workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path."),
+    debug: bool = typer.Option(False, "--debug", help="Show internal routing and model metadata."),
+) -> None:
     """Route a natural-language prompt through the Conversational Brain."""
-    typer.echo(render_brain_result(brain_ask(prompt, workspace)))
+    from dr_magu.brain.conversation import ConversationalBrain
 
+    result = ConversationalBrain(workspace).ask(prompt)
+    typer.echo(render_user_facing_result(result, debug=debug))
 
 @app.command("brain-chat")
-def brain_chat_command(prompt: str, workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path.")) -> None:
+def brain_chat_command(
+    prompt: str,
+    workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path."),
+    debug: bool = typer.Option(False, "--debug", help="Show internal routing and model metadata."),
+) -> None:
     """Alias for Conversational Brain prompts."""
-    typer.echo(render_brain_result(brain_chat(prompt, workspace)))
+    from dr_magu.brain.conversation import ConversationalBrain
 
-
+    result = ConversationalBrain(workspace).ask(prompt)
+    typer.echo(render_user_facing_result(result, debug=debug))
 
 @app.command("llm-chat")
 def llm_chat_command(
@@ -683,6 +696,13 @@ def llm_chat_command(
             typer.echo(response.get("content", ""))
     else:
         typer.echo(result.errors)
+
+
+
+@app.command("mcp-servers")
+def mcp_servers_command(workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path.")) -> None:
+    """List configured MCP servers."""
+    typer.echo(MCPServerRegistry(workspace).to_dict())
 
 
 if __name__ == "__main__":

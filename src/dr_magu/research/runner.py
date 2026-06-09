@@ -5,15 +5,20 @@ from pathlib import Path
 from dr_magu.result import ToolResult
 
 from .provider import DeterministicResearchProvider
+from .mcp_provider import MCPResearchProvider
 from .store import ResearchStore
 
 
 class WebResearchRunner:
     """Run web research workflows through a provider boundary."""
 
-    def __init__(self, workspace_path: str | Path):
+    def __init__(self, workspace_path: str | Path, provider_name: str | None = None):
+        import os
+
         self.workspace_path = Path(workspace_path).resolve()
-        self.provider = DeterministicResearchProvider()
+        resolved_provider = provider_name or os.getenv("RESEARCH_PROVIDER") or "mcp"
+        self.provider_name = resolved_provider
+        self.provider = MCPResearchProvider(self.workspace_path) if resolved_provider == "mcp" else DeterministicResearchProvider()
         self.store = ResearchStore(self.workspace_path)
 
     def search(self, topic: str, limit: int = 5, persist: bool = True) -> ToolResult:

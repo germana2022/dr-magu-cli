@@ -1,4 +1,4 @@
-# Dr Magu CLI v1.1.4
+# Dr Magu CLI v1.2.0
 
 Dr Magu CLI is a Python-based agent platform foundation inspired by Claude Code, OpenCode, Codex CLI, and Gemini CLI.
 
@@ -693,3 +693,53 @@ dr-magu llm-chat "hi" --debug
 ```
 
 Debug output is still sanitized to avoid exposing chain-of-thought style provider fields.
+
+
+## v1.2.0 - MCP Research Runtime
+
+This release adds the MCP Research Runtime foundation.
+
+New capabilities:
+
+- MCP server registry
+- MCP client boundary
+- MCP tool-call model
+- MCP-backed research provider
+- `mcp.servers`
+- `mcp.call`
+- `dr-magu mcp-servers`
+- `research.search` defaults to the MCP research provider
+
+Configuration options:
+
+```env
+RESEARCH_PROVIDER=mcp
+MCP_WEB_SEARCH_COMMAND=your-mcp-web-search-server
+MCP_SERVERS_JSON={"servers":[{"id":"web-search","name":"Web Search","enabled":true,"capabilities":["web_search"]}]}
+```
+
+Workspace config:
+
+```text
+.dr-magu/config/mcp_servers.json
+```
+
+Example:
+
+```json
+{
+  "servers": [
+    {
+      "id": "web-search",
+      "name": "Web Search MCP",
+      "transport": "stdio",
+      "command": "your-mcp-server-command",
+      "args": [],
+      "enabled": true,
+      "capabilities": ["web_search", "research"]
+    }
+  ]
+}
+```
+
+v1.2.0 includes a deterministic MCP simulation boundary for tests and offline development. A future version can replace the simulated call with a real MCP transport without changing the research workflow contract.
