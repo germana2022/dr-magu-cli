@@ -1,3 +1,15 @@
+## v1.6.0 - Multi-Agent Orchestrator
+
+- Added `multi_agent` package.
+- Added `MultiAgentPlanner`.
+- Added `MultiAgentOrchestrator`.
+- Added `multiagent.plan` and `multiagent.run` commands.
+- Added `dr-magu multiagent-plan` and `dr-magu multiagent-run`.
+- Added built-in SDLC and research-to-build pipelines.
+- Added task dependency validation and result aggregation.
+- Added `multi-agent-orchestrator` plugin metadata.
+- Added multi-agent orchestration tests.
+
 ## v1.5.0 - Conversational Command Router
 
 - Added `conversational_router` package.

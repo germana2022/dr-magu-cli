@@ -1,0 +1,15 @@
+workflows:
+  multiagent.plan:
+    name: Multi-Agent Plan
+    description: Build a multi-agent execution plan.
+    enabled: true
+    deterministic: true
+    tools:
+      - multiagent.plan
+  multiagent.run:
+    name: Multi-Agent Run
+    description: Execute a multi-agent plan.
+    enabled: true
+    deterministic: true
+    tools:
+      - multiagent.run

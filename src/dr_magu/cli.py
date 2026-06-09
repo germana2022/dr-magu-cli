@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import typer
+from dr_magu.multi_agent.runtime import MultiAgentOrchestrator
 from dr_magu.conversational_router.router import route_prompt
 from dr_magu.mcp_integrations.runtime import MCPIntegrationRuntime
 from dr_magu.chat_ux.renderer import render_user_facing_result
@@ -653,7 +654,7 @@ def tui_command(
 
 @app.command("version")
 def version() -> None:
-    console.print("dr-magu-cli v1.5.0")
+    console.print("dr-magu-cli v1.6.0")
 
 
 
@@ -1064,6 +1065,29 @@ def execution_list(
 ) -> None:
     """List execution plans."""
     result = ExecutionExecutor(workspace).list_plans()
+    typer.echo(result.data if result.success else result.errors)
+
+
+@app.command("multiagent-plan")
+def multiagent_plan_command(
+    name: str = typer.Argument("sdlc.pipeline"),
+    mode: str = typer.Option("sequential", "--mode", help="Orchestration mode."),
+    workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path."),
+) -> None:
+    """Create a multi-agent orchestration plan."""
+    result = MultiAgentOrchestrator(workspace).plan(name=name, mode=mode)
+    typer.echo(result.data if result.success else result.errors)
+
+
+@app.command("multiagent-run")
+def multiagent_run_command(
+    name: str = typer.Argument("sdlc.pipeline"),
+    mode: str = typer.Option("sequential", "--mode", help="Orchestration mode."),
+    continue_on_error: bool = typer.Option(False, "--continue-on-error", help="Continue after failed tasks."),
+    workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path."),
+) -> None:
+    """Run a multi-agent orchestration plan."""
+    result = MultiAgentOrchestrator(workspace).run(name=name, mode=mode, continue_on_error=continue_on_error)
     typer.echo(result.data if result.success else result.errors)
 
 if __name__ == "__main__":

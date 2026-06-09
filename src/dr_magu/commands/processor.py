@@ -86,6 +86,9 @@ class CommandProcessor:
         elif command_name in {"router.route", "route", "cr.route", "router.execute", "route.execute", "cr.exec"}:
             if positional:
                 args.setdefault("prompt", " ".join(positional))
+        elif command_name in {"multiagent.plan", "ma.plan", "agents.plan", "multiagent.run", "ma.run", "agents.run"}:
+            if positional:
+                args.setdefault("name", positional[0])
         elif command_name in {"llm.chat", "llm", "model.chat"}:
             if positional:
                 args.setdefault("prompt", " ".join(positional))

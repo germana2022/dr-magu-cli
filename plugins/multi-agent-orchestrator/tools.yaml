@@ -1,0 +1,15 @@
+tools:
+  multiagent.plan:
+    description: Create a multi-agent orchestration plan.
+    category: multiagent
+    read_only: true
+    risk_level: low
+    approval_required: false
+    background_allowed: true
+  multiagent.run:
+    description: Run a multi-agent orchestration plan.
+    category: multiagent
+    read_only: false
+    risk_level: medium
+    approval_required: false
+    background_allowed: true

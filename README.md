@@ -1,4 +1,4 @@
-# Dr Magu CLI v1.5.0
+# Dr Magu CLI v1.6.0
 
 Dr Magu CLI is a Python-based agent platform foundation inspired by Claude Code, OpenCode, Codex CLI, and Gemini CLI.
 
@@ -830,3 +830,40 @@ The router resolves:
 - filesystem search → `filesystem.search`
 - software development prompts → SDLC agents
 - general chat → LLM chat
+
+
+## v1.6.0 - Multi-Agent Orchestrator
+
+This release adds coordinated multi-agent execution.
+
+New commands:
+
+```bash
+dr-magu multiagent-plan sdlc.pipeline
+dr-magu multiagent-run sdlc.pipeline
+```
+
+Command mode:
+
+```text
+multiagent.plan sdlc.pipeline
+multiagent.run sdlc.pipeline
+```
+
+Built-in pipelines:
+
+- `sdlc.pipeline`
+  - repository-analyzer
+  - architecture-planner
+  - ticket-generator
+  - test-generator
+  - documentation-writer
+  - release-notes-generator
+
+- `research.build`
+  - web-researcher
+  - website-analyzer
+  - architecture-planner
+  - ticket-generator
+
+The orchestrator validates task dependencies, executes steps in order, aggregates results, and stops on failure unless `--continue-on-error` is enabled.

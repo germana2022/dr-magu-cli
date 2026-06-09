@@ -1,0 +1,13 @@
+agents:
+  multi-agent-supervisor:
+    name: Multi-Agent Supervisor
+    description: Coordinate multiple specialized agents through deterministic orchestration plans.
+    role: supervisor
+    workflow: multiagent.run
+    enabled: true
+    requires_llm: false
+    capabilities:
+      - plan_agents
+      - execute_agent_pipeline
+      - validate_dependencies
+      - aggregate_results

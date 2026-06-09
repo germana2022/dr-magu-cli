@@ -1,0 +1,24 @@
+id: multi-agent-orchestrator
+name: Multi-Agent Orchestrator
+version: 1.6.0
+enabled: true
+domain: multiagent
+description: Coordinate multiple agents into sequential and supervised execution pipelines.
+
+provides:
+  agents:
+    - multi-agent-supervisor
+  workflows:
+    - multiagent.plan
+    - multiagent.run
+  tools:
+    - multiagent.plan
+    - multiagent.run
+  prompts:
+    - multi-agent-planning
+    - supervisor-orchestration
+  schedules: []
+  templates:
+    - orchestration-plan
+permissions:
+  command_execute: restricted

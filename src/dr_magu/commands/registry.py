@@ -238,6 +238,24 @@ def handle_web_search(args: dict[str, object], context: CommandContext) -> ToolR
 
 
 
+
+
+def handle_multiagent_plan(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.multi_agent.runtime import MultiAgentOrchestrator
+
+    name = _get_str(args, "name", _get_str(args, "value", "sdlc.pipeline"))
+    mode = _get_str(args, "mode", "sequential")
+    return MultiAgentOrchestrator(context.workspace_path).plan(name=name, mode=mode)
+
+
+def handle_multiagent_run(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.multi_agent.runtime import MultiAgentOrchestrator
+
+    name = _get_str(args, "name", _get_str(args, "value", "sdlc.pipeline"))
+    mode = _get_str(args, "mode", "sequential")
+    continue_on_error = _get_bool(args, "continue_on_error", False)
+    return MultiAgentOrchestrator(context.workspace_path).run(name=name, mode=mode, continue_on_error=continue_on_error)
+
 def handle_router_route(args: dict[str, object], context: CommandContext) -> ToolResult:
     from dr_magu.conversational_router.router import route_prompt
 
@@ -1213,6 +1231,22 @@ registry.register(CommandDefinition(
     handler=handle_llm_chat,
 ))
 
+
+
+registry.register(CommandDefinition(
+    name="multiagent.plan",
+    aliases=["ma.plan", "agents.plan"],
+    description="Create a multi-agent orchestration plan.",
+    category="multiagent",
+    handler=handle_multiagent_plan,
+))
+registry.register(CommandDefinition(
+    name="multiagent.run",
+    aliases=["ma.run", "agents.run"],
+    description="Run a multi-agent orchestration plan.",
+    category="multiagent",
+    handler=handle_multiagent_run,
+))
 
 registry.register(CommandDefinition(
     name="router.route",
