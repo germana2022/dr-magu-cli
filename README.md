@@ -1,4 +1,4 @@
-# Dr Magu CLI v0.11.0
+# Dr Magu CLI v0.12.0
 
 Dr Magu CLI is a Python-based agent platform foundation inspired by Claude Code, OpenCode, Codex CLI, and Gemini CLI.
 
@@ -267,3 +267,25 @@ dr-magu brain-route "schedule a daily research report"
 ```
 
 The router is deterministic in this version and prepares Dr Magu for future LLM-backed routing.
+
+
+## v0.12.0 - Web Research Plugin Foundation
+
+This release introduces the Web Research Plugin foundation.
+
+Highlights:
+
+- Added `research` plugin.
+- Added `web-researcher` agent.
+- Added `research.web` workflow metadata.
+- Added `research.search` command/tool boundary.
+- Added deterministic research provider for safe offline development.
+- Added `.dr-magu/research/latest-research.json` persistence.
+- Added `dr-magu research "topic"`.
+- Prepared future live web connectors without coupling the Brain to a provider.
+
+Example:
+
+```bash
+dr-magu research "AI developer tools" --limit 5
+```

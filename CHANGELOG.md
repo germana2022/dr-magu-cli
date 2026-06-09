@@ -1,3 +1,13 @@
+## v0.12.0 - Web Research Plugin Foundation
+
+- Added Research plugin metadata.
+- Added `web-researcher` agent definition.
+- Added deterministic research provider.
+- Added `research.search` command boundary.
+- Added `dr-magu research`.
+- Added persisted research output at `.dr-magu/research/latest-research.json`.
+- Prepared future live web search/fetch/summarization connectors.
+
 ## v0.11.0 - Intent Router
 
 - Added deterministic Intent Router.

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import typer
+from dr_magu.research.runner import WebResearchRunner
 from dr_magu.brain.commands import brain_plan, brain_execute, brain_route, render_brain_result
 from rich.console import Console
 from rich.table import Table
@@ -667,3 +668,11 @@ def brain_execute_command(prompt: str, workspace: str = typer.Option(".", "--wor
 def brain_route_command(prompt: str) -> None:
     """Classify a prompt through the Dr Magu Intent Router."""
     typer.echo(render_brain_result(brain_route(prompt)))
+
+
+
+@app.command("research")
+def research(topic: str, limit: int = typer.Option(5, "--limit", "-n", help="Number of sources to return."), workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path.")) -> None:
+    """Search for structured research sources about a topic."""
+    result = WebResearchRunner(workspace).search(topic, limit=limit)
+    typer.echo(result.data if result.success else result.errors)

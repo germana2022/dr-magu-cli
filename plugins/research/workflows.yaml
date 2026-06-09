@@ -1,0 +1,8 @@
+workflows:
+  research.web:
+    name: Web Research
+    description: Search for sources about a topic and persist structured research output.
+    enabled: true
+    deterministic: true
+    tools:
+      - research.search

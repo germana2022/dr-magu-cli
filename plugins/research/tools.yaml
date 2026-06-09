@@ -1,0 +1,8 @@
+tools:
+  research.search:
+    description: Search for structured research sources about a topic.
+    category: research
+    read_only: true
+    risk_level: medium
+    approval_required: false
+    background_allowed: true

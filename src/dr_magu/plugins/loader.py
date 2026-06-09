@@ -27,23 +27,42 @@ class PluginLoader:
         return roots
 
     def discover_plugin_dirs(self) -> list[Path]:
-        """Return directories containing a plugin.yaml manifest."""
+        """Return plugin directories with workspace-level ID override precedence."""
         discovered: list[Path] = []
-        seen: set[str] = set()
+        seen_paths: set[str] = set()
+        seen_plugin_ids: set[str] = set()
+
         for root in self.plugin_roots():
             if not root.exists() or not root.is_dir():
                 continue
+
             for child in sorted(root.iterdir()):
                 if not child.is_dir():
                     continue
+
                 manifest = child / "plugin.yaml"
                 if not manifest.exists():
                     continue
-                key = str(child.resolve())
-                if key in seen:
+
+                path_key = str(child.resolve())
+                if path_key in seen_paths:
                     continue
-                seen.add(key)
+
+                plugin_id = child.name
+                try:
+                    with manifest.open("r", encoding="utf-8") as file:
+                        payload = yaml.safe_load(file) or {}
+                    plugin_id = str(payload.get("id") or child.name)
+                except Exception:
+                    plugin_id = child.name
+
+                if plugin_id in seen_plugin_ids:
+                    continue
+
+                seen_paths.add(path_key)
+                seen_plugin_ids.add(plugin_id)
                 discovered.append(child)
+
         return discovered
 
     def load(self) -> list[PluginDefinition]:

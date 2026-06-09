@@ -203,6 +203,14 @@ def handle_brain_route(args: dict[str, object], context: CommandContext) -> Tool
     prompt = _get_str(args, "prompt", _get_str(args, "value", ""))
     return ToolResult(success=True, tool="brain.route", data=brain_route(prompt))
 
+
+def handle_research_search(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.research.runner import WebResearchRunner
+
+    topic = _get_str(args, "topic", _get_str(args, "value", ""))
+    limit = int(args.get("limit", 5) or 5)
+    return WebResearchRunner(context.workspace_path).search(topic, limit=limit)
+
 def handle_tools_list(args: dict[str, object], context: CommandContext) -> ToolResult:
     from dr_magu.tools.registry import ToolRegistry
 
@@ -497,6 +505,15 @@ registry.register(CommandDefinition(
     description="Classify a natural-language prompt with the Intent Router.",
     category="brain",
     handler=handle_brain_route,
+))
+
+
+registry.register(CommandDefinition(
+    name="research.search",
+    aliases=["research", "web.search", "rs"],
+    description="Search for structured research sources about a topic.",
+    category="research",
+    handler=handle_research_search,
 ))
 
 registry.register(CommandDefinition(

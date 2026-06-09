@@ -1,0 +1,17 @@
+agents:
+  web-researcher:
+    name: Web Researcher
+    description: Search and summarize web content through the research workflow.
+    role: research
+    workflow: research.web
+    enabled: true
+    requires_llm: true
+    capabilities:
+      - search_web
+      - summarize_content
+      - generate_research_sources
+    model:
+      provider: null
+      base_url: null
+      model: null
+      temperature: null

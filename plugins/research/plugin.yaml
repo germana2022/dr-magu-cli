@@ -1,0 +1,21 @@
+id: research
+name: Research
+version: 0.12.0
+enabled: true
+domain: research
+description: Research agents, workflows and tools for web-oriented discovery and summaries.
+
+provides:
+  agents:
+    - web-researcher
+  workflows:
+    - research.web
+  tools:
+    - research.search
+  prompts:
+    - research-summary
+  schedules: []
+  templates:
+    - research-report
+permissions:
+  external_network: restricted
