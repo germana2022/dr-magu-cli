@@ -268,6 +268,43 @@ def handle_approval_list(args: dict[str, object], context: CommandContext) -> To
 
 
 
+
+def handle_workflow_runtime_inspect(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.workflow_engine.runtime import WorkflowRuntime
+
+    run_id = _get_str(args, "run_id", _get_str(args, "id", _get_str(args, "value", "")))
+    return WorkflowRuntime(context.workspace_path).inspect(run_id)
+
+
+def handle_workflow_runtime_cancel(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.workflow_engine.runtime import WorkflowRuntime
+
+    run_id = _get_str(args, "run_id", _get_str(args, "id", _get_str(args, "value", "")))
+    reason = _get_str(args, "reason", "")
+    return WorkflowRuntime(context.workspace_path).cancel(run_id, reason=reason)
+
+
+def handle_workflow_runtime_retry(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.workflow_engine.runtime import WorkflowRuntime
+
+    run_id = _get_str(args, "run_id", _get_str(args, "id", _get_str(args, "value", "")))
+    return WorkflowRuntime(context.workspace_path).retry(run_id)
+
+
+def handle_workflow_runtime_resume(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.workflow_engine.runtime import WorkflowRuntime
+
+    run_id = _get_str(args, "run_id", _get_str(args, "id", _get_str(args, "value", "")))
+    return WorkflowRuntime(context.workspace_path).resume(run_id)
+
+
+def handle_workflow_runtime_export_history(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.workflow_engine.runtime import WorkflowRuntime
+
+    run_id = _get_str(args, "run_id", _get_str(args, "id", _get_str(args, "value", "")))
+    output_format = _get_str(args, "format", "json")
+    return WorkflowRuntime(context.workspace_path).export_history(run_id, output_format=output_format)
+
 def handle_workflow_engine_run(args: dict[str, object], context: CommandContext) -> ToolResult:
     from dr_magu.workflow_engine.runner import WorkflowRunner
 
@@ -289,6 +326,43 @@ def handle_workflow_engine_history(args: dict[str, object], context: CommandCont
     run_id = _get_str(args, "run_id", _get_str(args, "id", _get_str(args, "value", "")))
     return WorkflowRunner(context.workspace_path).history(run_id)
 
+
+
+def handle_workflow_runtime_inspect(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.workflow_engine.runtime import WorkflowRuntime
+
+    run_id = _get_str(args, "run_id", _get_str(args, "id", _get_str(args, "value", "")))
+    return WorkflowRuntime(context.workspace_path).inspect(run_id)
+
+
+def handle_workflow_runtime_cancel(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.workflow_engine.runtime import WorkflowRuntime
+
+    run_id = _get_str(args, "run_id", _get_str(args, "id", _get_str(args, "value", "")))
+    reason = _get_str(args, "reason", "")
+    return WorkflowRuntime(context.workspace_path).cancel(run_id, reason=reason)
+
+
+def handle_workflow_runtime_retry(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.workflow_engine.runtime import WorkflowRuntime
+
+    run_id = _get_str(args, "run_id", _get_str(args, "id", _get_str(args, "value", "")))
+    return WorkflowRuntime(context.workspace_path).retry(run_id)
+
+
+def handle_workflow_runtime_resume(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.workflow_engine.runtime import WorkflowRuntime
+
+    run_id = _get_str(args, "run_id", _get_str(args, "id", _get_str(args, "value", "")))
+    return WorkflowRuntime(context.workspace_path).resume(run_id)
+
+
+def handle_workflow_runtime_export_history(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.workflow_engine.runtime import WorkflowRuntime
+
+    run_id = _get_str(args, "run_id", _get_str(args, "id", _get_str(args, "value", "")))
+    output_format = _get_str(args, "format", "json")
+    return WorkflowRuntime(context.workspace_path).export_history(run_id, output_format=output_format)
 
 def handle_workflow_engine_runs(args: dict[str, object], context: CommandContext) -> ToolResult:
     from dr_magu.workflow_engine.runner import WorkflowRunner
@@ -845,6 +919,43 @@ registry.register(CommandDefinition(
 ))
 
 
+
+
+registry.register(CommandDefinition(
+    name="workflow.runtime.inspect",
+    aliases=["workflow.inspect", "wr.inspect"],
+    description="Inspect workflow state, context and latest event.",
+    category="workflow-runtime",
+    handler=handle_workflow_runtime_inspect,
+))
+registry.register(CommandDefinition(
+    name="workflow.runtime.cancel",
+    aliases=["workflow.cancel", "wr.cancel"],
+    description="Cancel a workflow run.",
+    category="workflow-runtime",
+    handler=handle_workflow_runtime_cancel,
+))
+registry.register(CommandDefinition(
+    name="workflow.runtime.retry",
+    aliases=["workflow.retry", "wr.retry"],
+    description="Retry a failed workflow run.",
+    category="workflow-runtime",
+    handler=handle_workflow_runtime_retry,
+))
+registry.register(CommandDefinition(
+    name="workflow.runtime.resume",
+    aliases=["workflow.resume", "wr.resume"],
+    description="Resume a workflow run.",
+    category="workflow-runtime",
+    handler=handle_workflow_runtime_resume,
+))
+registry.register(CommandDefinition(
+    name="workflow.runtime.export_history",
+    aliases=["workflow.export", "wr.export"],
+    description="Export workflow history as JSON or Markdown.",
+    category="workflow-runtime",
+    handler=handle_workflow_runtime_export_history,
+))
 
 registry.register(CommandDefinition(
     name="workflow.engine.run",

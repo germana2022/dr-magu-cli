@@ -1,3 +1,11 @@
+## v0.20.0 - Workflow Runtime & History
+
+- Added WorkflowRuntime operations.
+- Added workflow inspect, cancel, retry, resume and export history.
+- Added runtime command registry entries and CLI commands.
+- Updated Workflow Engine plugin metadata.
+- Added JSON and Markdown history export support.
+
 ## v0.19.0 - Workflow Engine Foundation
 
 - Added Workflow Engine package.

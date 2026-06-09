@@ -27,3 +27,38 @@ tools:
     risk_level: low
     approval_required: false
     background_allowed: true
+  workflow.runtime.inspect:
+    description: Inspect workflow state, context and latest event.
+    category: workflow-runtime
+    read_only: true
+    risk_level: low
+    approval_required: false
+    background_allowed: true
+  workflow.runtime.cancel:
+    description: Cancel a workflow run.
+    category: workflow-runtime
+    read_only: false
+    risk_level: medium
+    approval_required: false
+    background_allowed: false
+  workflow.runtime.retry:
+    description: Retry a failed workflow run.
+    category: workflow-runtime
+    read_only: false
+    risk_level: medium
+    approval_required: false
+    background_allowed: false
+  workflow.runtime.resume:
+    description: Resume a pending/running/failed workflow run.
+    category: workflow-runtime
+    read_only: false
+    risk_level: medium
+    approval_required: false
+    background_allowed: false
+  workflow.runtime.export_history:
+    description: Export workflow history as JSON or Markdown.
+    category: workflow-runtime
+    read_only: false
+    risk_level: low
+    approval_required: false
+    background_allowed: true

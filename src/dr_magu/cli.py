@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import typer
+from dr_magu.workflow_engine.runtime import WorkflowRuntime
 from dr_magu.workflow_engine.runner import WorkflowRunner
 from dr_magu.website_builder.workflow import WebsiteBuilderWorkflow
 from dr_magu.filesystem_tools.runner import FilesystemToolRunner
@@ -838,4 +839,57 @@ def workflow_engine_runs(
 ) -> None:
     """List workflow engine runs."""
     result = WorkflowRunner(workspace).list_runs()
+    typer.echo(result.data if result.success else result.errors)
+
+
+
+@app.command("workflow-runtime-inspect")
+def workflow_runtime_inspect(
+    run_id: str,
+    workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path."),
+) -> None:
+    """Inspect workflow state, context and latest event."""
+    result = WorkflowRuntime(workspace).inspect(run_id)
+    typer.echo(result.data if result.success else result.errors)
+
+
+@app.command("workflow-runtime-cancel")
+def workflow_runtime_cancel(
+    run_id: str,
+    reason: str = typer.Option("", "--reason", "-r", help="Cancellation reason."),
+    workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path."),
+) -> None:
+    """Cancel a workflow run."""
+    result = WorkflowRuntime(workspace).cancel(run_id, reason=reason)
+    typer.echo(result.data if result.success else result.errors)
+
+
+@app.command("workflow-runtime-retry")
+def workflow_runtime_retry(
+    run_id: str,
+    workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path."),
+) -> None:
+    """Retry a failed workflow run."""
+    result = WorkflowRuntime(workspace).retry(run_id)
+    typer.echo(result.data if result.success else result.errors)
+
+
+@app.command("workflow-runtime-resume")
+def workflow_runtime_resume(
+    run_id: str,
+    workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path."),
+) -> None:
+    """Resume a workflow run."""
+    result = WorkflowRuntime(workspace).resume(run_id)
+    typer.echo(result.data if result.success else result.errors)
+
+
+@app.command("workflow-runtime-export")
+def workflow_runtime_export(
+    run_id: str,
+    output_format: str = typer.Option("json", "--format", "-f", help="Export format: json or md."),
+    workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path."),
+) -> None:
+    """Export workflow history as JSON or Markdown."""
+    result = WorkflowRuntime(workspace).export_history(run_id, output_format=output_format)
     typer.echo(result.data if result.success else result.errors)

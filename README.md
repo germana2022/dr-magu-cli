@@ -1,4 +1,4 @@
-# Dr Magu CLI v0.19.0
+# Dr Magu CLI v0.20.0
 
 Dr Magu CLI is a Python-based agent platform foundation inspired by Claude Code, OpenCode, Codex CLI, and Gemini CLI.
 
@@ -436,3 +436,37 @@ Persistence:
 ```
 
 This version provides a deterministic, stateful workflow foundation before advanced retry/resume/cancel capabilities.
+
+
+## v0.20.0 - Workflow Runtime & History
+
+This release extends the Workflow Engine with runtime operations.
+
+New capabilities:
+
+- Inspect workflow run state, context and latest event.
+- Cancel workflow runs.
+- Retry failed workflow runs.
+- Resume pending/running/failed workflow runs.
+- Export workflow history as JSON or Markdown.
+
+New commands:
+
+```bash
+dr-magu workflow-runtime-inspect <run-id>
+dr-magu workflow-runtime-cancel <run-id> --reason "Cancelled by user"
+dr-magu workflow-runtime-retry <run-id>
+dr-magu workflow-runtime-resume <run-id>
+dr-magu workflow-runtime-export <run-id> --format md
+```
+
+Persistence remains under:
+
+```text
+.dr-magu/workflow-runs/<run-id>/
+  state.json
+  context.json
+  history.json
+  history.md
+  history-export.json
+```

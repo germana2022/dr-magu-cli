@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dr-magu-cli"
-version = "0.19.0"
-description = "Dr Magu CLI with Workflow Engine Foundation for stateful, traceable workflow orchestration."
+version = "0.20.0"
+description = "Dr Magu CLI with Workflow Runtime and History operations for resume, retry, cancel, inspect and export."
 readme = "README.md"
 requires-python = ">=3.11"
 authors = [{ name = "Dr Magu Team" }]
