@@ -1,6 +1,10 @@
 from __future__ import annotations
 
 import typer
+from dr_magu.filesystem_tools.runner import FilesystemToolRunner
+from dr_magu.shell_tools.runner import ShellToolRunner
+from dr_magu.git_tools.runner import GitToolRunner
+from dr_magu.sdlc.agents import SoftwareAgentRunner
 from dr_magu.scheduler.runtime import SchedulerRuntime
 from dr_magu.research.runner import WebResearchRunner
 from dr_magu.brain.commands import brain_plan, brain_execute, brain_route, render_brain_result
@@ -729,4 +733,54 @@ def schedule_delete(task_id: str, workspace: str = typer.Option(".", "--workspac
 def schedule_run(task_id: str, workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path.")) -> None:
     """Execute a scheduled command once."""
     result = SchedulerRuntime(workspace).run_once(task_id)
+    typer.echo(result.data if result.success else result.errors)
+
+
+
+@app.command("dev-agents")
+def dev_agents(workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path.")) -> None:
+    """List software development agents."""
+    result = SoftwareAgentRunner(workspace).list_agents()
+    typer.echo(result.data if result.success else result.errors)
+
+
+@app.command("dev-run")
+def dev_run(agent_id: str, workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path.")) -> None:
+    """Run a deterministic software development agent."""
+    result = SoftwareAgentRunner(workspace).run(agent_id)
+    typer.echo(result.data if result.success else result.errors)
+
+
+@app.command("git-status")
+def git_status(workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path.")) -> None:
+    """Read git status."""
+    result = GitToolRunner(workspace).run("status")
+    typer.echo(result.data if result.success else result.errors)
+
+
+@app.command("fs-list")
+def fs_list(path: str = ".", workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path.")) -> None:
+    """List workspace files."""
+    result = FilesystemToolRunner(workspace).list(path)
+    typer.echo(result.data if result.success else result.errors)
+
+
+@app.command("fs-read")
+def fs_read(path: str, workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path.")) -> None:
+    """Read a workspace file."""
+    result = FilesystemToolRunner(workspace).read(path)
+    typer.echo(result.data if result.success else result.errors)
+
+
+@app.command("fs-write")
+def fs_write(path: str, content: str, workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path.")) -> None:
+    """Write a workspace file."""
+    result = FilesystemToolRunner(workspace).write(path, content)
+    typer.echo(result.data if result.success else result.errors)
+
+
+@app.command("shell-run")
+def shell_run(command: str, approved: bool = typer.Option(False, "--approved", help="Confirm shell execution approval."), workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path.")) -> None:
+    """Run a shell command after approval."""
+    result = ShellToolRunner(workspace).run(command, approved=approved)
     typer.echo(result.data if result.success else result.errors)

@@ -1,3 +1,13 @@
+## v0.17.0 - Software Development Platform
+
+- Added Software Development plugin metadata.
+- Added deterministic SDLC agent foundations.
+- Added repository analyzer, architecture planner, ticket generator, code reviewer, test generator, documentation writer and release notes generator.
+- Added safe read-only Git tools.
+- Added approval-aware shell runner.
+- Added workspace-scoped filesystem tools.
+- Added CLI and command registry entries for SDLC/Git/Shell/Filesystem operations.
+
 ## v0.16.0 - Scheduler Runtime Foundation
 
 - Added formal scheduled task model.

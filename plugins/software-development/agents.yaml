@@ -1,0 +1,72 @@
+agents:
+  repository-analyzer:
+    name: Repository Analyzer
+    description: Analyze repository structure and generate repository-analysis.md.
+    role: software-development
+    workflow: sdlc.analyze
+    enabled: true
+    requires_llm: false
+    capabilities:
+      - analyze_repository
+      - summarize_structure
+
+  architecture-planner:
+    name: Architecture Planner
+    description: Generate architecture proposals and recommendations.
+    role: software-development
+    workflow: sdlc.plan
+    enabled: true
+    requires_llm: false
+    capabilities:
+      - plan_architecture
+      - compare_options
+
+  ticket-generator:
+    name: Ticket Generator
+    description: Generate implementation tickets.
+    role: software-development
+    workflow: sdlc.plan
+    enabled: true
+    requires_llm: false
+    capabilities:
+      - generate_tickets
+
+  code-reviewer:
+    name: Code Reviewer
+    description: Generate code review reports.
+    role: software-development
+    workflow: sdlc.analyze
+    enabled: true
+    requires_llm: false
+    capabilities:
+      - review_code
+
+  test-generator:
+    name: Test Generator
+    description: Generate test plans and suggested test cases.
+    role: software-development
+    workflow: sdlc.plan
+    enabled: true
+    requires_llm: false
+    capabilities:
+      - generate_tests
+
+  documentation-writer:
+    name: Documentation Writer
+    description: Generate documentation plans.
+    role: software-development
+    workflow: sdlc.plan
+    enabled: true
+    requires_llm: false
+    capabilities:
+      - write_documentation
+
+  release-notes-generator:
+    name: Release Notes Generator
+    description: Generate release notes.
+    role: software-development
+    workflow: sdlc.plan
+    enabled: true
+    requires_llm: false
+    capabilities:
+      - generate_release_notes

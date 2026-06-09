@@ -212,6 +212,126 @@ def handle_research_search(args: dict[str, object], context: CommandContext) -> 
     return WebResearchRunner(context.workspace_path).search(topic, limit=limit)
 
 
+
+
+def handle_report_create(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.reports.generator import ReportGenerator
+    from dr_magu.reports.models import ReportSection
+
+    title = _get_str(args, "title", _get_str(args, "value", "Report"))
+    summary = _get_str(args, "summary", "")
+    section_text = _get_str(args, "section", "")
+    sections = [ReportSection(title="Details", body=section_text)] if section_text else []
+    return ReportGenerator(context.workspace_path).generate(title=title, summary=summary, sections=sections)
+
+
+def handle_report_from_research(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.reports.generator import ReportGenerator
+
+    return ReportGenerator(context.workspace_path).generate_from_latest_research()
+
+
+def handle_approval_request(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.hitl.engine import ApprovalEngine
+
+    title = _get_str(args, "title", _get_str(args, "value", "Approval Request"))
+    description = _get_str(args, "description", "")
+    action = _get_str(args, "action", "manual.review")
+    risk_level = _get_str(args, "risk", "medium")
+    return ApprovalEngine(context.workspace_path).request(
+        title=title,
+        description=description,
+        action=action,
+        risk_level=risk_level,
+    )
+
+
+def handle_approval_approve(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.hitl.engine import ApprovalEngine
+
+    request_id = _get_str(args, "id", _get_str(args, "value", ""))
+    option = _get_str(args, "option", "")
+    return ApprovalEngine(context.workspace_path).approve(request_id, selected_option_id=option or None)
+
+
+def handle_approval_reject(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.hitl.engine import ApprovalEngine
+
+    request_id = _get_str(args, "id", _get_str(args, "value", ""))
+    return ApprovalEngine(context.workspace_path).reject(request_id)
+
+
+def handle_approval_list(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.hitl.engine import ApprovalEngine
+
+    return ApprovalEngine(context.workspace_path).list(include_resolved=True)
+
+def handle_sdlc_agent_list(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.sdlc.agents import SoftwareAgentRunner
+
+    return SoftwareAgentRunner(context.workspace_path).list_agents()
+
+
+def handle_sdlc_agent_run(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.sdlc.agents import SoftwareAgentRunner
+
+    agent_id = _get_str(args, "agent", _get_str(args, "id", _get_str(args, "value", "")))
+    return SoftwareAgentRunner(context.workspace_path).run(agent_id)
+
+
+def handle_git_status(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.git_tools.runner import GitToolRunner
+
+    return GitToolRunner(context.workspace_path).run("status")
+
+
+def handle_git_diff(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.git_tools.runner import GitToolRunner
+
+    return GitToolRunner(context.workspace_path).run("diff")
+
+
+def handle_git_log(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.git_tools.runner import GitToolRunner
+
+    return GitToolRunner(context.workspace_path).run("log")
+
+
+def handle_git_branch(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.git_tools.runner import GitToolRunner
+
+    return GitToolRunner(context.workspace_path).run("branch")
+
+
+def handle_shell_run(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.shell_tools.runner import ShellToolRunner
+
+    command = _get_str(args, "command", _get_str(args, "value", ""))
+    approved = bool(args.get("approved", False))
+    return ShellToolRunner(context.workspace_path).run(command, approved=approved)
+
+
+def handle_fs_list(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.filesystem_tools.runner import FilesystemToolRunner
+
+    path = _get_str(args, "path", _get_str(args, "value", "."))
+    return FilesystemToolRunner(context.workspace_path).list(path)
+
+
+def handle_fs_read(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.filesystem_tools.runner import FilesystemToolRunner
+
+    path = _get_str(args, "path", _get_str(args, "value", ""))
+    return FilesystemToolRunner(context.workspace_path).read(path)
+
+
+def handle_fs_write(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.filesystem_tools.runner import FilesystemToolRunner
+
+    path = _get_str(args, "path", _get_str(args, "value", ""))
+    content = _get_str(args, "content", "")
+    return FilesystemToolRunner(context.workspace_path).write(path, content)
+
 def handle_schedule_create(args: dict[str, object], context: CommandContext) -> ToolResult:
     from dr_magu.scheduler.runtime import SchedulerRuntime
 
@@ -642,6 +762,122 @@ registry.register(CommandDefinition(
     handler=handle_plan_validate,
 ))
 
+
+
+
+registry.register(CommandDefinition(
+    name="report.create",
+    aliases=["report", "rc"],
+    description="Generate Markdown, HTML and JSON report artifacts.",
+    category="reporting",
+    handler=handle_report_create,
+))
+registry.register(CommandDefinition(
+    name="report.from_research",
+    aliases=["report.research", "rr"],
+    description="Generate a report from the latest research output.",
+    category="reporting",
+    handler=handle_report_from_research,
+))
+registry.register(CommandDefinition(
+    name="approval.request",
+    aliases=["approval", "hitl.request"],
+    description="Create a human-in-the-loop approval request.",
+    category="approval",
+    handler=handle_approval_request,
+))
+registry.register(CommandDefinition(
+    name="approval.approve",
+    aliases=["approval.approve", "hitl.approve"],
+    description="Approve a pending approval request.",
+    category="approval",
+    handler=handle_approval_approve,
+))
+registry.register(CommandDefinition(
+    name="approval.reject",
+    aliases=["approval.reject", "hitl.reject"],
+    description="Reject a pending approval request.",
+    category="approval",
+    handler=handle_approval_reject,
+))
+registry.register(CommandDefinition(
+    name="approval.list",
+    aliases=["approvals", "hitl.list"],
+    description="List human-in-the-loop approval requests.",
+    category="approval",
+    handler=handle_approval_list,
+))
+
+registry.register(CommandDefinition(
+    name="sdlc.agent.list",
+    aliases=["sdlc.agents", "dev.agents"],
+    description="List software development agents.",
+    category="software-development",
+    handler=handle_sdlc_agent_list,
+))
+registry.register(CommandDefinition(
+    name="sdlc.agent.run",
+    aliases=["sdlc.run", "dev.run"],
+    description="Run a software development agent.",
+    category="software-development",
+    handler=handle_sdlc_agent_run,
+))
+registry.register(CommandDefinition(
+    name="git.status",
+    aliases=["gs"],
+    description="Read git status.",
+    category="git",
+    handler=handle_git_status,
+))
+registry.register(CommandDefinition(
+    name="git.diff",
+    aliases=["gd"],
+    description="Read git diff summary.",
+    category="git",
+    handler=handle_git_diff,
+))
+registry.register(CommandDefinition(
+    name="git.log",
+    aliases=["gl"],
+    description="Read recent git log.",
+    category="git",
+    handler=handle_git_log,
+))
+registry.register(CommandDefinition(
+    name="git.branch",
+    aliases=["gb"],
+    description="Read current git branch.",
+    category="git",
+    handler=handle_git_branch,
+))
+registry.register(CommandDefinition(
+    name="shell.run",
+    aliases=["sh"],
+    description="Run shell command after approval.",
+    category="shell",
+    handler=handle_shell_run,
+))
+registry.register(CommandDefinition(
+    name="fs.list",
+    aliases=["ls"],
+    description="List workspace files.",
+    category="filesystem",
+    handler=handle_fs_list,
+))
+registry.register(CommandDefinition(
+    name="fs.read",
+    aliases=["cat"],
+    description="Read workspace file.",
+    category="filesystem",
+    handler=handle_fs_read,
+))
+registry.register(CommandDefinition(
+    name="fs.write",
+    aliases=["write"],
+    description="Write workspace file.",
+    category="filesystem",
+    handler=handle_fs_write,
+))
 
 registry.register(CommandDefinition(
     name="schedule.create",

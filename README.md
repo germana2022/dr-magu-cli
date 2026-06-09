@@ -1,4 +1,4 @@
-# Dr Magu CLI v0.16.0
+# Dr Magu CLI v0.17.0
 
 Dr Magu CLI is a Python-based agent platform foundation inspired by Claude Code, OpenCode, Codex CLI, and Gemini CLI.
 
@@ -323,4 +323,46 @@ Example:
 dr-magu schedule-create daily-research --command "research.search LangGraph" --cron @daily
 dr-magu schedule-list
 dr-magu schedule-run daily-research
+```
+
+
+## v0.17.0 - Software Development Platform
+
+This release introduces the Software Development Platform layer.
+
+Highlights:
+
+- Added SDLC agents:
+  - repository-analyzer
+  - architecture-planner
+  - ticket-generator
+  - code-reviewer
+  - test-generator
+  - documentation-writer
+  - release-notes-generator
+- Added `software-development` plugin.
+- Added safe read-only Git tools:
+  - git.status
+  - git.diff
+  - git.log
+  - git.branch
+- Added approval-aware shell tool:
+  - shell.run
+- Added workspace-scoped filesystem tools:
+  - fs.list
+  - fs.read
+  - fs.write
+- Added CLI commands:
+  - dr-magu dev-agents
+  - dr-magu dev-run <agent-id>
+  - dr-magu git-status
+  - dr-magu fs-list
+  - dr-magu fs-read
+  - dr-magu fs-write
+  - dr-magu shell-run --approved
+
+Generated SDLC artifacts are written to:
+
+```text
+.dr-magu/sdlc/
 ```

@@ -1,0 +1,71 @@
+tools:
+  sdlc.agent.list:
+    description: List software development agents.
+    category: software-development
+    read_only: true
+    risk_level: low
+    approval_required: false
+    background_allowed: true
+  sdlc.agent.run:
+    description: Run a deterministic software development agent.
+    category: software-development
+    read_only: false
+    risk_level: low
+    approval_required: false
+    background_allowed: true
+  git.status:
+    description: Read git status.
+    category: git
+    read_only: true
+    risk_level: low
+    approval_required: false
+    background_allowed: true
+  git.diff:
+    description: Read git diff summary.
+    category: git
+    read_only: true
+    risk_level: low
+    approval_required: false
+    background_allowed: true
+  git.log:
+    description: Read recent git log.
+    category: git
+    read_only: true
+    risk_level: low
+    approval_required: false
+    background_allowed: true
+  git.branch:
+    description: Read current git branch.
+    category: git
+    read_only: true
+    risk_level: low
+    approval_required: false
+    background_allowed: true
+  shell.run:
+    description: Run shell command after approval.
+    category: shell
+    read_only: false
+    risk_level: high
+    approval_required: true
+    background_allowed: false
+  fs.list:
+    description: List workspace files.
+    category: filesystem
+    read_only: true
+    risk_level: low
+    approval_required: false
+    background_allowed: true
+  fs.read:
+    description: Read workspace file.
+    category: filesystem
+    read_only: true
+    risk_level: low
+    approval_required: false
+    background_allowed: true
+  fs.write:
+    description: Write workspace file.
+    category: filesystem
+    read_only: false
+    risk_level: medium
+    approval_required: false
+    background_allowed: false

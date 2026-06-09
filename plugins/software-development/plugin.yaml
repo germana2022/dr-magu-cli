@@ -1,0 +1,44 @@
+id: software-development
+name: Software Development
+version: 0.17.0
+enabled: true
+domain: software-development
+description: Software development agents and Git/Shell/Filesystem tool foundations.
+
+provides:
+  agents:
+    - repository-analyzer
+    - architecture-planner
+    - ticket-generator
+    - code-reviewer
+    - test-generator
+    - documentation-writer
+    - release-notes-generator
+  workflows:
+    - sdlc.analyze
+    - sdlc.plan
+  tools:
+    - sdlc.agent.list
+    - sdlc.agent.run
+    - git.status
+    - git.diff
+    - git.log
+    - git.branch
+    - shell.run
+    - fs.list
+    - fs.read
+    - fs.write
+  prompts:
+    - software-analysis
+    - architecture-planning
+    - code-review
+  schedules: []
+  templates:
+    - repository-analysis
+    - architecture-proposal
+    - implementation-tickets
+permissions:
+  file_read: allowed
+  file_write: restricted
+  shell_run: approval_required
+  git_write: blocked

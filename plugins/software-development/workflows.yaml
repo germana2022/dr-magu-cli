@@ -1,0 +1,19 @@
+workflows:
+  sdlc.analyze:
+    name: SDLC Analyze
+    description: Analyze repository context using software development agents.
+    enabled: true
+    deterministic: true
+    tools:
+      - sdlc.agent.run
+      - git.status
+      - fs.list
+
+  sdlc.plan:
+    name: SDLC Plan
+    description: Generate architecture, tickets, tests, documentation and release notes.
+    enabled: true
+    deterministic: true
+    tools:
+      - sdlc.agent.run
+      - fs.write
