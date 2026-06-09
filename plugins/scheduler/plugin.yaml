@@ -1,0 +1,14 @@
+id: scheduler
+name: Scheduler
+version: 0.15.0
+enabled: true
+domain: automation
+
+provides:
+  agents:
+    - scheduler-manager
+  workflows:
+    - schedule.execute
+  tools:
+    - schedule.create
+    - schedule.list

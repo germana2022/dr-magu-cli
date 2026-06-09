@@ -338,3 +338,16 @@ dr-magu approval-request "Approve website architecture" --action website.generat
 dr-magu approval-list
 dr-magu approval-approve <approval-id>
 ```
+
+
+## v0.15.0 - Scheduler Foundation
+
+Features:
+
+- scheduler plugin
+- scheduler-manager agent
+- schedule.execute workflow
+- schedule.create
+- schedule.list
+- .dr-magu/schedules persistence
+- foundation for future cron background execution
