@@ -1,0 +1,12 @@
+workflows:
+  website.build:
+    name: Website Build
+    description: Research websites, generate proposal, create architecture options, request approval and generate report.
+    enabled: true
+    deterministic: true
+    tools:
+      - research.search
+      - sdlc.agent.run
+      - approval.request
+      - report.create
+      - website.build

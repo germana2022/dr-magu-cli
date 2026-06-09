@@ -266,6 +266,14 @@ def handle_approval_list(args: dict[str, object], context: CommandContext) -> To
 
     return ApprovalEngine(context.workspace_path).list(include_resolved=True)
 
+
+def handle_website_build(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.website_builder.workflow import WebsiteBuilderWorkflow
+
+    topic = _get_str(args, "topic", _get_str(args, "value", ""))
+    limit = int(args.get("limit", 5) or 5)
+    return WebsiteBuilderWorkflow(context.workspace_path).generate(topic=topic, research_limit=limit)
+
 def handle_sdlc_agent_list(args: dict[str, object], context: CommandContext) -> ToolResult:
     from dr_magu.sdlc.agents import SoftwareAgentRunner
 
@@ -806,6 +814,15 @@ registry.register(CommandDefinition(
     description="List human-in-the-loop approval requests.",
     category="approval",
     handler=handle_approval_list,
+))
+
+
+registry.register(CommandDefinition(
+    name="website.build",
+    aliases=["website", "site.build", "wb"],
+    description="Generate website proposal, architecture options, approval request and report.",
+    category="website-builder",
+    handler=handle_website_build,
 ))
 
 registry.register(CommandDefinition(

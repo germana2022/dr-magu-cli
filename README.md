@@ -1,4 +1,4 @@
-# Dr Magu CLI v0.17.0
+# Dr Magu CLI v0.18.0
 
 Dr Magu CLI is a Python-based agent platform foundation inspired by Claude Code, OpenCode, Codex CLI, and Gemini CLI.
 
@@ -366,3 +366,40 @@ Generated SDLC artifacts are written to:
 ```text
 .dr-magu/sdlc/
 ```
+
+
+## v0.18.0 - Website Builder Workflow
+
+This release introduces the Website Builder Workflow foundation.
+
+Flow:
+
+- Research websites
+- Extract initial business/market context
+- Generate website proposal
+- Generate architecture options
+- Create HITL approval request
+- Generate report artifacts
+- Persist workflow result
+
+Generated artifacts:
+
+```text
+.dr-magu/website-builder/
+  website-proposal.md
+  architecture-options.json
+  latest-website-builder-result.json
+
+.dr-magu/approvals/
+.dr-magu/reports/
+.dr-magu/research/
+.dr-magu/sdlc/
+```
+
+Example:
+
+```bash
+dr-magu website-build "AI developer tools landing page" --limit 5
+```
+
+This version intentionally stops before code generation. Code generation should be executed only after a human selects an architecture option.

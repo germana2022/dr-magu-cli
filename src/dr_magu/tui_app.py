@@ -90,7 +90,7 @@ class TuiSettings:
     """Settings used to start the Dr Magu Terminal UI."""
 
     workspace_path: str
-    version: str = "0.17.0"
+    version: str = "0.18.0"
 
 
 def _build_context(workspace_path: str) -> CommandContext:
@@ -1278,3 +1278,5 @@ def run_tui(workspace_path: str) -> None:
 # v0.16.0: Scheduler Runtime adds persisted schedule lifecycle operations and run-once execution.
 
 # v0.17.0: Software Development Platform adds SDLC agents plus Git/Shell/Filesystem tool foundations.
+
+# v0.18.0: Website Builder Workflow integrates research, SDLC agents, HITL and reports.

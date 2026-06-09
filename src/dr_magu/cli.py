@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import typer
+from dr_magu.website_builder.workflow import WebsiteBuilderWorkflow
 from dr_magu.filesystem_tools.runner import FilesystemToolRunner
 from dr_magu.shell_tools.runner import ShellToolRunner
 from dr_magu.git_tools.runner import GitToolRunner
@@ -783,4 +784,16 @@ def fs_write(path: str, content: str, workspace: str = typer.Option(".", "--work
 def shell_run(command: str, approved: bool = typer.Option(False, "--approved", help="Confirm shell execution approval."), workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path.")) -> None:
     """Run a shell command after approval."""
     result = ShellToolRunner(workspace).run(command, approved=approved)
+    typer.echo(result.data if result.success else result.errors)
+
+
+
+@app.command("website-build")
+def website_build(
+    topic: str,
+    limit: int = typer.Option(5, "--limit", "-n", help="Number of research sources."),
+    workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path."),
+) -> None:
+    """Generate website proposal, architecture options, approval request and report."""
+    result = WebsiteBuilderWorkflow(workspace).generate(topic=topic, research_limit=limit)
     typer.echo(result.data if result.success else result.errors)

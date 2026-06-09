@@ -1,0 +1,15 @@
+agents:
+  website-builder:
+    name: Website Builder
+    description: Generate website proposal, architecture options and approval workflow.
+    role: website-builder
+    workflow: website.build
+    enabled: true
+    requires_llm: false
+    capabilities:
+      - research_websites
+      - extract_business_logic
+      - generate_proposal
+      - generate_architecture_options
+      - request_human_approval
+      - generate_report

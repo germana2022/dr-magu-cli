@@ -1,3 +1,14 @@
+## v0.18.0 - Website Builder Workflow
+
+- Added Website Builder plugin metadata.
+- Added deterministic website-builder workflow foundation.
+- Added `website.build` command boundary.
+- Added `dr-magu website-build`.
+- Integrated research output, SDLC agents, HITL approval request and report generation.
+- Added architecture options including custom user-suggested option.
+- Persisted Website Builder artifacts under `.dr-magu/website-builder/`.
+- Prepared future code generation after HITL option selection.
+
 ## v0.17.0 - Software Development Platform
 
 - Added Software Development plugin metadata.

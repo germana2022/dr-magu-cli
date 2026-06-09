@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dr-magu-cli"
-version = "0.17.0"
-description = "Dr Magu CLI with Software Development Platform agents and Git/Shell/Filesystem tool foundations."
+version = "0.18.0"
+description = "Dr Magu CLI with Website Builder Workflow foundation integrating research, HITL, SDLC agents and reports."
 readme = "README.md"
 requires-python = ">=3.11"
 authors = [{ name = "Dr Magu Team" }]
