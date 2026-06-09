@@ -1,0 +1,9 @@
+workflows:
+  brain.ask:
+    name: Conversational Brain Ask
+    description: Route a natural-language prompt through Brain intent classification and command execution.
+    enabled: true
+    deterministic: true
+    tools:
+      - brain.route
+      - brain.ask

@@ -13,7 +13,7 @@ from dr_magu.git_tools.runner import GitToolRunner
 from dr_magu.sdlc.agents import SoftwareAgentRunner
 from dr_magu.scheduler.runtime import SchedulerRuntime
 from dr_magu.research.runner import WebResearchRunner
-from dr_magu.brain.commands import brain_plan, brain_execute, brain_route, render_brain_result
+from dr_magu.brain.commands import brain_ask, brain_chat, brain_plan, brain_execute, brain_route, render_brain_result
 from rich.console import Console
 from rich.table import Table
 
@@ -651,6 +651,19 @@ def version() -> None:
     console.print("dr-magu-cli v0.9.4")
 
 
+
+@app.command("brain-ask")
+def brain_ask_command(prompt: str, workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path.")) -> None:
+    """Route a natural-language prompt through the Conversational Brain."""
+    typer.echo(render_brain_result(brain_ask(prompt, workspace)))
+
+
+@app.command("brain-chat")
+def brain_chat_command(prompt: str, workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path.")) -> None:
+    """Alias for Conversational Brain prompts."""
+    typer.echo(render_brain_result(brain_chat(prompt, workspace)))
+
+
 if __name__ == "__main__":
     app()
 
@@ -679,6 +692,8 @@ def brain_execute_command(prompt: str, workspace: str = typer.Option(".", "--wor
 def brain_route_command(prompt: str) -> None:
     """Classify a prompt through the Dr Magu Intent Router."""
     typer.echo(render_brain_result(brain_route(prompt)))
+
+
 
 
 

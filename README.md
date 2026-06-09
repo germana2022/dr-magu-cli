@@ -1,4 +1,4 @@
-# Dr Magu CLI v1.1.0
+# Dr Magu CLI v1.1.1
 
 Dr Magu CLI is a Python-based agent platform foundation inspired by Claude Code, OpenCode, Codex CLI, and Gemini CLI.
 
@@ -567,3 +567,34 @@ git:
 network:
   outbound: false
 ```
+
+
+## v1.1.1 - Conversational Brain Foundation
+
+This release introduces safe natural-language routing for Dr Magu.
+
+New capabilities:
+
+- `brain.ask`
+- `brain.chat`
+- `ask` and `chat` aliases
+- `dr-magu brain-ask`
+- `dr-magu brain-chat`
+- TUI natural-language fallback for unknown command inputs
+- Improved research intent detection for business/search/comparison prompts
+- Default model context is included in conversational responses
+
+Examples:
+
+```bash
+dr-magu brain-ask "What are the best CRM systems for small businesses?"
+dr-magu run 'ask "Research the top 10 CRM systems for small businesses"'
+```
+
+In the TUI, natural-language input can be typed directly:
+
+```text
+What are the best CRM systems for small businesses?
+```
+
+v1.1.1 resolves the configured default model and returns its context, but live LLM calls remain reserved for the upcoming LLM Runtime implementation.

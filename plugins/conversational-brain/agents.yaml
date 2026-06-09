@@ -1,0 +1,13 @@
+agents:
+  conversational-router:
+    name: Conversational Router
+    description: Route natural-language prompts to commands, workflows, agents or chat.
+    role: brain
+    workflow: brain.ask
+    enabled: true
+    requires_llm: false
+    capabilities:
+      - classify_intent
+      - route_prompt
+      - execute_routed_command
+      - expose_default_model_context

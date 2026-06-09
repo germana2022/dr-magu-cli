@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dr-magu-cli"
-version = "1.1.0"
-description = "Dr Magu CLI with Execution Runtime Layer for filesystem, terminal and git execution plans."
+version = "1.1.1"
+description = "Dr Magu CLI with Conversational Brain Foundation and safe natural-language routing."
 readme = "README.md"
 requires-python = ">=3.11"
 authors = [{ name = "Dr Magu Team" }]

@@ -28,6 +28,27 @@ SPANISH_MARKERS = [
 KEYWORDS = {
     INTENT_RESEARCH_ACTION: [
         "search",
+
+        "best",
+        "top",
+        "compare",
+        "comparison",
+        "recommend",
+        "recommendation",
+        "systems",
+        "platforms",
+        "tools",
+        "solutions",
+        "crm",
+        "business",
+        "small business",
+        "small businesses",
+        "mejores",
+        "comparar",
+        "recomienda",
+        "sistemas",
+        "plataformas",
+        "herramientas",
         "research",
         "find",
         "web",
@@ -116,7 +137,10 @@ def _match_keywords(prompt: str, keywords: list[str]) -> list[str]:
     lowered = prompt.lower()
     matches: list[str] = []
     for keyword in keywords:
-        if keyword.isascii() and keyword.replace("_", "").isalnum():
+        if " " in keyword:
+            if keyword in lowered:
+                matches.append(keyword)
+        elif keyword.isascii() and keyword.replace("_", "").isalnum():
             if re.search(rf"\b{re.escape(keyword)}\b", lowered):
                 matches.append(keyword)
         elif keyword in lowered:

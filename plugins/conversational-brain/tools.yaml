@@ -1,0 +1,15 @@
+tools:
+  brain.ask:
+    description: Route a natural-language prompt through the Conversational Brain.
+    category: brain
+    read_only: false
+    risk_level: low
+    approval_required: false
+    background_allowed: true
+  brain.chat:
+    description: Alias for conversational Brain prompts.
+    category: brain
+    read_only: false
+    risk_level: low
+    approval_required: false
+    background_allowed: true

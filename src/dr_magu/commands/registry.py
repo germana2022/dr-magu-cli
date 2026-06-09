@@ -308,6 +308,17 @@ def handle_execution_plan_list(args: dict[str, object], context: CommandContext)
 
     return ExecutionExecutor(context.workspace_path).list_plans()
 
+
+def handle_brain_ask(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.brain.conversation import ConversationalBrain
+
+    prompt = _get_str(args, "prompt", _get_str(args, "value", ""))
+    return ConversationalBrain(context.workspace_path).ask(prompt)
+
+
+def handle_brain_chat(args: dict[str, object], context: CommandContext) -> ToolResult:
+    return handle_brain_ask(args, context)
+
 def handle_platform_stabilize(args: dict[str, object], context: CommandContext) -> ToolResult:
     from dr_magu.stabilization.commands import run_stabilization_checks
 
@@ -411,6 +422,17 @@ def handle_execution_plan_list(args: dict[str, object], context: CommandContext)
     from dr_magu.execution.executor import ExecutionExecutor
 
     return ExecutionExecutor(context.workspace_path).list_plans()
+
+
+def handle_brain_ask(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.brain.conversation import ConversationalBrain
+
+    prompt = _get_str(args, "prompt", _get_str(args, "value", ""))
+    return ConversationalBrain(context.workspace_path).ask(prompt)
+
+
+def handle_brain_chat(args: dict[str, object], context: CommandContext) -> ToolResult:
+    return handle_brain_ask(args, context)
 
 def handle_platform_stabilize(args: dict[str, object], context: CommandContext) -> ToolResult:
     from dr_magu.stabilization.commands import run_stabilization_checks
@@ -1040,6 +1062,22 @@ registry.register(CommandDefinition(
     description="List execution plans.",
     category="execution",
     handler=handle_execution_plan_list,
+))
+
+
+registry.register(CommandDefinition(
+    name="brain.ask",
+    aliases=["ask", "chat"],
+    description="Route a natural-language prompt through the Conversational Brain.",
+    category="brain",
+    handler=handle_brain_ask,
+))
+registry.register(CommandDefinition(
+    name="brain.chat",
+    aliases=["bc.chat"],
+    description="Alias for Conversational Brain prompts.",
+    category="brain",
+    handler=handle_brain_chat,
 ))
 
 registry.register(CommandDefinition(

@@ -5,6 +5,7 @@ from .intent_router import classify_prompt
 
 from .context_loader import load_brain_context
 from .orchestrator import create_plan, execute_prompt
+from .conversation import ask as conversational_ask
 
 
 def brain_context(workspace_path: str | None = None) -> dict:
@@ -27,3 +28,20 @@ def render_brain_result(payload: dict) -> str:
 def brain_route(prompt: str) -> dict:
     """Classify a natural-language prompt using the Intent Router."""
     return classify_prompt(prompt).to_dict()
+
+
+
+def brain_ask(prompt: str, workspace_path: str | None = None) -> dict:
+    """Route a natural-language prompt through the Conversational Brain."""
+    result = conversational_ask(prompt, workspace_path or ".")
+    return {
+        "success": result.success,
+        "tool": result.tool,
+        "data": result.data,
+        "errors": result.errors,
+    }
+
+
+def brain_chat(prompt: str, workspace_path: str | None = None) -> dict:
+    """Alias for Conversational Brain prompts."""
+    return brain_ask(prompt, workspace_path)

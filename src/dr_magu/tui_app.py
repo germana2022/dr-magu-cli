@@ -90,7 +90,7 @@ class TuiSettings:
     """Settings used to start the Dr Magu Terminal UI."""
 
     workspace_path: str
-    version: str = "1.1.0"
+    version: str = "1.1.1"
 
 
 def _build_context(workspace_path: str) -> CommandContext:
@@ -446,7 +446,7 @@ def run_tui(workspace_path: str) -> None:
 
         def on_mount(self) -> None:
             log = self.query_one("#console", RichLog)
-            log.write("[bold cyan]Welcome to Dr Magu v1.1.0[/]")
+            log.write("[bold cyan]Welcome to Dr Magu v1.1.1[/]")
             log.write(
                 "[dim]Workspace-aware Terminal UI with persistent sessions, command history, and deterministic repository scanning, context generation, workflow execution, and Brain context loading.[/]"
             )
@@ -642,10 +642,22 @@ def run_tui(workspace_path: str) -> None:
             if command.startswith("/") and not command.startswith("/run "):
                 command = command[1:]
 
+            original_command = command
+            explicit_command = raw_value.strip().startswith("/") or command.startswith("run ") or command.startswith("/run ")
+
             if command.startswith("run "):
                 command = command.removeprefix("run ").strip()
             elif command.startswith("/run "):
                 command = command.removeprefix("/run ").strip()
+
+            if not explicit_command:
+                first_token = command.split(maxsplit=1)[0] if command else ""
+                try:
+                    registry.get(first_token)
+                except Exception:
+                    safe_prompt = original_command.replace('"', '\\"')
+                    self._execute_and_render(f'brain.ask "{safe_prompt}"', log)
+                    return
 
             self._execute_and_render(command, log)
 
@@ -1288,3 +1300,5 @@ def run_tui(workspace_path: str) -> None:
 # v0.22.0: Platform Stabilization adds v1.0.0 readiness checks.
 
 # v1.1.0: Execution Runtime Layer adds plans, permissions, filesystem, terminal and git runtimes.
+
+# v1.1.1: Conversational Brain Foundation routes unknown natural-language TUI input through brain.ask.

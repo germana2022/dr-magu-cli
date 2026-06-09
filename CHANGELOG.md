@@ -1,3 +1,15 @@
+## v1.1.1 - Conversational Brain Foundation
+
+- Added Conversational Brain module.
+- Added `brain.ask` and `brain.chat` command boundaries.
+- Added `ask` and `chat` aliases.
+- Added safe natural-language fallback in the TUI.
+- Added `dr-magu brain-ask` and `dr-magu brain-chat`.
+- Improved research intent detection for business/search/comparison prompts.
+- Added default model context to conversational responses.
+- Added conversational-brain plugin metadata.
+- Added regression checks to preserve the `dr-magu tui` command.
+
 ## v1.1.0 - Execution Runtime Layer
 
 - Added Execution Runtime Layer package.

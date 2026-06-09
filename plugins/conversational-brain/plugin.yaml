@@ -1,0 +1,24 @@
+id: conversational-brain
+name: Conversational Brain
+version: 1.1.1
+enabled: true
+domain: brain
+description: Natural-language routing foundation for conversational prompts.
+
+provides:
+  agents:
+    - conversational-router
+  workflows:
+    - brain.ask
+  tools:
+    - brain.ask
+    - brain.chat
+    - brain.route
+  prompts:
+    - conversational-routing
+    - intent-classification
+  schedules: []
+  templates:
+    - conversational-response
+permissions:
+  file_write: restricted
