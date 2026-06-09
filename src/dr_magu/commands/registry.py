@@ -204,6 +204,23 @@ def handle_brain_route(args: dict[str, object], context: CommandContext) -> Tool
     return ToolResult(success=True, tool="brain.route", data=brain_route(prompt))
 
 
+
+def handle_report_create(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.reports.generator import ReportGenerator
+    from dr_magu.reports.models import ReportSection
+
+    title = _get_str(args, "title", _get_str(args, "value", "Report"))
+    summary = _get_str(args, "summary", "")
+    section_text = _get_str(args, "section", "")
+    sections = [ReportSection(title="Details", body=section_text)] if section_text else []
+    return ReportGenerator(context.workspace_path).generate(title=title, summary=summary, sections=sections)
+
+
+def handle_report_from_research(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.reports.generator import ReportGenerator
+
+    return ReportGenerator(context.workspace_path).generate_from_latest_research()
+
 def handle_research_search(args: dict[str, object], context: CommandContext) -> ToolResult:
     from dr_magu.research.runner import WebResearchRunner
 
@@ -507,6 +524,22 @@ registry.register(CommandDefinition(
     handler=handle_brain_route,
 ))
 
+
+
+registry.register(CommandDefinition(
+    name="report.create",
+    aliases=["report", "report.create", "rc"],
+    description="Generate Markdown, HTML and JSON report artifacts.",
+    category="reporting",
+    handler=handle_report_create,
+))
+registry.register(CommandDefinition(
+    name="report.from_research",
+    aliases=["report.research", "rr"],
+    description="Generate a report from the latest research output.",
+    category="reporting",
+    handler=handle_report_from_research,
+))
 
 registry.register(CommandDefinition(
     name="research.search",

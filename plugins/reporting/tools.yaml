@@ -1,0 +1,15 @@
+tools:
+  report.create:
+    description: Generate Markdown, HTML and JSON report artifacts.
+    category: reporting
+    read_only: false
+    risk_level: low
+    approval_required: false
+    background_allowed: true
+  report.from_research:
+    description: Generate a report from the latest research output.
+    category: reporting
+    read_only: false
+    risk_level: low
+    approval_required: false
+    background_allowed: true

@@ -1,0 +1,18 @@
+agents:
+  report-generator:
+    name: Report Generator
+    description: Generate structured Markdown, HTML and JSON reports.
+    role: reporting
+    workflow: report.generate
+    enabled: true
+    requires_llm: false
+    capabilities:
+      - generate_markdown_report
+      - generate_html_report
+      - generate_json_report
+      - generate_research_report
+    model:
+      provider: null
+      base_url: null
+      model: null
+      temperature: null

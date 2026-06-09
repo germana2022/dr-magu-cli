@@ -1,0 +1,23 @@
+id: reporting
+name: Reporting
+version: 0.13.0
+enabled: true
+domain: reporting
+description: Report generation plugin for Markdown, HTML and JSON outputs.
+
+provides:
+  agents:
+    - report-generator
+  workflows:
+    - report.generate
+  tools:
+    - report.create
+    - report.from_research
+  prompts:
+    - report-summary
+  schedules: []
+  templates:
+    - executive-report
+    - research-report
+permissions:
+  file_write: restricted

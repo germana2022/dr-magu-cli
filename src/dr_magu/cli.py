@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import typer
+from dr_magu.reports.generator import ReportGenerator
 from dr_magu.research.runner import WebResearchRunner
 from dr_magu.brain.commands import brain_plan, brain_execute, brain_route, render_brain_result
 from rich.console import Console
@@ -675,4 +676,19 @@ def brain_route_command(prompt: str) -> None:
 def research(topic: str, limit: int = typer.Option(5, "--limit", "-n", help="Number of sources to return."), workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path.")) -> None:
     """Search for structured research sources about a topic."""
     result = WebResearchRunner(workspace).search(topic, limit=limit)
+    typer.echo(result.data if result.success else result.errors)
+
+
+
+@app.command("report")
+def report(title: str, summary: str = typer.Option("", "--summary", "-s", help="Report summary."), workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path.")) -> None:
+    """Generate a Markdown, HTML and JSON report."""
+    result = ReportGenerator(workspace).generate(title=title, summary=summary)
+    typer.echo(result.data if result.success else result.errors)
+
+
+@app.command("report-from-research")
+def report_from_research(workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path.")) -> None:
+    """Generate a report from the latest research output."""
+    result = ReportGenerator(workspace).generate_from_latest_research()
     typer.echo(result.data if result.success else result.errors)

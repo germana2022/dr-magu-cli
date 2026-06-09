@@ -59,8 +59,8 @@ def test_plugin_registry_discovers_workspace_plugins(tmp_path: Path) -> None:
     registry = PluginRegistry(tmp_path)
     plugins = registry.list()
 
-    assert [plugin.id for plugin in plugins] == ["research", "software-dev"]
-    assert plugins[0].provides.agents == ["web-researcher"]
+    assert [plugin.id for plugin in plugins] == ["reporting", "research", "software-dev"]
+    assert next(plugin for plugin in plugins if plugin.id == "research").provides.agents == ["web-researcher"]
 
 
 def test_plugin_manager_validates_plugins(tmp_path: Path) -> None:
@@ -87,7 +87,7 @@ def test_brain_context_includes_plugins(tmp_path: Path) -> None:
 
     snapshot = BrainContextLoader(tmp_path).load()
 
-    assert snapshot.summary["plugin_count"] == 2
+    assert snapshot.summary["plugin_count"] == 3
     assert any(plugin["id"] == "research" for plugin in snapshot.plugins)
     assert any(agent["id"] == "web-researcher" for agent in snapshot.agents)
 

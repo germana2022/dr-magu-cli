@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dr-magu-cli"
-version = "0.12.0"
-description = "Dr Magu CLI with Web Research Plugin foundation for research-oriented agents and reports."
+version = "0.13.0"
+description = "Dr Magu CLI with Report Generator Plugin foundation for Markdown, HTML and JSON reports."
 readme = "README.md"
 requires-python = ">=3.11"
 authors = [{ name = "Dr Magu Team" }]

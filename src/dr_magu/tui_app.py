@@ -90,7 +90,7 @@ class TuiSettings:
     """Settings used to start the Dr Magu Terminal UI."""
 
     workspace_path: str
-    version: str = "0.12.0"
+    version: str = "0.13.0"
 
 
 def _build_context(workspace_path: str) -> CommandContext:
@@ -446,7 +446,7 @@ def run_tui(workspace_path: str) -> None:
 
         def on_mount(self) -> None:
             log = self.query_one("#console", RichLog)
-            log.write("[bold cyan]Welcome to Dr Magu v0.12.0[/]")
+            log.write("[bold cyan]Welcome to Dr Magu v0.13.0[/]")
             log.write(
                 "[dim]Workspace-aware Terminal UI with persistent sessions, command history, and deterministic repository scanning, context generation, workflow execution, and Brain context loading.[/]"
             )
@@ -1274,3 +1274,5 @@ def run_tui(workspace_path: str) -> None:
 # v0.11.0: Intent Router classifies natural-language prompts before planning/execution.
 
 # v0.12.0: Web Research Plugin adds research.search for research-oriented prompts.
+
+# v0.13.0: Report Generator Plugin adds report.create and report.from_research.

@@ -1,3 +1,14 @@
+## v0.13.0 - Report Generator Plugin Foundation
+
+- Added Reporting plugin metadata.
+- Added `report-generator` agent definition.
+- Added report document models.
+- Added Markdown, HTML and JSON report renderers.
+- Added `report.create` and `report.from_research` command boundaries.
+- Added `dr-magu report` and `dr-magu report-from-research`.
+- Added report persistence under `.dr-magu/reports/`.
+- Prepared future PDF and email report workflows.
+
 ## v0.12.0 - Web Research Plugin Foundation
 
 - Added Research plugin metadata.

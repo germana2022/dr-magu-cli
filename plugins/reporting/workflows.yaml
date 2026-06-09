@@ -1,0 +1,9 @@
+workflows:
+  report.generate:
+    name: Report Generate
+    description: Generate structured report artifacts in Markdown, HTML and JSON.
+    enabled: true
+    deterministic: true
+    tools:
+      - report.create
+      - report.from_research
