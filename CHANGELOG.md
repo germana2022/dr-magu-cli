@@ -1,3 +1,12 @@
+## v1.1.3 - OpenCode Provider Compatibility Fix
+
+- Added provider-compatible headers to OpenAI-compatible LLM requests.
+- Added stable `User-Agent: dr-magu-cli/1.1.3`.
+- Added `LLM_USER_AGENT` override support.
+- Added `LLM_EXTRA_HEADERS` JSON override support.
+- Added regression tests to avoid Python urllib default signature issues.
+- Updated LLM Runtime plugin metadata.
+
 ## v1.1.2 - LLM Runtime Integration
 
 - Added `llm_runtime` package.

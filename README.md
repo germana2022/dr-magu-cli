@@ -1,4 +1,4 @@
-# Dr Magu CLI v1.1.2
+# Dr Magu CLI v1.1.3
 
 Dr Magu CLI is a Python-based agent platform foundation inspired by Claude Code, OpenCode, Codex CLI, and Gemini CLI.
 
@@ -633,3 +633,33 @@ LLM_TEMPERATURE=0.1
 ```
 
 Action-oriented prompts such as research, website generation, workflow execution, and repository analysis still route to commands/workflows. General chat now attempts an LLM call.
+
+
+## v1.1.3 - OpenCode Provider Compatibility Fix
+
+This release improves LLM provider compatibility for OpenAI-compatible endpoints such as:
+
+```text
+https://opencode.ai/zen/go/v1/chat/completions
+```
+
+Fixes:
+
+- Replaces Python urllib's default User-Agent with `dr-magu-cli/1.1.3`.
+- Keeps standard API headers:
+  - `Authorization`
+  - `Content-Type`
+  - `Accept`
+  - `User-Agent`
+- Adds optional environment configuration:
+  - `LLM_USER_AGENT`
+  - `LLM_EXTRA_HEADERS`
+
+Example:
+
+```env
+LLM_USER_AGENT=dr-magu-cli/1.1.3
+LLM_EXTRA_HEADERS={"X-Client":"dr-magu"}
+```
+
+This addresses provider-side blocks such as Cloudflare `Error 1010: browser_signature_banned` caused by Python's default HTTP client signature.

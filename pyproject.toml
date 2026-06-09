@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dr-magu-cli"
-version = "1.1.2"
-description = "Dr Magu CLI with LLM Runtime Integration for default model chat execution."
+version = "1.1.3"
+description = "Dr Magu CLI with OpenCode provider compatibility fixes for LLM runtime headers."
 readme = "README.md"
 requires-python = ">=3.11"
 authors = [{ name = "Dr Magu Team" }]

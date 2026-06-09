@@ -4,10 +4,47 @@ import json
 import os
 import urllib.error
 import urllib.request
+from typing import Any
 
 from dr_magu.brain.models import ResolvedModelConfig
 
 from .models import LLMMessage, LLMResponse
+
+
+DEFAULT_USER_AGENT = "dr-magu-cli/1.1.3"
+
+
+def _build_headers(api_key: str) -> dict[str, str]:
+    """Build provider-compatible headers for OpenAI-compatible endpoints.
+
+    Some public providers, including OpenCode gateway endpoints, reject the
+    default Python urllib User-Agent through Cloudflare. A stable application
+    User-Agent keeps the request explicit and avoids Python's default signature.
+    """
+
+    user_agent = os.getenv("LLM_USER_AGENT") or DEFAULT_USER_AGENT
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "User-Agent": user_agent,
+    }
+
+    # Optional extra headers in JSON format:
+    # LLM_EXTRA_HEADERS='{"X-Client":"dr-magu"}'
+    extra_headers = os.getenv("LLM_EXTRA_HEADERS")
+    if extra_headers:
+        try:
+            parsed: Any = json.loads(extra_headers)
+            if isinstance(parsed, dict):
+                for key, value in parsed.items():
+                    if key and value is not None:
+                        headers[str(key)] = str(value)
+        except json.JSONDecodeError:
+            # Ignore invalid optional headers to avoid breaking normal chat.
+            pass
+
+    return headers
 
 
 class OpenAICompatibleProvider:
@@ -49,11 +86,7 @@ class OpenAICompatibleProvider:
         request = urllib.request.Request(
             url,
             data=json.dumps(payload).encode("utf-8"),
-            headers={
-                "Authorization": f"Bearer {api_key}",
-                "Content-Type": "application/json",
-                "Accept": "application/json",
-            },
+            headers=_build_headers(api_key),
             method="POST",
         )
 
