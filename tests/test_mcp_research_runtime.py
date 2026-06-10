@@ -95,3 +95,35 @@ def test_cli_exposes_mcp_servers_command():
 def test_mcp_research_runtime_plugin_is_discovered():
     plugins = PluginRegistry(".").list()
     assert any(plugin.id == "mcp-research-runtime" for plugin in plugins)
+
+
+def test_mcp_enable_dot_syntax_persists_config(tmp_path: Path):
+    context = CommandContext(workspace_path=str(tmp_path))
+
+    result = CommandProcessor(registry).execute_line("mcp.enable playwright", context)
+
+    assert result.success is True
+    assert result.tool == "mcp.enable"
+    assert result.data["id"] == "playwright"
+    assert result.data["enabled"] is True
+    assert (tmp_path / ".dr-magu" / "config" / "mcp_servers.json").exists()
+
+
+def test_mcp_enable_space_syntax_is_command_first(tmp_path: Path):
+    context = CommandContext(workspace_path=str(tmp_path))
+
+    result = CommandProcessor(registry).execute_line("mcp enable playwright", context)
+
+    assert result.success is True
+    assert result.tool == "mcp.enable"
+    assert result.data["id"] == "playwright"
+    assert result.data["enabled"] is True
+
+
+def test_operational_enable_disable_space_syntax_normalization():
+    assert CommandProcessor.parse_line("mcp enable playwright")["command_name"] == "mcp.enable"
+    assert CommandProcessor.parse_line("mcp disable playwright")["command_name"] == "mcp.disable"
+    assert CommandProcessor.parse_line("agent enable repository-analyzer")["command_name"] == "agent.enable"
+    assert CommandProcessor.parse_line("agent disable repository-analyzer")["command_name"] == "agent.disable"
+    assert CommandProcessor.parse_line("schedule enable task-1")["command_name"] == "schedule.enable"
+    assert CommandProcessor.parse_line("schedule disable task-1")["command_name"] == "schedule.disable"

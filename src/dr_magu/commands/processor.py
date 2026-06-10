@@ -34,6 +34,23 @@ class CommandProcessor:
             raise ValueError("Command line cannot be empty.")
 
         command_name = tokens[0]
+
+        # v2.1.1 command-first normalization. Operational commands must never be
+        # treated as LLM chat. Support both dot syntax (mcp.enable x) and
+        # natural space syntax (mcp enable x) across operational domains.
+        operational_domains = {"mcp", "agent", "schedule"}
+        operational_actions = {
+            "enable", "disable", "start", "stop", "restart", "health",
+            "status", "discover", "boot", "servers", "list", "show",
+            "validate", "run", "delete",
+        }
+        if len(tokens) > 1 and command_name in operational_domains and tokens[1] in operational_actions:
+            action = tokens[1]
+            if command_name == "mcp" and action == "list":
+                action = "servers"
+            command_name = f"{command_name}.{action}"
+            tokens = [command_name] + tokens[2:]
+
         args: dict[str, object] = {}
         positional: list[str] = []
         index = 1
@@ -107,6 +124,9 @@ class CommandProcessor:
         elif command_name in {"mcp.call"}:
             if positional:
                 args.setdefault("query", " ".join(positional))
+        elif command_name in {"mcp.enable", "mcp.disable", "mcp.start", "mcp.stop", "mcp.restart", "mcp.health", "mcp.status"}:
+            if positional:
+                args.setdefault("id", positional[0])
         elif command_name in {"website.analyze", "site.analyze", "web.analyze"}:
             if positional:
                 args.setdefault("url", " ".join(positional))
@@ -119,7 +139,7 @@ class CommandProcessor:
         elif command_name in {"web.search", "brave.search"}:
             if positional:
                 args.setdefault("query", " ".join(positional))
-        elif command_name in {"agent.show", "agent.run", "agent.validate", "agent.enable", "agent.disable", "agent.delete", "as", "ar", "av", "ae", "ad", "ax"}:
+        elif command_name in {"agent.show", "agent.run", "agent.validate", "agent.enable", "agent.disable", "agent.delete", "as", "ar", "av", "ae", "ad", "ax", "schedule.enable", "schedule.disable", "schedule.delete", "schedule.run", "se", "sd", "sx", "sr"}:
             if positional:
                 args.setdefault("id", positional[0])
         elif command_name in {"agent.add", "aa"}:

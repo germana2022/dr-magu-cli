@@ -13,7 +13,7 @@ from .models import MCPServerConfig, MCPToolResult
 class MCPClient:
     """Operational MCP client boundary.
 
-    v2.1.0 keeps the MCP process lifecycle separate from the tool-call boundary.
+    v2.1.1 keeps the MCP process lifecycle separate from the tool-call boundary.
     When real MCP stdio adapters are not available, built-in operational adapters
     provide real Brave Search, GitHub, Filesystem and basic web-page extraction.
     """
@@ -69,7 +69,7 @@ class MCPClient:
         url = str(arguments.get("url") or arguments.get("query") or "")
         if not url.startswith(("http://", "https://")):
             return MCPToolResult(False, server.id, tool_name, error="A valid http(s) URL is required for Playwright provider analysis.")
-        request = urllib.request.Request(url, headers={"User-Agent": "dr-magu-cli/2.1.0"})
+        request = urllib.request.Request(url, headers={"User-Agent": "dr-magu-cli/2.1.1"})
         with urllib.request.urlopen(request, timeout=20) as response:
             html = response.read().decode("utf-8", errors="ignore")
         title_match = re.search(r"<title[^>]*>(.*?)</title>", html, re.I | re.S)
@@ -98,7 +98,7 @@ class MCPClient:
         if "/" not in repository:
             return MCPToolResult(False, server.id, tool_name, error="GitHub repository must be owner/name or a GitHub URL.")
         api_url = f"https://api.github.com/repos/{repository}"
-        headers = {"Accept": "application/vnd.github+json", "User-Agent": "dr-magu-cli/2.1.0"}
+        headers = {"Accept": "application/vnd.github+json", "User-Agent": "dr-magu-cli/2.1.1"}
         if token:
             headers["Authorization"] = f"Bearer {token}"
         request = urllib.request.Request(api_url, headers=headers)

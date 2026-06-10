@@ -366,6 +366,60 @@ def handle_mcp_servers(args: dict[str, object], context: CommandContext) -> Tool
     return ToolResult(success=True, tool="mcp.servers", data=registry_data)
 
 
+def handle_mcp_enable(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.mcp_runtime.manager import MCPRuntimeManager
+
+    return MCPRuntimeManager(context.workspace_path).enable(_get_str(args, "id", _get_str(args, "value", "")))
+
+
+def handle_mcp_disable(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.mcp_runtime.manager import MCPRuntimeManager
+
+    return MCPRuntimeManager(context.workspace_path).disable(_get_str(args, "id", _get_str(args, "value", "")))
+
+
+def handle_mcp_start(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.mcp_runtime.manager import MCPRuntimeManager
+
+    return MCPRuntimeManager(context.workspace_path).start(_get_str(args, "id", _get_str(args, "value", "")))
+
+
+def handle_mcp_stop(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.mcp_runtime.manager import MCPRuntimeManager
+
+    return MCPRuntimeManager(context.workspace_path).stop(_get_str(args, "id", _get_str(args, "value", "")))
+
+
+def handle_mcp_restart(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.mcp_runtime.manager import MCPRuntimeManager
+
+    return MCPRuntimeManager(context.workspace_path).restart(_get_str(args, "id", _get_str(args, "value", "")))
+
+
+def handle_mcp_health(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.mcp_runtime.manager import MCPRuntimeManager
+
+    return MCPRuntimeManager(context.workspace_path).health(_get_str(args, "id", _get_str(args, "value", "")))
+
+
+def handle_mcp_status(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.mcp_runtime.manager import MCPRuntimeManager
+
+    return MCPRuntimeManager(context.workspace_path).status(_get_str(args, "id", _get_str(args, "value", "")))
+
+
+def handle_mcp_discover(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.mcp_runtime.manager import MCPRuntimeManager
+
+    return MCPRuntimeManager(context.workspace_path).discover()
+
+
+def handle_mcp_boot(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.mcp_runtime.manager import MCPRuntimeManager
+
+    return MCPRuntimeManager(context.workspace_path).boot()
+
+
 def handle_mcp_call(args: dict[str, object], context: CommandContext) -> ToolResult:
     from dr_magu.mcp_runtime.client import MCPClient
     from dr_magu.mcp_runtime.registry import MCPServerRegistry
@@ -1140,6 +1194,70 @@ registry.register(CommandDefinition(
     description="Call an MCP tool through the MCP runtime boundary.",
     category="mcp",
     handler=handle_mcp_call,
+))
+
+registry.register(CommandDefinition(
+    name="mcp.enable",
+    aliases=["mcp.enable", "mcp-enable", "me"],
+    description="Enable a configured MCP server and persist the server state.",
+    category="mcp",
+    handler=handle_mcp_enable,
+))
+registry.register(CommandDefinition(
+    name="mcp.disable",
+    aliases=["mcp.disable", "mcp-disable", "md"],
+    description="Disable a configured MCP server and persist the server state.",
+    category="mcp",
+    handler=handle_mcp_disable,
+))
+registry.register(CommandDefinition(
+    name="mcp.start",
+    aliases=["mcp.start", "mcp-start"],
+    description="Start an enabled MCP server process.",
+    category="mcp",
+    handler=handle_mcp_start,
+))
+registry.register(CommandDefinition(
+    name="mcp.stop",
+    aliases=["mcp.stop", "mcp-stop"],
+    description="Stop a running MCP server process.",
+    category="mcp",
+    handler=handle_mcp_stop,
+))
+registry.register(CommandDefinition(
+    name="mcp.restart",
+    aliases=["mcp.restart", "mcp-restart"],
+    description="Restart an MCP server process.",
+    category="mcp",
+    handler=handle_mcp_restart,
+))
+registry.register(CommandDefinition(
+    name="mcp.health",
+    aliases=["mcp.health", "mcp-health"],
+    description="Run an MCP server health check.",
+    category="mcp",
+    handler=handle_mcp_health,
+))
+registry.register(CommandDefinition(
+    name="mcp.status",
+    aliases=["mcp.status", "mcp-status"],
+    description="Show MCP server runtime status.",
+    category="mcp",
+    handler=handle_mcp_status,
+))
+registry.register(CommandDefinition(
+    name="mcp.discover",
+    aliases=["mcp.discover", "mcp-discover"],
+    description="Discover configured MCP servers and initialize persisted MCP config.",
+    category="mcp",
+    handler=handle_mcp_discover,
+))
+registry.register(CommandDefinition(
+    name="mcp.boot",
+    aliases=["mcp.boot", "mcp-boot"],
+    description="Auto-start enabled MCP servers configured for boot.",
+    category="mcp",
+    handler=handle_mcp_boot,
 ))
 
 registry.register(CommandDefinition(

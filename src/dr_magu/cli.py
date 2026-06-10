@@ -658,7 +658,7 @@ def tui_command(
 
 @app.command("version")
 def version() -> None:
-    console.print("dr-magu-cli v2.1.0")
+    console.print("dr-magu-cli v2.1.1")
 
 
 
