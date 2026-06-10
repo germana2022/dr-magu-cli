@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dr-magu-cli"
-version = "2.0.0"
-description = "Dr Magu CLI as an AI Operating System control layer."
+version = "2.1.0"
+description = "Dr Magu CLI as an AI Operating System with an operational MCP runtime."
 readme = "README.md"
 requires-python = ">=3.11"
 authors = [{ name = "Dr Magu Team" }]

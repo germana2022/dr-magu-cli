@@ -27,6 +27,8 @@ class ResearchResult:
     sources: list[ResearchSource] = field(default_factory=list)
     generated_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     provider: str = "deterministic"
+    provider_chain: list[str] = field(default_factory=list)
+    fallback_used: bool = False
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -34,5 +36,7 @@ class ResearchResult:
             "query": self.query,
             "generated_at": self.generated_at,
             "provider": self.provider,
+            "provider_chain": self.provider_chain,
+            "fallback_used": self.fallback_used,
             "sources": [source.to_dict() for source in self.sources],
         }

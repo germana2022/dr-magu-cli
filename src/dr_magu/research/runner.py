@@ -10,15 +10,18 @@ from .store import ResearchStore
 
 
 class WebResearchRunner:
-    """Run web research workflows through a provider boundary."""
+    """Run research workflows through selectable real MCP providers and fallbacks."""
 
-    def __init__(self, workspace_path: str | Path, provider_name: str | None = None):
+    def __init__(self, workspace_path: str | Path, provider_name: str | None = None, simulation_enabled: bool = True):
         import os
 
         self.workspace_path = Path(workspace_path).resolve()
-        resolved_provider = provider_name or os.getenv("RESEARCH_PROVIDER") or "mcp"
+        resolved_provider = provider_name or os.getenv("RESEARCH_PROVIDER") or "auto"
         self.provider_name = resolved_provider
-        self.provider = MCPResearchProvider(self.workspace_path) if resolved_provider == "mcp" else DeterministicResearchProvider()
+        if resolved_provider == "deterministic":
+            self.provider = DeterministicResearchProvider()
+        else:
+            self.provider = MCPResearchProvider(self.workspace_path, provider_name=resolved_provider, simulation_enabled=simulation_enabled)
         self.store = ResearchStore(self.workspace_path)
 
     def search(self, topic: str, limit: int = 5, persist: bool = True) -> ToolResult:
@@ -35,6 +38,8 @@ class WebResearchRunner:
                 "topic": result.topic,
                 "query": result.query,
                 "provider": result.provider,
+                "provider_chain": result.provider_chain,
+                "fallback_used": result.fallback_used,
                 "source_count": len(result.sources),
                 "sources": [source.to_dict() for source in result.sources],
                 "output_path": str(output_path) if output_path else None,

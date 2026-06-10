@@ -1,0 +1,31 @@
+{
+  "version": "2.1.0",
+  "servers": [
+    {
+      "id": "brave-search",
+      "name": "Brave Search MCP",
+      "transport": "stdio",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-brave-search"],
+      "enabled": false,
+      "auto_start": true,
+      "health_check": true,
+      "required_env": ["BRAVE_API_KEY"],
+      "capabilities": ["web_search", "research", "news_search"],
+      "fallbacks": ["playwright", "filesystem"]
+    },
+    {
+      "id": "playwright",
+      "name": "Playwright MCP",
+      "transport": "stdio",
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp"],
+      "enabled": false,
+      "auto_start": true,
+      "health_check": true,
+      "required_env": [],
+      "capabilities": ["browser", "web_scraping", "website_analysis", "screenshot", "web_search"],
+      "fallbacks": ["brave-search", "filesystem"]
+    }
+  ]
+}

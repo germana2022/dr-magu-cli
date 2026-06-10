@@ -6,6 +6,8 @@ from pathlib import Path
 
 from .models import MCPServerConfig
 
+TRUE_VALUES = {"1", "true", "yes", "on"}
+
 
 def _env_args(name: str) -> list[str]:
     raw = os.getenv(name)
@@ -20,48 +22,67 @@ def _env_args(name: str) -> list[str]:
     return [part for part in raw.split(" ") if part]
 
 
+def _env_enabled(name: str, default: bool = False) -> bool:
+    raw = os.getenv(name)
+    if raw is None:
+        return default
+    return raw.lower() in TRUE_VALUES
+
+
 DEFAULT_MCP_SERVERS = [
+    MCPServerConfig(
+        id="brave-search",
+        name="Brave Search MCP",
+        transport="stdio",
+        command=os.getenv("MCP_BRAVE_SEARCH_COMMAND") or "npx",
+        args=_env_args("MCP_BRAVE_SEARCH_ARGS") or ["-y", "@modelcontextprotocol/server-brave-search"],
+        enabled=_env_enabled("MCP_BRAVE_SEARCH_ENABLED", False),
+        auto_start=_env_enabled("MCP_BRAVE_SEARCH_AUTO_START", True),
+        required_env=["BRAVE_API_KEY"],
+        capabilities=["web_search", "research", "news_search"],
+        fallbacks=["playwright", "filesystem"],
+    ),
     MCPServerConfig(
         id="playwright",
         name="Playwright MCP",
         transport="stdio",
         command=os.getenv("MCP_PLAYWRIGHT_COMMAND") or "npx",
-        args=_env_args("MCP_PLAYWRIGHT_ARGS") or ["@playwright/mcp"],
-        enabled=os.getenv("MCP_PLAYWRIGHT_ENABLED", "false").lower() in {"1", "true", "yes", "on"},
+        args=_env_args("MCP_PLAYWRIGHT_ARGS") or ["-y", "@playwright/mcp"],
+        enabled=_env_enabled("MCP_PLAYWRIGHT_ENABLED", False),
+        auto_start=_env_enabled("MCP_PLAYWRIGHT_AUTO_START", True),
+        required_env=[],
         capabilities=["browser", "web_scraping", "website_analysis", "screenshot", "web_search"],
-    ),
-    MCPServerConfig(
-        id="brave-search",
-        name="Brave Search MCP",
-        transport="stdio",
-        command=os.getenv("MCP_BRAVE_SEARCH_COMMAND"),
-        args=_env_args("MCP_BRAVE_SEARCH_ARGS"),
-        enabled=bool(os.getenv("MCP_BRAVE_SEARCH_COMMAND")) or os.getenv("MCP_BRAVE_SEARCH_ENABLED", "false").lower() in {"1", "true", "yes", "on"},
-        capabilities=["web_search", "research", "news_search"],
+        fallbacks=["brave-search", "filesystem"],
     ),
     MCPServerConfig(
         id="github",
         name="GitHub MCP",
         transport="stdio",
-        command=os.getenv("MCP_GITHUB_COMMAND"),
-        args=_env_args("MCP_GITHUB_ARGS"),
-        enabled=bool(os.getenv("MCP_GITHUB_COMMAND")) or os.getenv("MCP_GITHUB_ENABLED", "false").lower() in {"1", "true", "yes", "on"},
+        command=os.getenv("MCP_GITHUB_COMMAND") or "npx",
+        args=_env_args("MCP_GITHUB_ARGS") or ["-y", "@modelcontextprotocol/server-github"],
+        enabled=_env_enabled("MCP_GITHUB_ENABLED", False),
+        auto_start=_env_enabled("MCP_GITHUB_AUTO_START", True),
+        required_env=["GITHUB_TOKEN"],
         capabilities=["github", "repository", "pull_request", "issues"],
+        fallbacks=["filesystem"],
     ),
     MCPServerConfig(
         id="filesystem",
         name="Filesystem MCP",
         transport="stdio",
-        command=os.getenv("MCP_FILESYSTEM_COMMAND"),
-        args=_env_args("MCP_FILESYSTEM_ARGS"),
-        enabled=bool(os.getenv("MCP_FILESYSTEM_COMMAND")) or os.getenv("MCP_FILESYSTEM_ENABLED", "false").lower() in {"1", "true", "yes", "on"},
-        capabilities=["filesystem", "files_read", "files_write", "workspace"],
+        command=os.getenv("MCP_FILESYSTEM_COMMAND") or "npx",
+        args=_env_args("MCP_FILESYSTEM_ARGS") or ["-y", "@modelcontextprotocol/server-filesystem", "."],
+        enabled=_env_enabled("MCP_FILESYSTEM_ENABLED", False),
+        auto_start=_env_enabled("MCP_FILESYSTEM_AUTO_START", True),
+        required_env=[],
+        capabilities=["filesystem", "files_read", "files_write", "workspace", "research"],
+        fallbacks=[],
     ),
 ]
 
 
 class MCPServerRegistry:
-    """Loads MCP server configuration from workspace config and environment."""
+    """Loads and persists MCP server configuration from workspace config and environment."""
 
     def __init__(self, workspace_path: str | Path):
         self.workspace_path = Path(workspace_path).resolve()
@@ -85,20 +106,56 @@ class MCPServerRegistry:
 
         return DEFAULT_MCP_SERVERS
 
+    def save_servers(self, servers: list[MCPServerConfig]) -> Path:
+        path = self.config_path()
+        path.parent.mkdir(parents=True, exist_ok=True)
+        payload = {"version": "2.1.0", "servers": [server.to_dict() for server in servers]}
+        path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+        return path
+
+    def initialize_config(self, overwrite: bool = False) -> Path:
+        path = self.config_path()
+        if overwrite or not path.exists():
+            self.save_servers(DEFAULT_MCP_SERVERS)
+        return path
+
     def enabled_servers(self) -> list[MCPServerConfig]:
         return [server for server in self.list_servers() if server.enabled]
 
-    def find_server(self, capability: str) -> MCPServerConfig | None:
-        for server in self.enabled_servers():
+    def find_server(self, capability: str, include_disabled: bool = False) -> MCPServerConfig | None:
+        servers = self.list_servers() if include_disabled else self.enabled_servers()
+        for server in servers:
             if capability in server.capabilities:
                 return server
         return None
 
-    def find_by_id(self, server_id: str) -> MCPServerConfig | None:
-        for server in self.list_servers():
+    def find_by_id(self, server_id: str, include_disabled: bool = True) -> MCPServerConfig | None:
+        servers = self.list_servers() if include_disabled else self.enabled_servers()
+        for server in servers:
             if server.id == server_id:
                 return server
         return None
+
+    def set_enabled(self, server_id: str, enabled: bool) -> MCPServerConfig:
+        servers = self.list_servers()
+        updated: list[MCPServerConfig] = []
+        selected: MCPServerConfig | None = None
+        for server in servers:
+            if server.id == server_id:
+                selected = server.with_enabled(enabled)
+                updated.append(selected)
+            else:
+                updated.append(server)
+        if selected is None:
+            raise KeyError(f"Unknown MCP server: {server_id}")
+        self.save_servers(updated)
+        return selected
+
+    def discover(self) -> list[MCPServerConfig]:
+        discovered = self.list_servers()
+        if not self.config_path().exists():
+            self.save_servers(discovered)
+        return discovered
 
     def to_dict(self) -> dict:
         servers = self.list_servers()

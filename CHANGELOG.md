@@ -1,3 +1,16 @@
+## v2.1.0 - Operational MCP Runtime
+
+- Added operational MCP lifecycle management for configured servers.
+- Added `MCPRuntimeManager` with list, discover, status, health, start, stop, restart, enable, disable and boot operations.
+- Extended MCP server configuration with `auto_start`, `health_check`, `required_env`, `fallbacks` and startup timeout metadata.
+- Added workspace persistence for `.dr-magu/config/mcp_servers.json` and `.dr-magu/mcp_runtime/processes.json`.
+- Added CLI commands: `mcp-list`, `mcp-discover`, `mcp-status`, `mcp-health`, `mcp-start`, `mcp-stop`, `mcp-restart`, `mcp-enable`, `mcp-disable` and `mcp-boot`.
+- Added research provider selection with `dr-magu research --provider auto|brave-search|playwright|github|filesystem|deterministic`.
+- Added fallback provider chain metadata to research outputs.
+- Added operational adapters for real Brave Search, Playwright-style web-page extraction, GitHub repository metadata and workspace filesystem access.
+- Updated CLI and package version to `2.1.0`.
+- Added release notes and tests for the Operational MCP Runtime.
+
 ## v2.0.0 - AI Operating System
 
 - Added `ai_os` package.

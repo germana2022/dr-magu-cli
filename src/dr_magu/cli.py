@@ -9,6 +9,7 @@ from dr_magu.conversational_router.router import route_prompt
 from dr_magu.mcp_integrations.runtime import MCPIntegrationRuntime
 from dr_magu.chat_ux.renderer import render_user_facing_result
 from dr_magu.mcp_runtime.registry import MCPServerRegistry
+from dr_magu.mcp_runtime.manager import MCPRuntimeManager
 from dr_magu.llm_runtime.runtime import LLMRuntime
 from dr_magu.execution.executor import ExecutionExecutor
 from dr_magu.execution.planner import ExecutionPlanner
@@ -657,7 +658,7 @@ def tui_command(
 
 @app.command("version")
 def version() -> None:
-    console.print("dr-magu-cli v2.0.0")
+    console.print("dr-magu-cli v2.1.0")
 
 
 
@@ -709,6 +710,76 @@ def llm_chat_command(
 def mcp_servers_command(workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path.")) -> None:
     """List configured MCP servers."""
     typer.echo(MCPServerRegistry(workspace).to_dict())
+
+
+@app.command("mcp-list")
+def mcp_list_command(workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path.")) -> None:
+    """List operational MCP servers with lifecycle status."""
+    result = MCPRuntimeManager(workspace).list()
+    typer.echo(result.data if result.success else result.errors)
+
+
+@app.command("mcp-discover")
+def mcp_discover_command(workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path.")) -> None:
+    """Discover default MCP servers and persist workspace configuration."""
+    result = MCPRuntimeManager(workspace).discover()
+    typer.echo(result.data if result.success else result.errors)
+
+
+@app.command("mcp-status")
+def mcp_status_command(server_id: str, workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path.")) -> None:
+    """Show operational status for one MCP server."""
+    result = MCPRuntimeManager(workspace).status(server_id)
+    typer.echo(result.data if result.success else result.errors)
+
+
+@app.command("mcp-health")
+def mcp_health_command(server_id: str, workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path.")) -> None:
+    """Run an MCP health check."""
+    result = MCPRuntimeManager(workspace).health(server_id)
+    typer.echo(result.data if result.success else result.errors)
+
+
+@app.command("mcp-start")
+def mcp_start_command(server_id: str, workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path.")) -> None:
+    """Start one configured MCP server process."""
+    result = MCPRuntimeManager(workspace).start(server_id)
+    typer.echo(result.data if result.success else result.errors)
+
+
+@app.command("mcp-stop")
+def mcp_stop_command(server_id: str, workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path.")) -> None:
+    """Stop one managed MCP server process."""
+    result = MCPRuntimeManager(workspace).stop(server_id)
+    typer.echo(result.data if result.success else result.errors)
+
+
+@app.command("mcp-restart")
+def mcp_restart_command(server_id: str, workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path.")) -> None:
+    """Restart one managed MCP server process."""
+    result = MCPRuntimeManager(workspace).restart(server_id)
+    typer.echo(result.data if result.success else result.errors)
+
+
+@app.command("mcp-enable")
+def mcp_enable_command(server_id: str, workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path.")) -> None:
+    """Enable one MCP server in workspace configuration."""
+    result = MCPRuntimeManager(workspace).enable(server_id)
+    typer.echo(result.data if result.success else result.errors)
+
+
+@app.command("mcp-disable")
+def mcp_disable_command(server_id: str, workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path.")) -> None:
+    """Disable one MCP server and stop it if it is running."""
+    result = MCPRuntimeManager(workspace).disable(server_id)
+    typer.echo(result.data if result.success else result.errors)
+
+
+@app.command("mcp-boot")
+def mcp_boot_command(workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path.")) -> None:
+    """Start all enabled MCP servers that have auto_start=true."""
+    result = MCPRuntimeManager(workspace).boot()
+    typer.echo(result.data if result.success else result.errors)
 
 
 
@@ -783,9 +854,15 @@ def brain_route_command(prompt: str) -> None:
 
 
 @app.command("research")
-def research(topic: str, limit: int = typer.Option(5, "--limit", "-n", help="Number of sources to return."), workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path.")) -> None:
-    """Search for structured research sources about a topic."""
-    result = WebResearchRunner(workspace).search(topic, limit=limit)
+def research(
+    topic: str,
+    limit: int = typer.Option(5, "--limit", "-n", help="Number of sources to return."),
+    provider: str = typer.Option("auto", "--provider", "-p", help="Research provider: auto, brave-search, playwright, github, filesystem, deterministic."),
+    simulate: bool = typer.Option(False, "--simulate", help="Use deterministic MCP simulation instead of real provider adapters."),
+    workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path."),
+) -> None:
+    """Search for structured research sources using selectable MCP providers and fallbacks."""
+    result = WebResearchRunner(workspace, provider_name=provider, simulation_enabled=simulate).search(topic, limit=limit)
     typer.echo(result.data if result.success else result.errors)
 
 
