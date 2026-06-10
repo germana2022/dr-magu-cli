@@ -1,0 +1,29 @@
+tools:
+  os.status:
+    description: Show AI Operating System status.
+    category: os
+    read_only: true
+    risk_level: low
+    approval_required: false
+    background_allowed: true
+  os.capabilities:
+    description: List AI OS capabilities.
+    category: os
+    read_only: true
+    risk_level: low
+    approval_required: false
+    background_allowed: true
+  os.dispatch:
+    description: Dispatch a command through the OS control layer.
+    category: os
+    read_only: false
+    risk_level: medium
+    approval_required: false
+    background_allowed: true
+  os.boot:
+    description: Boot and summarize AI OS status.
+    category: os
+    read_only: true
+    risk_level: low
+    approval_required: false
+    background_allowed: true

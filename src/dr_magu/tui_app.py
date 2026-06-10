@@ -90,7 +90,7 @@ class TuiSettings:
     """Settings used to start the Dr Magu Terminal UI."""
 
     workspace_path: str
-    version: str = "1.8.0"
+    version: str = "2.0.0"
 
 
 def _build_context(workspace_path: str) -> CommandContext:
@@ -1320,3 +1320,5 @@ def run_tui(workspace_path: str) -> None:
 # v1.7.0: Autonomous Software Factory adds idea-to-delivery software pipeline planning.
 
 # v1.8.0: Self-Healing Workflows adds retry, fallback and escalation around command execution.
+
+# v2.0.0: AI Operating System consolidates Brain, Agents, Workflows, MCP, LLM, Scheduler, Execution, Factory and Healing.

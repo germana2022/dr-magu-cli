@@ -1,0 +1,28 @@
+id: ai-operating-system
+name: AI Operating System
+version: 2.0.0
+enabled: true
+domain: os
+description: Unified OS-like control layer for Brain, Router, LLM, MCP, Agents, Workflows, Scheduler, Execution, Factory and Healing.
+
+provides:
+  agents:
+    - ai-os-controller
+  workflows:
+    - os.boot
+    - os.status
+    - os.dispatch
+  tools:
+    - os.status
+    - os.capabilities
+    - os.dispatch
+    - os.boot
+  prompts:
+    - ai-os-control
+    - platform-orchestration
+  schedules: []
+  templates:
+    - os-status
+permissions:
+  command_execute: restricted
+  platform_control: restricted

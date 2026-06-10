@@ -244,6 +244,32 @@ def handle_web_search(args: dict[str, object], context: CommandContext) -> ToolR
 
 
 
+
+
+def handle_os_status(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.ai_os.runtime import AIOperatingSystem
+
+    return AIOperatingSystem(context.workspace_path).status()
+
+
+def handle_os_capabilities(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.ai_os.runtime import AIOperatingSystem
+
+    return AIOperatingSystem(context.workspace_path).capabilities()
+
+
+def handle_os_dispatch(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.ai_os.runtime import AIOperatingSystem
+
+    command = _get_str(args, "command", _get_str(args, "value", ""))
+    return AIOperatingSystem(context.workspace_path).dispatch(command)
+
+
+def handle_os_boot(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.ai_os.runtime import AIOperatingSystem
+
+    return AIOperatingSystem(context.workspace_path).boot()
+
 def handle_healing_plan(args: dict[str, object], context: CommandContext) -> ToolResult:
     from dr_magu.self_healing.runtime import SelfHealingRuntime
 
@@ -1291,6 +1317,36 @@ registry.register(CommandDefinition(
 
 
 
+
+
+registry.register(CommandDefinition(
+    name="os.status",
+    aliases=["os", "status"],
+    description="Show AI Operating System status.",
+    category="os",
+    handler=handle_os_status,
+))
+registry.register(CommandDefinition(
+    name="os.capabilities",
+    aliases=["os.caps", "capabilities"],
+    description="List AI Operating System capabilities.",
+    category="os",
+    handler=handle_os_capabilities,
+))
+registry.register(CommandDefinition(
+    name="os.dispatch",
+    aliases=["dispatch"],
+    description="Dispatch a command through the AI Operating System control layer.",
+    category="os",
+    handler=handle_os_dispatch,
+))
+registry.register(CommandDefinition(
+    name="os.boot",
+    aliases=["boot"],
+    description="Boot and summarize the AI Operating System.",
+    category="os",
+    handler=handle_os_boot,
+))
 
 registry.register(CommandDefinition(
     name="healing.plan",

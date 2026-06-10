@@ -1,0 +1,13 @@
+agents:
+  ai-os-controller:
+    name: AI OS Controller
+    description: Coordinate the AI Operating System control layer.
+    role: controller
+    workflow: os.boot
+    enabled: true
+    requires_llm: false
+    capabilities:
+      - platform_status
+      - capability_discovery
+      - command_dispatch
+      - unified_control

@@ -1,0 +1,22 @@
+workflows:
+  os.boot:
+    name: AI OS Boot
+    description: Boot and summarize the AI Operating System.
+    enabled: true
+    deterministic: true
+    tools:
+      - os.boot
+  os.status:
+    name: AI OS Status
+    description: Show AI Operating System status.
+    enabled: true
+    deterministic: true
+    tools:
+      - os.status
+  os.dispatch:
+    name: AI OS Dispatch
+    description: Dispatch a command through the OS layer.
+    enabled: true
+    deterministic: true
+    tools:
+      - os.dispatch

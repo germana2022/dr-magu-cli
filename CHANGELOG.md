@@ -1,3 +1,14 @@
+## v2.0.0 - AI Operating System
+
+- Added `ai_os` package.
+- Added `AIOperatingSystem` control layer.
+- Added OS capability registry.
+- Added `os.status`, `os.capabilities`, `os.dispatch`, and `os.boot` commands.
+- Added `dr-magu os-status`, `dr-magu os-capabilities`, `dr-magu os-dispatch`, and `dr-magu os-boot`.
+- Added `ai-operating-system` plugin metadata.
+- Added AI OS tests.
+- Consolidated Brain, Router, LLM, MCP, Agents, Workflows, Scheduler, Execution, Factory, Healing, Plugins and Permissions into one top-level platform view.
+
 ## v1.8.0 - Self-Healing Workflows
 
 - Added `self_healing` package.

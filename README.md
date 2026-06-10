@@ -1,4 +1,4 @@
-# Dr Magu CLI v1.8.0
+# Dr Magu CLI v2.0.0
 
 Dr Magu CLI is a Python-based agent platform foundation inspired by Claude Code, OpenCode, Codex CLI, and Gemini CLI.
 
@@ -930,3 +930,43 @@ Healing behavior:
 3. Execute fallback command when configured
 4. Escalate for human review when unrecovered
 5. Store report under `.dr-magu/healing/latest-healing-report.json`
+
+
+## v2.0.0 - AI Operating System
+
+This release consolidates Dr Magu into an AI Operating System control layer.
+
+New commands:
+
+```bash
+dr-magu os-status
+dr-magu os-capabilities
+dr-magu os-boot
+dr-magu os-dispatch "files.list"
+```
+
+Command mode:
+
+```text
+os.status
+os.capabilities
+os.boot
+os.dispatch files.list
+```
+
+AI OS layers:
+
+- conversation
+- routing
+- llm
+- mcp
+- agents
+- workflows
+- execution
+- scheduler
+- software_factory
+- self_healing
+- plugins
+- permissions
+
+The AI OS layer provides a unified control surface over the platform capabilities added from v1.0.0 through v1.8.0.

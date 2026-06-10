@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import typer
+from dr_magu.ai_os.runtime import AIOperatingSystem
 from dr_magu.self_healing.runtime import SelfHealingRuntime
 from dr_magu.software_factory.runtime import SoftwareFactoryRuntime
 from dr_magu.multi_agent.runtime import MultiAgentOrchestrator
@@ -656,7 +657,7 @@ def tui_command(
 
 @app.command("version")
 def version() -> None:
-    console.print("dr-magu-cli v1.8.0")
+    console.print("dr-magu-cli v2.0.0")
 
 
 
@@ -1141,6 +1142,43 @@ def healing_run_command(
         max_retries=max_retries,
         escalate_on_failure=escalate_on_failure,
     )
+    typer.echo(result.data if result.success else result.errors)
+
+
+@app.command("os-status")
+def os_status_command(
+    workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path."),
+) -> None:
+    """Show AI Operating System status."""
+    result = AIOperatingSystem(workspace).status()
+    typer.echo(result.data if result.success else result.errors)
+
+
+@app.command("os-capabilities")
+def os_capabilities_command(
+    workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path."),
+) -> None:
+    """List AI Operating System capabilities."""
+    result = AIOperatingSystem(workspace).capabilities()
+    typer.echo(result.data if result.success else result.errors)
+
+
+@app.command("os-dispatch")
+def os_dispatch_command(
+    command: str,
+    workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path."),
+) -> None:
+    """Dispatch a command through the AI Operating System control layer."""
+    result = AIOperatingSystem(workspace).dispatch(command)
+    typer.echo(result.data if result.success else result.errors)
+
+
+@app.command("os-boot")
+def os_boot_command(
+    workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path."),
+) -> None:
+    """Boot and summarize the AI Operating System."""
+    result = AIOperatingSystem(workspace).boot()
     typer.echo(result.data if result.success else result.errors)
 
 if __name__ == "__main__":
