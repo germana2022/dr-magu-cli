@@ -35,7 +35,7 @@ class CommandProcessor:
 
         command_name = tokens[0]
 
-        # v2.1.1 command-first normalization. Operational commands must never be
+        # v2.1.1+ command-first normalization. Operational commands must never be
         # treated as LLM chat. Support both dot syntax (mcp.enable x) and
         # natural space syntax (mcp enable x) across operational domains.
         operational_domains = {"mcp", "agent", "schedule"}

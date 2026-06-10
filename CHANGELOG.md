@@ -1,3 +1,21 @@
+## v2.1.3 — MCP Runtime Process Persistence Fix
+
+- Keeps started stdio MCP server processes alive inside the active Dr. Magu runtime session.
+- Persists MCP process metadata under `.dr-magu/mcp_runtime/processes.json`.
+- Adds stdout/stderr log files per MCP server under `.dr-magu/mcp_runtime/logs`.
+- Enhances `mcp.status` with `state_path`, log paths, last exit code, and stderr tail diagnostics.
+- Prevents false-positive startup success when an MCP process exits during startup.
+- Improves `mcp.stop` to terminate tracked in-session processes and clean persisted state.
+
+## v2.1.2 — Windows MCP Command Resolution Fix
+
+- Fixed MCP server startup on Windows when a server command is configured as `npx`.
+- Added cross-platform command resolution with Windows shim support for `.cmd`, `.exe`, and `.bat`.
+- `mcp.start` now spawns the resolved executable path and returns `resolved_command`.
+- `mcp.status` and `mcp.health` now include `resolved_command` and `command_available`.
+- Missing runtime commands now return `Command not found in PATH: <command>`.
+- Added regression tests for Windows `npx.cmd` resolution and missing-command startup errors.
+
 ## v2.1.0 - Operational MCP Runtime
 
 - Added operational MCP lifecycle management for configured servers.

@@ -50,3 +50,107 @@ def test_research_provider_selection_uses_fallback_when_disabled(tmp_path):
     assert result.data["provider"] == "fallback-deterministic"
     assert result.data["fallback_used"] is True
     assert result.data["source_count"] == 2
+
+
+def test_mcp_runtime_resolves_windows_cmd_shims(tmp_path, monkeypatch):
+    manager = MCPRuntimeManager(tmp_path)
+    monkeypatch.setattr("sys.platform", "win32")
+    calls = []
+
+    def fake_which(candidate: str):
+        calls.append(candidate)
+        if candidate == "npx.cmd":
+            return r"C:\\Program Files\\nodejs\\npx.cmd"
+        return None
+
+    monkeypatch.setattr("shutil.which", fake_which)
+
+    assert manager._resolve_command("npx") == r"C:\\Program Files\\nodejs\\npx.cmd"
+    assert calls == ["npx", "npx.cmd"]
+
+
+def test_mcp_start_returns_clear_error_when_command_is_missing(tmp_path):
+    registry = MCPServerRegistry(tmp_path)
+    registry.initialize_config()
+    registry.set_enabled("playwright", True)
+    servers = registry.list_servers()
+    updated = []
+    for server in servers:
+        if server.id == "playwright":
+            updated.append(server.__class__.from_dict({**server.to_dict(), "command": "definitely-not-a-real-command"}))
+        else:
+            updated.append(server)
+    registry.save_servers(updated)
+
+    result = MCPRuntimeManager(tmp_path).start("playwright")
+
+    assert result.success is False
+    assert "Command not found in PATH: definitely-not-a-real-command" in result.errors[0]
+    assert result.data["server_id"] == "playwright"
+
+
+def test_mcp_start_persists_process_state_and_status_uses_tracked_process(tmp_path, monkeypatch):
+    registry = MCPServerRegistry(tmp_path)
+    registry.initialize_config()
+    registry.set_enabled("playwright", True)
+
+    class FakeStdin:
+        def close(self):
+            pass
+
+    class FakeProcess:
+        pid = 4242
+        stdin = FakeStdin()
+
+        def poll(self):
+            return None
+
+        def terminate(self):
+            pass
+
+        def wait(self, timeout=None):
+            return 0
+
+        def kill(self):
+            pass
+
+    monkeypatch.setattr("dr_magu.mcp_runtime.manager.MCPRuntimeManager._resolve_command", lambda self, command: "/usr/bin/npx")
+    monkeypatch.setattr("dr_magu.mcp_runtime.manager.subprocess.Popen", lambda *args, **kwargs: FakeProcess())
+
+    manager = MCPRuntimeManager(tmp_path)
+    started = manager.start("playwright")
+    assert started.success is True
+    assert started.data["pid"] == 4242
+    assert (tmp_path / ".dr-magu" / "mcp_runtime" / "processes.json").exists()
+
+    status = MCPRuntimeManager(tmp_path).status("playwright")
+    assert status.success is True
+    assert status.data["running"] is True
+    assert status.data["pid"] == 4242
+    assert "state_path" in status.data
+    assert "stderr_path" in status.data
+
+    stopped = manager.stop("playwright")
+    assert stopped.success is True
+
+
+def test_mcp_start_reports_immediate_process_exit(tmp_path, monkeypatch):
+    registry = MCPServerRegistry(tmp_path)
+    registry.initialize_config()
+    registry.set_enabled("playwright", True)
+
+    class FakeProcess:
+        pid = 5151
+        stdin = None
+
+        def poll(self):
+            return 1
+
+    monkeypatch.setattr("dr_magu.mcp_runtime.manager.MCPRuntimeManager._resolve_command", lambda self, command: "/usr/bin/npx")
+    monkeypatch.setattr("dr_magu.mcp_runtime.manager.subprocess.Popen", lambda *args, **kwargs: FakeProcess())
+
+    result = MCPRuntimeManager(tmp_path).start("playwright")
+
+    assert result.success is False
+    assert result.data["status"] == "exited"
+    assert result.data["exit_code"] == 1
