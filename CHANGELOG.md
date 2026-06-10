@@ -1,3 +1,15 @@
+## v1.7.0 - Autonomous Software Factory
+
+- Added `software_factory` package.
+- Added `SoftwareFactoryPlanner`.
+- Added `SoftwareFactoryRuntime`.
+- Added `factory.plan`, `factory.run`, and `factory.stage` commands.
+- Added `dr-magu factory-plan` and `dr-magu factory-run`.
+- Added idea-to-delivery pipeline stages.
+- Added factory artifact store under `.dr-magu/factory`.
+- Added `autonomous-software-factory` plugin metadata.
+- Added software factory tests.
+
 ## v1.6.0 - Multi-Agent Orchestrator
 
 - Added `multi_agent` package.

@@ -89,6 +89,12 @@ class CommandProcessor:
         elif command_name in {"multiagent.plan", "ma.plan", "agents.plan", "multiagent.run", "ma.run", "agents.run"}:
             if positional:
                 args.setdefault("name", positional[0])
+        elif command_name in {"factory.plan", "software.factory.plan", "sf.plan", "factory.run", "software.factory.run", "sf.run"}:
+            if positional:
+                args.setdefault("idea", " ".join(positional))
+        elif command_name in {"factory.stage", "sf.stage"}:
+            if positional:
+                args.setdefault("idea", " ".join(positional))
         elif command_name in {"llm.chat", "llm", "model.chat"}:
             if positional:
                 args.setdefault("prompt", " ".join(positional))

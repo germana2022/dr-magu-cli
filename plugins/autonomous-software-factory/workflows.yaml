@@ -1,0 +1,15 @@
+workflows:
+  factory.plan:
+    name: Software Factory Plan
+    description: Create an idea-to-delivery plan.
+    enabled: true
+    deterministic: true
+    tools:
+      - factory.plan
+  factory.run:
+    name: Software Factory Run
+    description: Run the idea-to-delivery pipeline.
+    enabled: true
+    deterministic: true
+    tools:
+      - factory.run

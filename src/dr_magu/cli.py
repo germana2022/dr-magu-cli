@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import typer
+from dr_magu.software_factory.runtime import SoftwareFactoryRuntime
 from dr_magu.multi_agent.runtime import MultiAgentOrchestrator
 from dr_magu.conversational_router.router import route_prompt
 from dr_magu.mcp_integrations.runtime import MCPIntegrationRuntime
@@ -654,7 +655,7 @@ def tui_command(
 
 @app.command("version")
 def version() -> None:
-    console.print("dr-magu-cli v1.6.0")
+    console.print("dr-magu-cli v1.7.0")
 
 
 
@@ -1088,6 +1089,27 @@ def multiagent_run_command(
 ) -> None:
     """Run a multi-agent orchestration plan."""
     result = MultiAgentOrchestrator(workspace).run(name=name, mode=mode, continue_on_error=continue_on_error)
+    typer.echo(result.data if result.success else result.errors)
+
+
+@app.command("factory-plan")
+def factory_plan_command(
+    idea: str,
+    workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path."),
+) -> None:
+    """Create an Autonomous Software Factory plan."""
+    result = SoftwareFactoryRuntime(workspace).plan(idea=idea)
+    typer.echo(result.data if result.success else result.errors)
+
+
+@app.command("factory-run")
+def factory_run_command(
+    idea: str,
+    continue_on_error: bool = typer.Option(False, "--continue-on-error", help="Continue after failed stages."),
+    workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path."),
+) -> None:
+    """Run the Autonomous Software Factory pipeline."""
+    result = SoftwareFactoryRuntime(workspace).run(idea=idea, continue_on_error=continue_on_error)
     typer.echo(result.data if result.success else result.errors)
 
 if __name__ == "__main__":

@@ -1,4 +1,4 @@
-# Dr Magu CLI v1.6.0
+# Dr Magu CLI v1.7.0
 
 Dr Magu CLI is a Python-based agent platform foundation inspired by Claude Code, OpenCode, Codex CLI, and Gemini CLI.
 
@@ -867,3 +867,40 @@ Built-in pipelines:
   - ticket-generator
 
 The orchestrator validates task dependencies, executes steps in order, aggregates results, and stops on failure unless `--continue-on-error` is enabled.
+
+
+## v1.7.0 - Autonomous Software Factory
+
+This release adds an end-to-end software factory pipeline.
+
+New commands:
+
+```bash
+dr-magu factory-plan "Build a CRM"
+dr-magu factory-run "Build a CRM"
+```
+
+Command mode:
+
+```text
+factory.plan Build a CRM
+factory.run Build a CRM
+factory.stage "Build a CRM" --stage code-plan
+```
+
+Pipeline stages:
+
+1. Idea Intake
+2. Research
+3. Architecture
+4. Tickets
+5. Code Plan
+6. Tests
+7. Documentation
+8. Release Notes
+
+Artifacts are stored under:
+
+```text
+.dr-magu/factory/
+```

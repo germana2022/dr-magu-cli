@@ -1,0 +1,16 @@
+agents:
+  software-factory-supervisor:
+    name: Software Factory Supervisor
+    description: Coordinate idea-to-delivery software planning stages.
+    role: supervisor
+    workflow: factory.run
+    enabled: true
+    requires_llm: false
+    capabilities:
+      - idea_intake
+      - research_planning
+      - architecture_planning
+      - ticket_generation
+      - test_planning
+      - documentation_planning
+      - release_notes

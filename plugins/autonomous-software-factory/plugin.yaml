@@ -1,0 +1,27 @@
+id: autonomous-software-factory
+name: Autonomous Software Factory
+version: 1.7.0
+enabled: true
+domain: factory
+description: End-to-end software delivery pipeline from idea to release notes.
+
+provides:
+  agents:
+    - software-factory-supervisor
+  workflows:
+    - factory.plan
+    - factory.run
+  tools:
+    - factory.plan
+    - factory.run
+    - factory.stage
+  prompts:
+    - software-factory-planning
+    - idea-to-delivery
+  schedules: []
+  templates:
+    - factory-plan
+    - factory-run-summary
+permissions:
+  command_execute: restricted
+  file_write: restricted

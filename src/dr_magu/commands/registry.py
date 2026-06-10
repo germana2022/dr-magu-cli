@@ -240,6 +240,32 @@ def handle_web_search(args: dict[str, object], context: CommandContext) -> ToolR
 
 
 
+
+
+def handle_factory_plan(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.software_factory.runtime import SoftwareFactoryRuntime
+
+    idea = _get_str(args, "idea", _get_str(args, "value", "Build a software product"))
+    name = _get_str(args, "name", "software.factory")
+    return SoftwareFactoryRuntime(context.workspace_path).plan(idea=idea, name=name)
+
+
+def handle_factory_run(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.software_factory.runtime import SoftwareFactoryRuntime
+
+    idea = _get_str(args, "idea", _get_str(args, "value", "Build a software product"))
+    name = _get_str(args, "name", "software.factory")
+    continue_on_error = _get_bool(args, "continue_on_error", False)
+    return SoftwareFactoryRuntime(context.workspace_path).run(idea=idea, name=name, continue_on_error=continue_on_error)
+
+
+def handle_factory_stage(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.software_factory.runtime import SoftwareFactoryRuntime
+
+    idea = _get_str(args, "idea", _get_str(args, "value", "Build a software product"))
+    stage = _get_str(args, "stage", "idea-intake")
+    return SoftwareFactoryRuntime(context.workspace_path).run_stage(stage=stage, idea=idea)
+
 def handle_multiagent_plan(args: dict[str, object], context: CommandContext) -> ToolResult:
     from dr_magu.multi_agent.runtime import MultiAgentOrchestrator
 
@@ -1232,6 +1258,29 @@ registry.register(CommandDefinition(
 ))
 
 
+
+
+registry.register(CommandDefinition(
+    name="factory.plan",
+    aliases=["software.factory.plan", "sf.plan"],
+    description="Create an Autonomous Software Factory plan.",
+    category="factory",
+    handler=handle_factory_plan,
+))
+registry.register(CommandDefinition(
+    name="factory.run",
+    aliases=["software.factory.run", "sf.run"],
+    description="Run the Autonomous Software Factory pipeline.",
+    category="factory",
+    handler=handle_factory_run,
+))
+registry.register(CommandDefinition(
+    name="factory.stage",
+    aliases=["sf.stage"],
+    description="Run a specific internal Software Factory stage.",
+    category="factory",
+    handler=handle_factory_stage,
+))
 
 registry.register(CommandDefinition(
     name="multiagent.plan",

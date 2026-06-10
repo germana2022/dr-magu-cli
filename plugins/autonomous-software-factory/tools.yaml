@@ -1,0 +1,22 @@
+tools:
+  factory.plan:
+    description: Create an Autonomous Software Factory plan.
+    category: factory
+    read_only: false
+    risk_level: medium
+    approval_required: false
+    background_allowed: true
+  factory.run:
+    description: Run the Autonomous Software Factory pipeline.
+    category: factory
+    read_only: false
+    risk_level: medium
+    approval_required: false
+    background_allowed: true
+  factory.stage:
+    description: Run an internal Software Factory stage.
+    category: factory
+    read_only: false
+    risk_level: low
+    approval_required: false
+    background_allowed: true
