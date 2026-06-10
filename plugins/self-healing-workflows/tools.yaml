@@ -1,0 +1,15 @@
+tools:
+  healing.plan:
+    description: Create a self-healing policy.
+    category: healing
+    read_only: true
+    risk_level: low
+    approval_required: false
+    background_allowed: true
+  healing.run:
+    description: Run a command with retry, fallback and escalation.
+    category: healing
+    read_only: false
+    risk_level: medium
+    approval_required: false
+    background_allowed: true

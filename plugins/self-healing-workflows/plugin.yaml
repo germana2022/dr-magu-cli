@@ -1,0 +1,26 @@
+id: self-healing-workflows
+name: Self-Healing Workflows
+version: 1.8.0
+enabled: true
+domain: healing
+description: Retry, fallback and escalation layer for commands and workflows.
+
+provides:
+  agents:
+    - self-healing-supervisor
+  workflows:
+    - healing.plan
+    - healing.run
+  tools:
+    - healing.plan
+    - healing.run
+  prompts:
+    - failure-recovery
+    - retry-fallback-escalation
+  schedules: []
+  templates:
+    - healing-report
+permissions:
+  command_execute: restricted
+  file_write: restricted
+  human_approval: optional

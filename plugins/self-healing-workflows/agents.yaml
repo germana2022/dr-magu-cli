@@ -1,0 +1,14 @@
+agents:
+  self-healing-supervisor:
+    name: Self-Healing Supervisor
+    description: Monitor command execution and recover using retry, fallback and escalation.
+    role: supervisor
+    workflow: healing.run
+    enabled: true
+    requires_llm: false
+    capabilities:
+      - failure_detection
+      - retry_execution
+      - fallback_execution
+      - escalation
+      - healing_report_generation

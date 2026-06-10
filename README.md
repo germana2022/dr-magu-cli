@@ -1,4 +1,4 @@
-# Dr Magu CLI v1.7.0
+# Dr Magu CLI v1.8.0
 
 Dr Magu CLI is a Python-based agent platform foundation inspired by Claude Code, OpenCode, Codex CLI, and Gemini CLI.
 
@@ -342,7 +342,7 @@ Highlights:
   - release-notes-generator
 - Added `software-development` plugin.
 - Added safe read-only Git tools:
-  - git.status
+  - files.list
   - git.diff
   - git.log
   - git.branch
@@ -522,7 +522,7 @@ Runtime capabilities:
 - `filesystem.write`
 - `filesystem.delete`
 - `terminal.run`
-- `git.status`
+- `files.list`
 - `git.diff`
 - `git.log`
 - `git.branch`
@@ -904,3 +904,29 @@ Artifacts are stored under:
 ```text
 .dr-magu/factory/
 ```
+\n
+## v1.8.0 - Self-Healing Workflows
+
+This release adds retry, fallback and escalation around command execution.
+
+New commands:
+
+```bash
+dr-magu healing-plan "website.analyze https://example.com"
+dr-magu healing-run "unknown.command" --fallback-command files.list --max-retries 0
+```
+
+Command mode:
+
+```text
+healing.plan website.analyze https://example.com
+healing.run unknown.command --fallback-command files.list --max-retries 0
+```
+
+Healing behavior:
+
+1. Execute primary command
+2. Retry when configured
+3. Execute fallback command when configured
+4. Escalate for human review when unrecovered
+5. Store report under `.dr-magu/healing/latest-healing-report.json`

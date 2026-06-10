@@ -92,6 +92,9 @@ class CommandProcessor:
         elif command_name in {"factory.plan", "software.factory.plan", "sf.plan", "factory.run", "software.factory.run", "sf.run"}:
             if positional:
                 args.setdefault("idea", " ".join(positional))
+        elif command_name in {"healing.plan", "heal.plan", "selfheal.plan", "healing.run", "heal.run", "selfheal.run"}:
+            if positional:
+                args.setdefault("command", " ".join(positional))
         elif command_name in {"factory.stage", "sf.stage"}:
             if positional:
                 args.setdefault("idea", " ".join(positional))

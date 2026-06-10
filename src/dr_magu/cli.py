@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import typer
+from dr_magu.self_healing.runtime import SelfHealingRuntime
 from dr_magu.software_factory.runtime import SoftwareFactoryRuntime
 from dr_magu.multi_agent.runtime import MultiAgentOrchestrator
 from dr_magu.conversational_router.router import route_prompt
@@ -655,7 +656,7 @@ def tui_command(
 
 @app.command("version")
 def version() -> None:
-    console.print("dr-magu-cli v1.7.0")
+    console.print("dr-magu-cli v1.8.0")
 
 
 
@@ -1110,6 +1111,36 @@ def factory_run_command(
 ) -> None:
     """Run the Autonomous Software Factory pipeline."""
     result = SoftwareFactoryRuntime(workspace).run(idea=idea, continue_on_error=continue_on_error)
+    typer.echo(result.data if result.success else result.errors)
+
+
+@app.command("healing-plan")
+def healing_plan_command(
+    command: str,
+    fallback_command: str | None = typer.Option(None, "--fallback-command", help="Fallback command."),
+    max_retries: int | None = typer.Option(None, "--max-retries", help="Maximum retry count."),
+    workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path."),
+) -> None:
+    """Create a self-healing policy for a command."""
+    result = SelfHealingRuntime(workspace).plan(command=command, fallback_command=fallback_command, max_retries=max_retries)
+    typer.echo(result.data if result.success else result.errors)
+
+
+@app.command("healing-run")
+def healing_run_command(
+    command: str,
+    fallback_command: str | None = typer.Option(None, "--fallback-command", help="Fallback command."),
+    max_retries: int | None = typer.Option(None, "--max-retries", help="Maximum retry count."),
+    escalate_on_failure: bool = typer.Option(True, "--escalate/--no-escalate", help="Escalate after unrecovered failure."),
+    workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path."),
+) -> None:
+    """Run a command with retry, fallback and escalation."""
+    result = SelfHealingRuntime(workspace).run(
+        command=command,
+        fallback_command=fallback_command,
+        max_retries=max_retries,
+        escalate_on_failure=escalate_on_failure,
+    )
     typer.echo(result.data if result.success else result.errors)
 
 if __name__ == "__main__":

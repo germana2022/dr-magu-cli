@@ -1,3 +1,15 @@
+## v1.8.0 - Self-Healing Workflows
+
+- Added `self_healing` package.
+- Added `HealingPolicy`, `HealingAttempt`, and `HealingReport`.
+- Added `SelfHealingRuntime`.
+- Added default recovery policies.
+- Added `healing.plan` and `healing.run` commands.
+- Added `dr-magu healing-plan` and `dr-magu healing-run`.
+- Added healing report storage under `.dr-magu/healing`.
+- Added `self-healing-workflows` plugin metadata.
+- Added self-healing workflow tests.
+
 ## v1.7.0 - Autonomous Software Factory
 
 - Added `software_factory` package.

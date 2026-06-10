@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dr-magu-cli"
-version = "1.7.0"
-description = "Dr Magu CLI with Autonomous Software Factory for end-to-end software delivery planning."
+version = "1.8.0"
+description = "Dr Magu CLI with Self-Healing Workflows for retry, fallback and escalation."
 readme = "README.md"
 requires-python = ">=3.11"
 authors = [{ name = "Dr Magu Team" }]

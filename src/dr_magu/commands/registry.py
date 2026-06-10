@@ -242,6 +242,37 @@ def handle_web_search(args: dict[str, object], context: CommandContext) -> ToolR
 
 
 
+
+
+def handle_healing_plan(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.self_healing.runtime import SelfHealingRuntime
+
+    command = _get_str(args, "command", _get_str(args, "value", ""))
+    fallback_command = args.get("fallback_command")
+    max_retries = args.get("max_retries")
+    retries = _get_int(args, "max_retries", 1) if max_retries is not None else None
+    return SelfHealingRuntime(context.workspace_path).plan(
+        command=command,
+        fallback_command=str(fallback_command) if fallback_command is not None else None,
+        max_retries=retries,
+    )
+
+
+def handle_healing_run(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.self_healing.runtime import SelfHealingRuntime
+
+    command = _get_str(args, "command", _get_str(args, "value", ""))
+    fallback_command = args.get("fallback_command")
+    max_retries = args.get("max_retries")
+    retries = _get_int(args, "max_retries", 1) if max_retries is not None else None
+    escalate = args.get("escalate_on_failure")
+    return SelfHealingRuntime(context.workspace_path).run(
+        command=command,
+        fallback_command=str(fallback_command) if fallback_command is not None else None,
+        max_retries=retries,
+        escalate_on_failure=_get_bool(args, "escalate_on_failure", True) if escalate is not None else None,
+    )
+
 def handle_factory_plan(args: dict[str, object], context: CommandContext) -> ToolResult:
     from dr_magu.software_factory.runtime import SoftwareFactoryRuntime
 
@@ -1259,6 +1290,22 @@ registry.register(CommandDefinition(
 
 
 
+
+
+registry.register(CommandDefinition(
+    name="healing.plan",
+    aliases=["heal.plan", "selfheal.plan"],
+    description="Create a self-healing policy for a command.",
+    category="healing",
+    handler=handle_healing_plan,
+))
+registry.register(CommandDefinition(
+    name="healing.run",
+    aliases=["heal.run", "selfheal.run"],
+    description="Run a command with retry, fallback and escalation.",
+    category="healing",
+    handler=handle_healing_run,
+))
 
 registry.register(CommandDefinition(
     name="factory.plan",

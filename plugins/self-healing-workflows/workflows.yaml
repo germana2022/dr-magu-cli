@@ -1,0 +1,15 @@
+workflows:
+  healing.plan:
+    name: Healing Plan
+    description: Create a retry/fallback/escalation policy.
+    enabled: true
+    deterministic: true
+    tools:
+      - healing.plan
+  healing.run:
+    name: Healing Run
+    description: Execute a command with self-healing behavior.
+    enabled: true
+    deterministic: true
+    tools:
+      - healing.run
