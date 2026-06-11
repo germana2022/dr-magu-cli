@@ -22,13 +22,22 @@ STEP_SKIPPED = "skipped"
 
 @dataclass(frozen=True)
 class WorkflowStep:
-    """Single workflow step definition."""
+    """Single workflow step definition.
+
+    v2.5.0 keeps command steps as the stable execution primitive and adds
+    optional operational metadata used by the orchestration engine.
+    """
 
     id: str
     name: str
-    type: str
-    command: str
+    type: str = "command"
+    command: str = ""
     description: str = ""
+    enabled: bool = True
+    requires_approval: bool = False
+    timeout_seconds: int | None = None
+    continue_on_error: bool = False
+    output_key: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -37,6 +46,11 @@ class WorkflowStep:
             "type": self.type,
             "command": self.command,
             "description": self.description,
+            "enabled": self.enabled,
+            "requires_approval": self.requires_approval,
+            "timeout_seconds": self.timeout_seconds,
+            "continue_on_error": self.continue_on_error,
+            "output_key": self.output_key,
         }
 
     @staticmethod
@@ -47,16 +61,24 @@ class WorkflowStep:
             type=str(payload.get("type") or "command"),
             command=str(payload.get("command") or ""),
             description=str(payload.get("description") or ""),
+            enabled=bool(payload.get("enabled", True)),
+            requires_approval=bool(payload.get("requires_approval", False)),
+            timeout_seconds=(int(payload["timeout_seconds"]) if payload.get("timeout_seconds") is not None else None),
+            continue_on_error=bool(payload.get("continue_on_error", False)),
+            output_key=(str(payload.get("output_key")) if payload.get("output_key") else None),
         )
 
 
 @dataclass(frozen=True)
 class WorkflowDefinition:
-    """Workflow definition consumed by the engine."""
+    """Workflow definition consumed by the orchestration engine."""
 
     id: str
     name: str
     description: str = ""
+    version: str = "1.0"
+    tags: list[str] = field(default_factory=list)
+    inputs: dict[str, Any] = field(default_factory=dict)
     steps: list[WorkflowStep] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
@@ -64,8 +86,23 @@ class WorkflowDefinition:
             "id": self.id,
             "name": self.name,
             "description": self.description,
+            "version": self.version,
+            "tags": list(self.tags),
+            "inputs": dict(self.inputs),
             "steps": [step.to_dict() for step in self.steps],
         }
+
+    @staticmethod
+    def from_dict(payload: dict[str, Any]) -> "WorkflowDefinition":
+        return WorkflowDefinition(
+            id=str(payload["id"]),
+            name=str(payload.get("name") or payload["id"]),
+            description=str(payload.get("description") or ""),
+            version=str(payload.get("version") or "1.0"),
+            tags=[str(item) for item in payload.get("tags", [])],
+            inputs=dict(payload.get("inputs") or {}),
+            steps=[WorkflowStep.from_dict(item) for item in payload.get("steps", [])],
+        )
 
 
 @dataclass(frozen=True)

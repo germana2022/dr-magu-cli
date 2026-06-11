@@ -48,3 +48,26 @@ def test_unknown_command_returns_error(tmp_path):
 
     assert result.success is False
     assert "Unknown command" in result.errors[0]
+
+
+def test_parse_mcp_test_space_syntax():
+    parsed = CommandProcessor.parse_line("mcp test playwright www.google.com")
+
+    assert parsed["command_name"] == "mcp.test"
+    assert parsed["args"]["id"] == "playwright"
+    assert parsed["args"]["target"] == "www.google.com"
+
+
+def test_parse_mcp_tools_space_syntax():
+    parsed = CommandProcessor.parse_line("mcp tools playwright")
+
+    assert parsed["command_name"] == "mcp.tools"
+    assert parsed["args"]["id"] == "playwright"
+
+
+def test_parse_mcp_diagnose_space_syntax_with_target():
+    parsed = CommandProcessor.parse_line("mcp diagnose playwright https://www.google.com")
+
+    assert parsed["command_name"] == "mcp.diagnose"
+    assert parsed["args"]["id"] == "playwright"
+    assert parsed["args"]["target"] == "https://www.google.com"

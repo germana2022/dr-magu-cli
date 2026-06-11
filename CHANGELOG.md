@@ -1,3 +1,46 @@
+## v2.3.3 — Research Tool Mapping Fix
+
+- Mapped Playwright Research to concrete MCP tools (`browser_navigate` and `browser_snapshot`).
+- Updated Research debug output to show the actual MCP tool invoked instead of the synthetic adapter name.
+- Added Playwright MCP tool sequence metadata to research results.
+- Updated CLI/package version to 2.3.3.
+
+## v2.5.0 — Workflow Orchestration Engine
+
+- Added operational Workflow Engine definition catalog, planning, and persisted orchestration runs.
+- Added workspace YAML/JSON workflow definitions under `.dr-magu/workflows`.
+- Added richer step metadata and improved resume support.
+- Fixed CLI command import shadowing for Workflow Engine commands.
+
+
+## v2.3.3 — MCP Validation Toolkit and Session Architecture Fix
+
+- Added `mcp.handshake`, `mcp.tools`, `mcp.test`, and `mcp.diagnose` commands.
+- Added CLI commands `mcp-handshake`, `mcp-tools`, `mcp-test`, and `mcp-diagnose`.
+- Added direct Playwright MCP smoke testing, for example `mcp.test playwright https://www.google.com`.
+- Fixed stdio MCP framing by sending newline-delimited JSON-RPC messages instead of LSP-style `Content-Length` requests.
+- Kept backward-compatible response parsing for `Content-Length` framed MCP responses.
+- Fixed Research MCP session architecture to use client-owned stdio sessions for Playwright provider execution.
+- Added command parser support for `mcp test`, `mcp tools`, `mcp diagnose`, and `mcp handshake` space syntax.
+- Updated CLI/package version to 2.3.3.
+
+
+## v2.3.0 — Real MCP Client Connectivity
+
+- Added real stdio MCP JSON-RPC client connectivity.
+- Added MCP initialize handshake, tool discovery, and tool invocation.
+- Integrated Research with Playwright MCP stdio sessions.
+- Added debug metadata for client connection, handshake, tools, and responses.
+- Updated CLI/package version to 2.3.0.
+
+
+## v2.2.1 — MCP Research Diagnostics
+
+- Added `research --debug` diagnostics for Research → MCP provider execution.
+- Added `.dr-magu/research/debug/latest-debug.json`.
+- Added fallback reason, MCP client attempt metadata, and provider-chain debug events.
+- Added `mcp.debug` / `dr-magu mcp-debug` for runtime diagnostics and log tails.
+
 ## v2.2.0 — Real MCP Provider Integration
 
 - Changed research to use real provider adapters by default instead of deterministic MCP simulation.

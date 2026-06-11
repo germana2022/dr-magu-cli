@@ -1,9 +1,9 @@
 id: workflow-engine
 name: Workflow Engine
-version: 0.20.0
+version: 2.5.0
 enabled: true
 domain: orchestration
-description: Stateful workflow engine and runtime with history operations.
+description: Operational workflow orchestration engine with definition catalog, planning, persisted state, context and history operations.
 
 provides:
   agents:
@@ -11,6 +11,9 @@ provides:
   workflows:
     - workflow.engine.run
   tools:
+    - workflow.engine.plan
+    - workflow.engine.show
+    - workflow.engine.list
     - workflow.engine.run
     - workflow.engine.status
     - workflow.engine.history

@@ -56,8 +56,9 @@ class WorkflowRuntime:
             )
 
         topic = str(context.get("topic", ""))
+        variables = context.get("variables", {}) or {}
         self.store.append_history(run_id, WorkflowHistoryEvent("workflow.retry.requested", "Retry requested."))
-        return self.runner.run(state.workflow_id, topic=topic)
+        return self.runner.run(state.workflow_id, topic=topic, variables=variables)
 
     def resume(self, run_id: str) -> ToolResult:
         state = self.store.load_state(run_id)
@@ -69,9 +70,10 @@ class WorkflowRuntime:
                 errors=[f"Workflow run cannot be resumed from status: {state.status}"],
             )
 
-        topic = str(context.get("topic", ""))
-        self.store.append_history(run_id, WorkflowHistoryEvent("workflow.resume.requested", "Resume requested."))
-        return self.runner.run(state.workflow_id, topic=topic)
+        return self.runner.resume(run_id)
+
+    def history(self, run_id: str) -> ToolResult:
+        return self.runner.history(run_id)
 
     def export_history(self, run_id: str, output_format: str = "json") -> ToolResult:
         state = self.store.load_state(run_id)

@@ -1,4 +1,25 @@
 tools:
+  workflow.engine.list:
+    description: List Workflow Engine definitions.
+    category: workflow-engine
+    read_only: true
+    risk_level: low
+    approval_required: false
+    background_allowed: true
+  workflow.engine.show:
+    description: Show a Workflow Engine definition.
+    category: workflow-engine
+    read_only: true
+    risk_level: low
+    approval_required: false
+    background_allowed: true
+  workflow.engine.plan:
+    description: Render a Workflow Engine execution plan without running it.
+    category: workflow-engine
+    read_only: true
+    risk_level: low
+    approval_required: false
+    background_allowed: true
   workflow.engine.run:
     description: Run a stateful workflow.
     category: workflow-engine

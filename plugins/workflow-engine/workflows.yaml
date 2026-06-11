@@ -5,6 +5,15 @@ workflows:
     enabled: true
     deterministic: true
     tools:
+      - workflow.engine.list
+      - workflow.engine.show
+      - workflow.engine.plan
       - workflow.engine.run
       - workflow.engine.status
       - workflow.engine.history
+      - workflow.engine.runs
+      - workflow.runtime.inspect
+      - workflow.runtime.cancel
+      - workflow.runtime.retry
+      - workflow.runtime.resume
+      - workflow.runtime.export_history

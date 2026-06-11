@@ -5,6 +5,7 @@ __pycache__/
 htmlcov/
 .venv/
 .env
+.playwright-mcp/
 build/
 dist/
 *.egg-info/

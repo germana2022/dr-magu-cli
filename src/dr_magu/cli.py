@@ -15,7 +15,7 @@ from dr_magu.execution.executor import ExecutionExecutor
 from dr_magu.execution.planner import ExecutionPlanner
 from dr_magu.stabilization.commands import run_stabilization_checks
 from dr_magu.workflow_engine.runtime import WorkflowRuntime
-from dr_magu.workflow_engine.runner import WorkflowRunner
+from dr_magu.workflow_engine.runner import WorkflowRunner as WorkflowEngineRunner
 from dr_magu.website_builder.workflow import WebsiteBuilderWorkflow
 from dr_magu.filesystem_tools.runner import FilesystemToolRunner
 from dr_magu.shell_tools.runner import ShellToolRunner
@@ -658,7 +658,7 @@ def tui_command(
 
 @app.command("version")
 def version() -> None:
-    console.print("dr-magu-cli v2.2.0")
+    console.print("dr-magu-cli v2.5.0")
 
 
 
@@ -740,6 +740,13 @@ def mcp_health_command(server_id: str, workspace: str = typer.Option(".", "--wor
     typer.echo(result.data if result.success else result.errors)
 
 
+@app.command("mcp-debug")
+def mcp_debug_command(server_id: str, workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path.")) -> None:
+    """Show expanded MCP diagnostics for one server."""
+    result = MCPRuntimeManager(workspace).debug(server_id)
+    typer.echo(result.data if result.success else result.errors)
+
+
 @app.command("mcp-start")
 def mcp_start_command(server_id: str, workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path.")) -> None:
     """Start one configured MCP server process."""
@@ -780,6 +787,78 @@ def mcp_boot_command(workspace: str = typer.Option(".", "--workspace", "-w", hel
     """Start all enabled MCP servers that have auto_start=true."""
     result = MCPRuntimeManager(workspace).boot()
     typer.echo(result.data if result.success else result.errors)
+
+
+@app.command("mcp-handshake")
+def mcp_handshake_command(server_id: str, workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path.")) -> None:
+    """Open a direct MCP stdio session and run initialize()."""
+    from dr_magu.mcp_runtime.client import MCPClient
+
+    server = MCPServerRegistry(workspace).find_by_id(server_id, include_disabled=True)
+    if not server:
+        typer.echo([f"Unknown MCP server: {server_id}"])
+        return
+    result = MCPClient(workspace, simulation_enabled=False).handshake(server)
+    typer.echo(result.to_dict())
+
+
+@app.command("mcp-tools")
+def mcp_tools_command(server_id: str, workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path.")) -> None:
+    """Open a direct MCP session and list available tools."""
+    from dr_magu.mcp_runtime.client import MCPClient
+
+    server = MCPServerRegistry(workspace).find_by_id(server_id, include_disabled=True)
+    if not server:
+        typer.echo([f"Unknown MCP server: {server_id}"])
+        return
+    result = MCPClient(workspace, simulation_enabled=False).list_mcp_tools(server)
+    typer.echo(result.to_dict())
+
+
+@app.command("mcp-test")
+def mcp_test_command(
+    server_id: str,
+    target: str = typer.Argument("https://www.google.com"),
+    workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path."),
+) -> None:
+    """Run a direct provider-specific MCP smoke test."""
+    from dr_magu.mcp_runtime.client import MCPClient
+
+    server = MCPServerRegistry(workspace).find_by_id(server_id, include_disabled=True)
+    if not server:
+        typer.echo([f"Unknown MCP server: {server_id}"])
+        return
+    result = MCPClient(workspace, simulation_enabled=False).test_server(server, target=target)
+    typer.echo(result.to_dict())
+
+
+@app.command("mcp-diagnose")
+def mcp_diagnose_command(
+    server_id: str,
+    target: str = typer.Argument("https://www.google.com"),
+    workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path."),
+) -> None:
+    """Run runtime, handshake, tools, and provider smoke-test diagnostics."""
+    from dr_magu.mcp_runtime.client import MCPClient
+
+    server = MCPServerRegistry(workspace).find_by_id(server_id, include_disabled=True)
+    if not server:
+        typer.echo([f"Unknown MCP server: {server_id}"])
+        return
+    runtime_status = MCPRuntimeManager(workspace).status(server_id)
+    client = MCPClient(workspace, simulation_enabled=False)
+    handshake = client.handshake(server)
+    tools = client.list_mcp_tools(server) if handshake.success else None
+    smoke = client.test_server(server, target=target) if handshake.success else None
+    success = bool(runtime_status.success and handshake.success and (tools is None or tools.success) and (smoke is None or smoke.success))
+    typer.echo({
+        "server_id": server_id,
+        "runtime_status": runtime_status.data if runtime_status.success else {"errors": runtime_status.errors},
+        "handshake": handshake.to_dict(),
+        "tools": tools.to_dict() if tools else None,
+        "test": smoke.to_dict() if smoke else None,
+        "overall": "SUCCESS" if success else "FAILED",
+    })
 
 
 
@@ -859,10 +938,11 @@ def research(
     limit: int = typer.Option(5, "--limit", "-n", help="Number of sources to return."),
     provider: str = typer.Option("auto", "--provider", "-p", help="Research provider: auto, brave-search, playwright, github, filesystem, deterministic."),
     simulate: bool = typer.Option(False, "--simulate", help="Use deterministic MCP simulation instead of real provider adapters."),
+    debug: bool = typer.Option(False, "--debug", help="Include Research -> MCP diagnostic events and persist latest-debug.json."),
     workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path."),
 ) -> None:
     """Search for structured research sources using selectable MCP providers and fallbacks."""
-    result = WebResearchRunner(workspace, provider_name=provider, simulation_enabled=simulate).search(topic, limit=limit)
+    result = WebResearchRunner(workspace, provider_name=provider, simulation_enabled=simulate, debug_enabled=debug).search(topic, limit=limit, debug=debug)
     typer.echo(result.data if result.success else result.errors)
 
 
@@ -982,6 +1062,40 @@ def website_build(
 
 
 
+
+@app.command("workflow-engine-list")
+def workflow_engine_list(
+    workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path."),
+) -> None:
+    """List Workflow Engine definitions."""
+    result = WorkflowEngineRunner(workspace).list_definitions()
+    typer.echo(result.data if result.success else result.errors)
+
+
+@app.command("workflow-engine-show")
+def workflow_engine_show(
+    workflow_id: str = typer.Argument("website-builder"),
+    topic: str = typer.Option("", "--topic", "-t", help="Workflow topic/input."),
+    workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path."),
+) -> None:
+    """Show a Workflow Engine definition."""
+    variables = {"topic": topic} if topic else {}
+    result = WorkflowEngineRunner(workspace).show_definition(workflow_id, variables=variables)
+    typer.echo(result.data if result.success else result.errors)
+
+
+@app.command("workflow-engine-plan")
+def workflow_engine_plan(
+    workflow_id: str = typer.Argument("website-builder"),
+    topic: str = typer.Option("", "--topic", "-t", help="Workflow topic/input."),
+    workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path."),
+) -> None:
+    """Render a Workflow Engine plan without executing it."""
+    variables = {"topic": topic} if topic else {}
+    result = WorkflowEngineRunner(workspace).plan(workflow_id, variables=variables)
+    typer.echo(result.data if result.success else result.errors)
+
+
 @app.command("workflow-engine-run")
 def workflow_engine_run(
     workflow_id: str = typer.Argument("website-builder"),
@@ -989,7 +1103,7 @@ def workflow_engine_run(
     workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path."),
 ) -> None:
     """Run a stateful workflow through the Workflow Engine."""
-    result = WorkflowRunner(workspace).run(workflow_id, topic=topic)
+    result = WorkflowEngineRunner(workspace).run(workflow_id, topic=topic)
     typer.echo(result.data if result.success else result.errors)
 
 
@@ -999,7 +1113,7 @@ def workflow_engine_status(
     workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path."),
 ) -> None:
     """Inspect workflow state and context."""
-    result = WorkflowRunner(workspace).status(run_id)
+    result = WorkflowEngineRunner(workspace).status(run_id)
     typer.echo(result.data if result.success else result.errors)
 
 
@@ -1009,7 +1123,7 @@ def workflow_engine_history(
     workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path."),
 ) -> None:
     """Inspect workflow history."""
-    result = WorkflowRunner(workspace).history(run_id)
+    result = WorkflowEngineRunner(workspace).history(run_id)
     typer.echo(result.data if result.success else result.errors)
 
 
@@ -1018,7 +1132,7 @@ def workflow_engine_runs(
     workspace: str = typer.Option(".", "--workspace", "-w", help="Workspace path."),
 ) -> None:
     """List workflow engine runs."""
-    result = WorkflowRunner(workspace).list_runs()
+    result = WorkflowEngineRunner(workspace).list_runs()
     typer.echo(result.data if result.success else result.errors)
 
 

@@ -121,6 +121,7 @@ class MCPToolResult:
     error: str | None = None
     simulated: bool = False
     provider_chain: list[str] = field(default_factory=list)
+    debug: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -131,4 +132,5 @@ class MCPToolResult:
             "error": self.error,
             "simulated": self.simulated,
             "provider_chain": self.provider_chain,
+            "debug": self.debug,
         }

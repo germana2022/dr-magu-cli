@@ -408,6 +408,12 @@ def handle_mcp_status(args: dict[str, object], context: CommandContext) -> ToolR
     return MCPRuntimeManager(context.workspace_path).status(_get_str(args, "id", _get_str(args, "value", "")))
 
 
+def handle_mcp_debug(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.mcp_runtime.manager import MCPRuntimeManager
+
+    return MCPRuntimeManager(context.workspace_path).debug(_get_str(args, "id", _get_str(args, "value", "")))
+
+
 def handle_mcp_discover(args: dict[str, object], context: CommandContext) -> ToolResult:
     from dr_magu.mcp_runtime.manager import MCPRuntimeManager
 
@@ -418,6 +424,75 @@ def handle_mcp_boot(args: dict[str, object], context: CommandContext) -> ToolRes
     from dr_magu.mcp_runtime.manager import MCPRuntimeManager
 
     return MCPRuntimeManager(context.workspace_path).boot()
+
+
+def _get_mcp_server_for_command(context: CommandContext, server_id: str):
+    from dr_magu.mcp_runtime.registry import MCPServerRegistry
+
+    registry = MCPServerRegistry(context.workspace_path)
+    return registry.find_by_id(server_id, include_disabled=True)
+
+
+def handle_mcp_handshake(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.mcp_runtime.client import MCPClient
+
+    server_id = _get_str(args, "id", _get_str(args, "value", ""))
+    server = _get_mcp_server_for_command(context, server_id)
+    if not server:
+        return ToolResult(success=False, tool="mcp.handshake", errors=[f"Unknown MCP server: {server_id}"])
+    result = MCPClient(context.workspace_path, simulation_enabled=False).handshake(server)
+    return ToolResult(success=result.success, tool="mcp.handshake", data=result.to_dict(), errors=[] if result.success else [result.error or "MCP handshake failed."])
+
+
+def handle_mcp_tools(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.mcp_runtime.client import MCPClient
+
+    server_id = _get_str(args, "id", _get_str(args, "value", ""))
+    server = _get_mcp_server_for_command(context, server_id)
+    if not server:
+        return ToolResult(success=False, tool="mcp.tools", errors=[f"Unknown MCP server: {server_id}"])
+    result = MCPClient(context.workspace_path, simulation_enabled=False).list_mcp_tools(server)
+    return ToolResult(success=result.success, tool="mcp.tools", data=result.to_dict(), errors=[] if result.success else [result.error or "MCP tools discovery failed."])
+
+
+def handle_mcp_test(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.mcp_runtime.client import MCPClient
+
+    server_id = _get_str(args, "id", _get_str(args, "server_id", ""))
+    target = _get_str(args, "target", _get_str(args, "url", _get_str(args, "value", "https://www.google.com")))
+    server = _get_mcp_server_for_command(context, server_id)
+    if not server:
+        return ToolResult(success=False, tool="mcp.test", errors=[f"Unknown MCP server: {server_id}"])
+    result = MCPClient(context.workspace_path, simulation_enabled=False).test_server(server, target=target)
+    return ToolResult(success=result.success, tool="mcp.test", data=result.to_dict(), errors=[] if result.success else [result.error or "MCP test failed."])
+
+
+def handle_mcp_diagnose(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.mcp_runtime.client import MCPClient
+    from dr_magu.mcp_runtime.manager import MCPRuntimeManager
+
+    server_id = _get_str(args, "id", _get_str(args, "value", ""))
+    target = _get_str(args, "target", "https://www.google.com")
+    server = _get_mcp_server_for_command(context, server_id)
+    if not server:
+        return ToolResult(success=False, tool="mcp.diagnose", errors=[f"Unknown MCP server: {server_id}"])
+    manager = MCPRuntimeManager(context.workspace_path)
+    status = manager.status(server_id)
+    client = MCPClient(context.workspace_path, simulation_enabled=False)
+    handshake = client.handshake(server)
+    tools = client.list_mcp_tools(server) if handshake.success else None
+    smoke = client.test_server(server, target=target) if handshake.success else None
+    success = bool(status.success and handshake.success and (tools is None or tools.success) and (smoke is None or smoke.success))
+    data = {
+        "server_id": server_id,
+        "runtime_status": status.data if status.success else {"errors": status.errors},
+        "handshake": handshake.to_dict(),
+        "tools": tools.to_dict() if tools else None,
+        "test": smoke.to_dict() if smoke else None,
+        "overall": "SUCCESS" if success else "FAILED",
+    }
+    errors = [] if success else [handshake.error or (smoke.error if smoke else None) or "MCP diagnosis failed."]
+    return ToolResult(success=success, tool="mcp.diagnose", data=data, errors=[e for e in errors if e])
 
 
 def handle_mcp_call(args: dict[str, object], context: CommandContext) -> ToolResult:
@@ -441,7 +516,15 @@ def handle_research_search(args: dict[str, object], context: CommandContext) -> 
 
     topic = _get_str(args, "topic", _get_str(args, "value", ""))
     limit = int(args.get("limit", 5) or 5)
-    return WebResearchRunner(context.workspace_path).search(topic, limit=limit)
+    provider = _get_str(args, "provider", "auto")
+    simulate = bool(args.get("simulate", False))
+    debug = bool(args.get("debug", False))
+    return WebResearchRunner(
+        context.workspace_path,
+        provider_name=provider,
+        simulation_enabled=simulate,
+        debug_enabled=debug,
+    ).search(topic, limit=limit, debug=debug)
 
 
 
@@ -601,12 +684,38 @@ def handle_workflow_runtime_export_history(args: dict[str, object], context: Com
     output_format = _get_str(args, "format", "json")
     return WorkflowRuntime(context.workspace_path).export_history(run_id, output_format=output_format)
 
+def handle_workflow_engine_list(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.workflow_engine.runner import WorkflowRunner
+
+    return WorkflowRunner(context.workspace_path).list_definitions()
+
+
+def handle_workflow_engine_show(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.workflow_engine.runner import WorkflowRunner
+
+    workflow_id = _get_str(args, "workflow", _get_str(args, "id", _get_str(args, "value", "website-builder")))
+    topic = _get_str(args, "topic", "")
+    variables = {"topic": topic} if topic else {}
+    return WorkflowRunner(context.workspace_path).show_definition(workflow_id, variables=variables)
+
+
+def handle_workflow_engine_plan(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.workflow_engine.runner import WorkflowRunner
+
+    workflow_id = _get_str(args, "workflow", _get_str(args, "id", _get_str(args, "value", "website-builder")))
+    topic = _get_str(args, "topic", "")
+    variables = {"topic": topic} if topic else {}
+    return WorkflowRunner(context.workspace_path).plan(workflow_id, variables=variables)
+
+
 def handle_workflow_engine_run(args: dict[str, object], context: CommandContext) -> ToolResult:
     from dr_magu.workflow_engine.runner import WorkflowRunner
 
     workflow_id = _get_str(args, "workflow", _get_str(args, "id", _get_str(args, "value", "website-builder")))
     topic = _get_str(args, "topic", "")
-    return WorkflowRunner(context.workspace_path).run(workflow_id, topic=topic)
+    dry_run = bool(args.get("dry_run", args.get("dry", False)))
+    variables = {"topic": topic} if topic else {}
+    return WorkflowRunner(context.workspace_path).run(workflow_id, topic=topic, variables=variables, dry_run=dry_run)
 
 
 def handle_workflow_engine_status(args: dict[str, object], context: CommandContext) -> ToolResult:
@@ -1189,6 +1298,35 @@ registry.register(CommandDefinition(
     handler=handle_mcp_servers,
 ))
 registry.register(CommandDefinition(
+    name="mcp.handshake",
+    aliases=["mcp.handshake", "mcp-handshake"],
+    description="Open a direct MCP stdio session and run initialize().",
+    category="mcp",
+    handler=handle_mcp_handshake,
+))
+registry.register(CommandDefinition(
+    name="mcp.tools",
+    aliases=["mcp.tools", "mcp-tools"],
+    description="Open a direct MCP session and list available tools.",
+    category="mcp",
+    handler=handle_mcp_tools,
+))
+registry.register(CommandDefinition(
+    name="mcp.test",
+    aliases=["mcp.test", "mcp-test"],
+    description="Run a direct provider-specific MCP smoke test, for example Playwright navigation.",
+    category="mcp",
+    handler=handle_mcp_test,
+))
+registry.register(CommandDefinition(
+    name="mcp.diagnose",
+    aliases=["mcp.diagnose", "mcp-diagnose"],
+    description="Run runtime, handshake, tools, and provider smoke-test diagnostics.",
+    category="mcp",
+    handler=handle_mcp_diagnose,
+))
+
+registry.register(CommandDefinition(
     name="mcp.call",
     aliases=["mcp.call"],
     description="Call an MCP tool through the MCP runtime boundary.",
@@ -1244,6 +1382,14 @@ registry.register(CommandDefinition(
     description="Show MCP server runtime status.",
     category="mcp",
     handler=handle_mcp_status,
+))
+
+registry.register(CommandDefinition(
+    name="mcp.debug",
+    aliases=["mcp.debug", "mcp-debug"],
+    description="Show expanded MCP diagnostic state and log tails.",
+    category="mcp",
+    handler=handle_mcp_debug,
 ))
 registry.register(CommandDefinition(
     name="mcp.discover",
@@ -1593,8 +1739,30 @@ registry.register(CommandDefinition(
 ))
 
 registry.register(CommandDefinition(
+    name="workflow.engine.list",
+    aliases=["we.list", "workflow.engine.ls"],
+    description="List Workflow Engine definitions, including workspace-defined workflows.",
+    category="workflow-engine",
+    handler=handle_workflow_engine_list,
+))
+registry.register(CommandDefinition(
+    name="workflow.engine.show",
+    aliases=["we.show"],
+    description="Show a Workflow Engine definition.",
+    category="workflow-engine",
+    handler=handle_workflow_engine_show,
+))
+registry.register(CommandDefinition(
+    name="workflow.engine.plan",
+    aliases=["we.plan"],
+    description="Render and validate an execution plan without running it.",
+    category="workflow-engine",
+    handler=handle_workflow_engine_plan,
+))
+
+registry.register(CommandDefinition(
     name="workflow.engine.run",
-    aliases=["workflow.engine", "we.run"],
+    aliases=["workflow.engine", "we", "we.run"],
     description="Run a stateful workflow through the Workflow Engine.",
     category="workflow-engine",
     handler=handle_workflow_engine_run,

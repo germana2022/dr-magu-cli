@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 
 from .context import WorkflowContext
-from .models import WorkflowHistoryEvent, WorkflowRunState
+from .models import WorkflowDefinition, WorkflowHistoryEvent, WorkflowRunState
 
 
 class WorkflowRunStore:
@@ -29,6 +29,24 @@ class WorkflowRunStore:
         if not path.exists():
             raise KeyError(f"Unknown workflow run: {run_id}")
         return WorkflowRunState.from_dict(json.loads(path.read_text(encoding="utf-8")))
+
+
+    def save_definition(self, run_id: str, definition: WorkflowDefinition) -> Path:
+        path = self.run_dir(run_id)
+        path.mkdir(parents=True, exist_ok=True)
+        definition_path = path / "definition.json"
+        definition_path.write_text(json.dumps(definition.to_dict(), indent=2, ensure_ascii=False), encoding="utf-8")
+        return definition_path
+
+    def load_definition(self, run_id: str) -> WorkflowDefinition:
+        path = self.run_dir(run_id) / "definition.json"
+        if not path.exists():
+            state = self.load_state(run_id)
+            from .engine import WorkflowEngine
+            context = self.load_context(run_id)
+            variables = context.get("variables", {}) if hasattr(context, "get") else {}
+            return WorkflowEngine(self.workspace_path).get_definition(state.workflow_id, variables=variables)
+        return WorkflowDefinition.from_dict(json.loads(path.read_text(encoding="utf-8")))
 
     def save_context(self, run_id: str, context: WorkflowContext) -> Path:
         path = self.run_dir(run_id)

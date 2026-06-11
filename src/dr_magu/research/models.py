@@ -29,9 +29,10 @@ class ResearchResult:
     provider: str = "deterministic"
     provider_chain: list[str] = field(default_factory=list)
     fallback_used: bool = False
+    debug: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        return {
+        payload = {
             "topic": self.topic,
             "query": self.query,
             "generated_at": self.generated_at,
@@ -40,3 +41,6 @@ class ResearchResult:
             "fallback_used": self.fallback_used,
             "sources": [source.to_dict() for source in self.sources],
         }
+        if self.debug:
+            payload["debug"] = self.debug
+        return payload

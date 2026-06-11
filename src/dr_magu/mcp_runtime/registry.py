@@ -109,7 +109,7 @@ class MCPServerRegistry:
     def save_servers(self, servers: list[MCPServerConfig]) -> Path:
         path = self.config_path()
         path.parent.mkdir(parents=True, exist_ok=True)
-        payload = {"version": "2.2.0", "servers": [server.to_dict() for server in servers]}
+        payload = {"version": "2.3.3", "servers": [server.to_dict() for server in servers]}
         path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
         return path
 

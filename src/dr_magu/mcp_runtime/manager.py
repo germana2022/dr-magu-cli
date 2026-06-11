@@ -189,6 +189,26 @@ class MCPRuntimeManager:
             return result
         return ToolResult(success=True, tool="mcp.health", data=result.data)
 
+    def debug(self, server_id: str) -> ToolResult:
+        """Return an expanded diagnostic snapshot for one MCP server."""
+        status = self.status(server_id)
+        if not status.success:
+            return status
+        data = dict(status.data)
+        data["debug_version"] = "2.3.3"
+        data["client_test"] = {
+            "status_available": bool(status.data),
+            "process_running": bool(status.data.get("running")),
+            "process_healthy": bool(status.data.get("healthy")),
+            "stdio_session_attempted": False,
+            "note": "mcp.debug validates runtime state and log paths. Research --debug records provider/client invocation details.",
+        }
+        data["log_tail"] = {
+            "stdout": self._tail_file(status.data.get("stdout_path")),
+            "stderr": self._tail_file(status.data.get("stderr_path")),
+        }
+        return ToolResult(success=True, tool="mcp.debug", data=data)
+
     def start(self, server_id: str) -> ToolResult:
         server = self.registry.find_by_id(server_id)
         if server is None:
