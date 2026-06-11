@@ -12,7 +12,7 @@ from .store import ResearchStore
 class WebResearchRunner:
     """Run research workflows through selectable real MCP providers and fallbacks."""
 
-    def __init__(self, workspace_path: str | Path, provider_name: str | None = None, simulation_enabled: bool = True):
+    def __init__(self, workspace_path: str | Path, provider_name: str | None = None, simulation_enabled: bool = False):
         import os
 
         self.workspace_path = Path(workspace_path).resolve()

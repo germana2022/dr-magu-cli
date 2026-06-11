@@ -1,3 +1,16 @@
+## v2.2.0 — Real MCP Provider Integration
+
+- Changed research to use real provider adapters by default instead of deterministic MCP simulation.
+- Added strict explicit provider behavior: explicit providers no longer silently fall back to other providers.
+- Kept deterministic MCP simulation available only through `--simulate` or explicit simulation wiring for offline tests.
+- Added real Playwright provider web discovery for query-based research and direct page extraction for HTTP(S) URLs.
+- Added real Brave Search adapter through `BRAVE_API_KEY`.
+- Added real GitHub repository metadata retrieval through the GitHub REST API, with optional `GITHUB_TOKEN`.
+- Added real Filesystem research adapter for workspace-safe scans and reads.
+- Updated research output provider names to the selected real provider id, for example `playwright`, `brave-search`, `github`, or `filesystem`.
+- Updated MCP integration tests to validate real adapter contracts without requiring live internet access.
+- Updated CLI and package version to `2.2.0`.
+
 ## v2.1.3 — MCP Runtime Process Persistence Fix
 
 - Keeps started stdio MCP server processes alive inside the active Dr. Magu runtime session.

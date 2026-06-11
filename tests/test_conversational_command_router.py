@@ -28,6 +28,18 @@ def _write_enabled_servers(tmp_path: Path) -> None:
     )
 
 
+def _mock_urlopen(monkeypatch) -> None:
+    class FakeResponse:
+        def __enter__(self):
+            return self
+        def __exit__(self, *args):
+            return False
+        def read(self):
+            return b"<html><title>HubSpot</title><h1>CRM Platform</h1></html>"
+
+    monkeypatch.setattr("urllib.request.urlopen", lambda *args, **kwargs: FakeResponse())
+
+
 def test_router_maps_website_prompt_to_website_analyze():
     route = route_prompt("Analyze hubspot.com and summarize its business model")
 
@@ -65,7 +77,8 @@ def test_router_route_command_returns_command(tmp_path: Path):
     assert result.data["command"] == 'website.analyze "https://hubspot.com"'
 
 
-def test_router_execute_runs_resolved_website_command(tmp_path: Path):
+def test_router_execute_runs_resolved_website_command(tmp_path: Path, monkeypatch):
+    _mock_urlopen(monkeypatch)
     _write_enabled_servers(tmp_path)
     context = CommandContext(workspace_path=str(tmp_path), output_format="human", config={})
 
@@ -76,7 +89,8 @@ def test_router_execute_runs_resolved_website_command(tmp_path: Path):
     assert result.data["result"]["tool"] == "website.analyze"
 
 
-def test_brain_ask_uses_conversational_command_router_for_website(tmp_path: Path):
+def test_brain_ask_uses_conversational_command_router_for_website(tmp_path: Path, monkeypatch):
+    _mock_urlopen(monkeypatch)
     _write_enabled_servers(tmp_path)
     context = CommandContext(workspace_path=str(tmp_path), output_format="human", config={})
 

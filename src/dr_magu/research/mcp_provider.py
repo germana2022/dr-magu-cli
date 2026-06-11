@@ -34,23 +34,22 @@ class MCPResearchProvider:
         workspace_path: str | Path,
         provider_name: str = "auto",
         fallback_enabled: bool = True,
-        simulation_enabled: bool = True,
+        simulation_enabled: bool = False,
     ):
         self.workspace_path = Path(workspace_path).resolve()
         self.provider_name = provider_name
         self.registry = MCPServerRegistry(self.workspace_path)
         self.client = MCPClient(self.workspace_path, simulation_enabled=simulation_enabled)
-        self.fallback_enabled = fallback_enabled
+        self.fallback_enabled = fallback_enabled and self.provider_name in {"auto", "mcp"}
         self.fallback = DeterministicResearchProvider(provider="fallback-deterministic")
 
     def _candidate_servers(self) -> list:
         if self.provider_name in {"auto", "mcp"}:
             preferred = ["brave-search", "playwright", "github", "filesystem"]
         else:
+            # Explicit providers are strict in v2.2.0. They no longer walk configured
+            # fallback chains unless the caller uses the auto/mcp provider mode.
             preferred = [self.provider_name]
-            configured = self.registry.find_by_id(self.provider_name)
-            if configured:
-                preferred.extend(configured.fallbacks)
 
         servers = []
         seen = set()
@@ -100,7 +99,7 @@ class MCPResearchProvider:
                 topic=topic,
                 query=topic,
                 sources=sources,
-                provider=("mcp-simulated" if call_result.simulated else f"mcp:{server.id}"),
+                provider=("mcp-simulated" if call_result.simulated else server.id),
                 provider_chain=provider_chain,
                 fallback_used=len(provider_chain) > 1,
             )

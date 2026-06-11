@@ -433,7 +433,7 @@ def handle_mcp_call(args: dict[str, object], context: CommandContext) -> ToolRes
     if not server:
         return ToolResult(success=False, tool="mcp.call", errors=[f"No enabled MCP server found for capability: {capability}"])
 
-    result = MCPClient(context.workspace_path).call_tool(server, tool_name, {"query": query, "limit": limit})
+    result = MCPClient(context.workspace_path, simulation_enabled=False).call_tool(server, tool_name, {"query": query, "limit": limit})
     return ToolResult(success=result.success, tool="mcp.call", data=result.to_dict(), errors=[] if result.success else [result.error or "MCP call failed."])
 
 def handle_research_search(args: dict[str, object], context: CommandContext) -> ToolResult:

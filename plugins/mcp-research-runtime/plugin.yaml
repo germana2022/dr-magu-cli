@@ -1,6 +1,6 @@
 id: mcp-research-runtime
 name: MCP Research Runtime
-version: 1.2.0
+version: 1.4.0
 enabled: true
 domain: mcp
 description: MCP runtime foundation and MCP-backed research provider.

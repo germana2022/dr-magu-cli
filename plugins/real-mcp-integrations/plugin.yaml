@@ -1,6 +1,6 @@
 id: real-mcp-integrations
 name: Real MCP Integrations
-version: 1.3.0
+version: 2.2.0
 enabled: true
 domain: mcp
 description: MCP integration contracts for Playwright, Brave Search, GitHub and Filesystem.

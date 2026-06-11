@@ -970,3 +970,17 @@ AI OS layers:
 - permissions
 
 The AI OS layer provides a unified control surface over the platform capabilities added from v1.0.0 through v1.8.0.
+
+## v2.2.0 Real MCP Provider Integration
+
+The research layer now uses real provider adapters by default:
+
+```bash
+dr-magu research "AI news" --provider playwright
+dr-magu research "AI news" --provider brave-search
+dr-magu research "microsoft/vscode" --provider github
+dr-magu research "." --provider filesystem
+```
+
+Use `--simulate` only when deterministic offline MCP simulation is desired.
+Explicit providers are strict; use `--provider auto` when fallback behavior is wanted.

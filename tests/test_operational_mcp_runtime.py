@@ -41,15 +41,15 @@ def test_mcp_health_reports_missing_required_env(tmp_path, monkeypatch):
     assert "BRAVE_API_KEY" in result.data["missing_env"]
 
 
-def test_research_provider_selection_uses_fallback_when_disabled(tmp_path):
+def test_research_provider_selection_returns_unavailable_for_explicit_disabled_provider(tmp_path):
     MCPServerRegistry(tmp_path).initialize_config()
 
     result = WebResearchRunner(tmp_path, provider_name="brave-search").search("operational mcp runtime", limit=2)
 
     assert result.success
-    assert result.data["provider"] == "fallback-deterministic"
-    assert result.data["fallback_used"] is True
-    assert result.data["source_count"] == 2
+    assert result.data["provider"] == "mcp-unavailable"
+    assert result.data["fallback_used"] is False
+    assert result.data["source_count"] == 0
 
 
 def test_mcp_runtime_resolves_windows_cmd_shims(tmp_path, monkeypatch):

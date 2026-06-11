@@ -29,6 +29,30 @@ def _write_enabled_servers(tmp_path: Path) -> None:
     )
 
 
+def _mock_html(monkeypatch) -> None:
+    class FakeResponse:
+        def __enter__(self):
+            return self
+        def __exit__(self, *args):
+            return False
+        def read(self):
+            return b"<html><title>Example</title><h1>Example Domain</h1></html>"
+
+    monkeypatch.setattr("urllib.request.urlopen", lambda *args, **kwargs: FakeResponse())
+
+
+def _mock_github(monkeypatch) -> None:
+    class FakeResponse:
+        def __enter__(self):
+            return self
+        def __exit__(self, *args):
+            return False
+        def read(self):
+            return b'{"full_name":"owner/repo","html_url":"https://github.com/owner/repo","description":"Repo summary","default_branch":"main","language":"Python","stargazers_count":1,"topics":["ai"]}'
+
+    monkeypatch.setattr("urllib.request.urlopen", lambda *args, **kwargs: FakeResponse())
+
+
 def test_registry_lists_real_mcp_templates(tmp_path: Path):
     servers = MCPServerRegistry(tmp_path).list_servers()
     ids = {server.id for server in servers}
@@ -36,7 +60,8 @@ def test_registry_lists_real_mcp_templates(tmp_path: Path):
     assert {"playwright", "brave-search", "github", "filesystem"}.issubset(ids)
 
 
-def test_website_analyze_uses_playwright_capability(tmp_path: Path):
+def test_website_analyze_uses_playwright_capability(tmp_path: Path, monkeypatch):
+    _mock_html(monkeypatch)
     _write_enabled_servers(tmp_path)
 
     result = MCPIntegrationRuntime(tmp_path).website_analyze("https://example.com")
@@ -44,18 +69,19 @@ def test_website_analyze_uses_playwright_capability(tmp_path: Path):
     assert result.success is True
     assert result.tool == "website.analyze"
     assert result.data["server_id"] == "playwright"
-    assert result.data["simulated"] is True
-    assert "headings" in result.data["data"]
+    assert result.data["simulated"] is False
+    assert result.data["data"]["results"][0]["url"] == "https://example.com"
 
 
-def test_repository_read_uses_github_capability(tmp_path: Path):
+def test_repository_read_uses_github_capability(tmp_path: Path, monkeypatch):
+    _mock_github(monkeypatch)
     _write_enabled_servers(tmp_path)
 
     result = MCPIntegrationRuntime(tmp_path).repository_read("owner/repo")
 
     assert result.success is True
     assert result.data["server_id"] == "github"
-    assert "files" in result.data["data"]
+    assert result.data["data"]["repository"] == "owner/repo"
 
 
 def test_filesystem_search_uses_filesystem_capability(tmp_path: Path):
@@ -67,7 +93,8 @@ def test_filesystem_search_uses_filesystem_capability(tmp_path: Path):
     assert result.data["server_id"] == "filesystem"
 
 
-def test_command_processor_routes_website_analyze(tmp_path: Path):
+def test_command_processor_routes_website_analyze(tmp_path: Path, monkeypatch):
+    _mock_html(monkeypatch)
     _write_enabled_servers(tmp_path)
     context = CommandContext(workspace_path=str(tmp_path), output_format="human", config={})
 
@@ -77,7 +104,8 @@ def test_command_processor_routes_website_analyze(tmp_path: Path):
     assert result.tool == "website.analyze"
 
 
-def test_command_processor_routes_repository_read(tmp_path: Path):
+def test_command_processor_routes_repository_read(tmp_path: Path, monkeypatch):
+    _mock_github(monkeypatch)
     _write_enabled_servers(tmp_path)
     context = CommandContext(workspace_path=str(tmp_path), output_format="human", config={})
 
