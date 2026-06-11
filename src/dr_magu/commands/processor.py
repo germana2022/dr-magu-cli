@@ -38,11 +38,11 @@ class CommandProcessor:
         # v2.1.1+ command-first normalization. Operational commands must never be
         # treated as LLM chat. Support both dot syntax (mcp.enable x) and
         # natural space syntax (mcp enable x) across operational domains.
-        operational_domains = {"mcp", "agent", "schedule", "workflow"}
+        operational_domains = {"mcp", "agent", "schedule", "workflow", "skill", "team"}
         operational_actions = {
             "enable", "disable", "start", "stop", "restart", "health",
             "status", "discover", "boot", "servers", "list", "show", "plan",
-            "validate", "run", "runs", "history", "cancel", "resume", "export", "delete", "debug", "test", "tools", "diagnose", "handshake",
+            "validate", "run", "runs", "history", "cancel", "resume", "export", "delete", "debug", "test", "tools", "diagnose", "handshake", "create", "new", "context", "attach", "detach", "remove", "add", "skills",
         }
         if len(tokens) > 1 and command_name in operational_domains:
             if command_name == "workflow" and tokens[1] == "engine" and len(tokens) > 2 and tokens[2] in operational_actions:
@@ -53,6 +53,10 @@ class CommandProcessor:
                 action = tokens[1]
                 if command_name == "mcp" and action == "list":
                     action = "servers"
+                if command_name == "agent" and action == "new":
+                    action = "create"
+                if command_name == "team" and action == "new":
+                    action = "create"
                 command_name = f"{command_name}.{action}"
                 tokens = [command_name] + tokens[2:]
 
@@ -154,7 +158,42 @@ class CommandProcessor:
         elif command_name in {"web.search", "brave.search"}:
             if positional:
                 args.setdefault("query", " ".join(positional))
-        elif command_name in {"agent.show", "agent.run", "agent.validate", "agent.enable", "agent.disable", "agent.delete", "as", "ar", "av", "ae", "ad", "ax", "schedule.enable", "schedule.disable", "schedule.delete", "schedule.run", "se", "sd", "sx", "sr"}:
+        elif command_name in {"team.create", "team.new", "tc", "team.show", "team.status", "team.stop", "team.delete", "ts", "tst", "tstop", "tx"}:
+            if positional:
+                args.setdefault("id", positional[0])
+        elif command_name in {"team.add", "team.remove", "team.detach", "ta", "trm"}:
+            if positional:
+                args.setdefault("team_id", positional[0])
+            if len(positional) > 1:
+                args.setdefault("agent_id", positional[1])
+        elif command_name in {"team.run", "tr", "team"}:
+            if positional:
+                args.setdefault("id", positional[0])
+            if len(positional) > 1:
+                args.setdefault("prompt", " ".join(positional[1:]))
+        elif command_name in {"team.history", "th"}:
+            if positional:
+                args.setdefault("id", positional[0])
+        elif command_name in {"agent.create", "agent.new", "ac"}:
+            if positional:
+                args.setdefault("id", positional[0])
+        elif command_name in {"agent.run", "ar", "agent"}:
+            if positional:
+                args.setdefault("id", positional[0])
+            if len(positional) > 1:
+                args.setdefault("prompt", " ".join(positional[1:]))
+        elif command_name in {"agent.show", "agent.validate", "agent.enable", "agent.disable", "agent.delete", "agent.status", "agent.stop", "agent.context", "agent.skills", "as", "av", "ae", "ad", "ax", "ast", "astop", "actx", "askills", "schedule.enable", "schedule.disable", "schedule.delete", "schedule.run", "se", "sd", "sx", "sr"}:
+            if positional:
+                args.setdefault("id", positional[0])
+        elif command_name in {"skill.show", "skill", "ssk"}:
+            if positional:
+                args.setdefault("id", positional[0])
+        elif command_name in {"skill.attach", "skill.add", "sa", "skill.detach", "skill.remove", "sdsk"}:
+            if positional:
+                args.setdefault("agent_id", positional[0])
+            if len(positional) > 1:
+                args.setdefault("skill_id", positional[1])
+        elif command_name in {"agent.history", "ah"}:
             if positional:
                 args.setdefault("id", positional[0])
         elif command_name in {"agent.add", "aa"}:

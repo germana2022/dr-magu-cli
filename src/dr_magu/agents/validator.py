@@ -4,6 +4,7 @@ from pathlib import Path
 
 from dr_magu.agents.models import AgentDefinition
 from dr_magu.workflows.registry import workflow_registry
+from dr_magu.workflow_engine.engine import WorkflowEngine
 
 
 class AgentValidator:
@@ -24,7 +25,10 @@ class AgentValidator:
             try:
                 workflow_registry.get(agent.workflow)
             except KeyError:
-                errors.append(f"Agent references unknown workflow '{agent.workflow}'.")
+                try:
+                    WorkflowEngine(self.workspace_path).get_definition(agent.workflow)
+                except Exception:
+                    errors.append(f"Agent references unknown workflow '{agent.workflow}'.")
         if not isinstance(agent.capabilities, list):
             errors.append("Agent capabilities must be a list.")
         if agent.model and not isinstance(agent.model, dict):

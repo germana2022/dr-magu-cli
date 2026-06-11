@@ -17,6 +17,7 @@ from dr_magu.scanner.models import RepositoryScan
 from dr_magu.scanner.writers import write_latest_scan
 from dr_magu.sessions.models import SessionMetadata
 from dr_magu.tui_history import SessionCommandHistory
+from dr_magu.tui.clipboard import copy_text_to_clipboard, format_tool_result_for_copy, write_text_artifact
 
 
 
@@ -302,6 +303,8 @@ def run_tui(workspace_path: str) -> None:
         BINDINGS = [
             ("ctrl+c", "quit", "Quit"),
             ("ctrl+l", "clear_console", "Clear"),
+            ("ctrl+y", "copy_last_output", "Copy Last"),
+            ("ctrl+e", "export_transcript", "Export Log"),
             ("f1", "show_help", "Help"),
             ("f2", "show_commands", "Commands"),
             ("f3", "open_sessions", "Sessions"),
@@ -404,6 +407,8 @@ def run_tui(workspace_path: str) -> None:
         def __init__(self) -> None:
             super().__init__()
             self.session_metadata = session_metadata
+            self._last_output_text = ""
+            self._transcript_entries: list[str] = []
 
         def compose(self) -> ComposeResult:
             yield Header(show_clock=True)
@@ -435,6 +440,8 @@ def run_tui(workspace_path: str) -> None:
                         yield Static("\nShortcuts", classes="sidebar-section")
                         yield Label("F1 Help | F2 Commands")
                         yield Label("F3 Sessions | F5 Status")
+                        yield Label("Ctrl+Y Copy Last")
+                        yield Label("Ctrl+E Export Log")
                 with Container(id="input-panel"):
                     with Horizontal(id="command-row"):
                         yield Label("Command ›", id="command-label")
@@ -453,6 +460,7 @@ def run_tui(workspace_path: str) -> None:
             self._write_separator(log)
             log.write("[bold]Try:[/] /help, /commands, /session, /scan, /context, /wf repository.context, /brain, /agents")
             log.write("[dim]Use Arrow Up and Arrow Down to navigate commands executed in this TUI session.[/]")
+            log.write("[dim]Copy helpers: Ctrl+Y or /copy-last copies the last result; Ctrl+E or /export-log writes a plain-text transcript.[/]")
             log.write(f"[dim]Persistent session:[/] {session_metadata.id}")
             self.query_one("#prompt-input", Input).focus()
 
@@ -494,6 +502,34 @@ def run_tui(workspace_path: str) -> None:
         def action_show_status(self) -> None:
             log = self.query_one("#console", RichLog)
             self._execute_and_render("git.status", log)
+
+        def action_copy_last_output(self) -> None:
+            log = self.query_one("#console", RichLog)
+            result = copy_text_to_clipboard(self._last_output_text)
+            color = "green" if result.success else "yellow"
+            log.write(f"[{color}]{result.message}[/]")
+            if not result.success and self._last_output_text:
+                path = write_text_artifact(settings.workspace_path, "last-output.txt", self._last_output_text)
+                log.write(f"[bold green]Copy artifact:[/] {path}")
+
+        def action_copy_session_transcript(self) -> None:
+            log = self.query_one("#console", RichLog)
+            transcript = "\n\n".join(self._transcript_entries).strip()
+            result = copy_text_to_clipboard(transcript)
+            color = "green" if result.success else "yellow"
+            log.write(f"[{color}]{result.message}[/]")
+            if not result.success and transcript:
+                path = write_text_artifact(settings.workspace_path, f"session-{self.session_metadata.id}-transcript.txt", transcript)
+                log.write(f"[bold green]Transcript artifact:[/] {path}")
+
+        def action_export_transcript(self) -> None:
+            log = self.query_one("#console", RichLog)
+            transcript = "\n\n".join(self._transcript_entries).strip()
+            if not transcript:
+                log.write("[yellow]No transcript entries available yet.[/]")
+                return
+            path = write_text_artifact(settings.workspace_path, f"session-{self.session_metadata.id}-transcript.txt", transcript)
+            log.write(f"[bold green]Transcript exported:[/] {path}")
 
         def action_open_sessions(self) -> None:
             self.push_screen(SessionManagerScreen(self.session_metadata.id), self._handle_session_selection)
@@ -537,6 +573,18 @@ def run_tui(workspace_path: str) -> None:
 
             if command in {"/commands", "commands"}:
                 self._render_commands(log)
+                return
+
+            if command in {"/copy", "copy", "/copy-last", "copy.last", "copy-last"}:
+                self.action_copy_last_output()
+                return
+
+            if command in {"/copy-session", "copy.session", "copy-session"}:
+                self.action_copy_session_transcript()
+                return
+
+            if command in {"/export-log", "export.log", "export-log"}:
+                self.action_export_transcript()
                 return
 
             if command in {"/session", "/sessions", "session", "sessions", "ss"}:
@@ -667,7 +715,11 @@ def run_tui(workspace_path: str) -> None:
                 output_path = write_latest_scan(context.workspace_path, RepositoryScan.model_validate(result.data))
                 result.data["scan_file"] = str(output_path)
             updated_session = session_manager.record_command(self.session_metadata.id, command_line, result)
+            self.session_metadata = updated_session
             self._update_session_sidebar(updated_session)
+            plain_output = format_tool_result_for_copy(command_line, result)
+            self._last_output_text = plain_output
+            self._transcript_entries.append(plain_output)
             self._render_result(result, command_line, log)
 
         def _update_session_sidebar(self, metadata: SessionMetadata) -> None:
@@ -697,6 +749,11 @@ def run_tui(workspace_path: str) -> None:
                 ("/wf <name>", "Run a registered workflow. Defaults to repository.context."),
                 ("/session, ss", "Open the persistent session manager popup."),
                 ("/run <command>", "Execute an internal command."),
+                ("/copy-last, /copy", "Copy the last command result as plain JSON text to the OS clipboard."),
+                ("/copy-session", "Copy the current TUI session transcript to the OS clipboard."),
+                ("/export-log", "Write the current TUI session transcript to .dr-magu/tui/."),
+                ("Ctrl+Y", "Copy the last command result."),
+                ("Ctrl+E", "Export the current TUI transcript."),
                 ("fl, gs, gd", "Quick aliases for files.list, git.status, git.diff."),
                 ("Arrow Up", "Show previous command from the current TUI session."),
                 ("Arrow Down", "Show next command from the current TUI session."),

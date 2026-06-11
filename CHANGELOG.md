@@ -1,3 +1,30 @@
+
+## v2.8.0 — Multi-Agent Orchestration
+
+- Added workspace-managed multi-agent teams.
+- Added team.create, team.add, team.remove, team.list, team.show, team.run, team.status, team.history, team.stop and team.delete.
+- Added team persistence under `.dr-magu/teams/`.
+- Added sequential team execution over the Agent Runtime.
+- Added team run history and runtime state.
+- Added command-first routing for natural `team ...` syntax.
+
+
+## v2.7.0 — Agent Skills Framework
+
+- Added built-in reusable agent skills.
+- Added skill.list, skill.show, skill.attach, skill.detach, and agent.skills.
+- Added persisted agent skill bindings under .dr-magu/skills/agent_skills.yaml.
+- Added role-based default skills for created agents.
+- Enriched agent status/context with skill aggregates.
+
+
+## v2.6.0 — Agent Runtime
+
+- Added operational Agent Runtime state and execution history.
+- Added direct `agent.create`, `agent.status`, `agent.stop`, `agent.history`, and `agent.context` commands.
+- Extended `agent.run` with prompt/topic and dry-run support.
+- Integrated agents with the v2.5 Workflow Orchestration Engine while preserving existing YAML lifecycle commands.
+
 ## v2.3.3 — Research Tool Mapping Fix
 
 - Mapped Playwright Research to concrete MCP tools (`browser_navigate` and `browser_snapshot`).

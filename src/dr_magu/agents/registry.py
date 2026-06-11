@@ -45,6 +45,7 @@ class AgentRegistry:
             deleted=agent.deleted,
             requires_llm=agent.requires_llm,
             capabilities=list(agent.capabilities),
+            skills=list(getattr(agent, "skills", []) or []),
             aliases=list(agent.aliases),
             model=self.model_resolver.resolve(agent.model),
             plugin_id=agent.plugin_id,

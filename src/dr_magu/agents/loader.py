@@ -74,6 +74,7 @@ class AgentConfigLoader:
                     deleted=bool(agent_payload.get("deleted", False)),
                     requires_llm=bool(agent_payload.get("requires_llm", False)),
                     capabilities=list(agent_payload.get("capabilities", []) or []),
+                    skills=list(agent_payload.get("skills", []) or []),
                     aliases=list(agent_payload.get("aliases", []) or []),
                     model=dict(agent_payload.get("model", {}) or {}),
                     plugin_id=str(agent_payload.get("plugin_id") or plugin_id) if (agent_payload.get("plugin_id") or plugin_id) else None,

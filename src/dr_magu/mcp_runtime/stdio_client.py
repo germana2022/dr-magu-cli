@@ -180,7 +180,7 @@ class StdioMCPClient:
             {
                 "protocolVersion": "2024-11-05",
                 "capabilities": {},
-                "clientInfo": {"name": "dr-magu-cli", "version": "2.5.0"},
+                "clientInfo": {"name": "dr-magu-cli", "version": "2.7.0"},
             },
         )
         self._write_message({"jsonrpc": "2.0", "method": "notifications/initialized", "params": {}})

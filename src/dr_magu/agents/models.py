@@ -17,6 +17,7 @@ class AgentDefinition(BaseModel):
     deleted: bool = False
     requires_llm: bool = False
     capabilities: list[str] = Field(default_factory=list)
+    skills: list[str] = Field(default_factory=list)
     aliases: list[str] = Field(default_factory=list)
     model: dict[str, object] = Field(default_factory=dict)
     plugin_id: str | None = None
@@ -35,6 +36,7 @@ class ResolvedAgentDefinition(BaseModel):
     deleted: bool = False
     requires_llm: bool
     capabilities: list[str] = Field(default_factory=list)
+    skills: list[str] = Field(default_factory=list)
     aliases: list[str] = Field(default_factory=list)
     model: ResolvedModelConfig
     plugin_id: str | None = None

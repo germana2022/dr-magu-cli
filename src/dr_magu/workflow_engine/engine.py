@@ -36,7 +36,7 @@ class WorkflowEngine:
             id="website-builder",
             name="Website Builder",
             description="Research, propose architecture, request approval and generate report.",
-            version="2.5.0",
+            version="2.7.0",
             tags=["research", "website", "report"],
             inputs={"topic": "Website topic"},
             steps=[
@@ -65,7 +65,7 @@ class WorkflowEngine:
             id="research-brief",
             name="Research Brief",
             description="Run multi-provider research and persist a concise research result.",
-            version="2.5.0",
+            version="2.7.0",
             tags=["research", "mcp", "multi-provider"],
             inputs={"topic": "Research topic"},
             steps=[
@@ -85,7 +85,7 @@ class WorkflowEngine:
             id="repository-context",
             name="Repository Context",
             description="Scan the workspace and generate deterministic project context.",
-            version="2.5.0",
+            version="2.7.0",
             tags=["repository", "context", "filesystem"],
             steps=[
                 WorkflowStep(

@@ -27,6 +27,11 @@ def _get_bool(args: dict[str, object], key: str, default: bool = False) -> bool:
         return value.lower() in {"1", "true", "yes", "y", "on"}
     return bool(value)
 
+
+
+def _csv(value: str) -> list[str]:
+    return [item.strip() for item in value.split(',') if item.strip()]
+
 def _get_int(args: dict[str, object], key: str, default: int) -> int:
     value = args.get(key, default)
     try:
@@ -141,6 +146,25 @@ def handle_agent_list(args: dict[str, object], context: CommandContext) -> ToolR
     )
 
 
+def handle_agent_create(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.agents.runner import AgentRunner
+
+    capabilities = _csv(_get_str(args, "capabilities", ""))
+    aliases = _csv(_get_str(args, "aliases", ""))
+    skills = _csv(_get_str(args, "skills", ""))
+    return AgentRunner(context.workspace_path).create_agent(
+        _get_str(args, "id", _get_str(args, "value", "")),
+        name=_get_str(args, "name", "") or None,
+        role=_get_str(args, "role", "general"),
+        workflow=_get_str(args, "workflow", "research-brief"),
+        description=_get_str(args, "description", ""),
+        capabilities=capabilities or None,
+        skills=skills or None,
+        aliases=aliases or None,
+        requires_llm=_get_bool(args, "requires_llm", False),
+    )
+
+
 def handle_agent_show(args: dict[str, object], context: CommandContext) -> ToolResult:
     from dr_magu.agents.runner import AgentRunner
 
@@ -174,7 +198,75 @@ def handle_agent_delete(args: dict[str, object], context: CommandContext) -> Too
 def handle_agent_run(args: dict[str, object], context: CommandContext) -> ToolResult:
     from dr_magu.agents.runner import AgentRunner
 
-    return AgentRunner(context.workspace_path).run_agent(_get_str(args, "id", _get_str(args, "value", "repository-analyzer")))
+    return AgentRunner(context.workspace_path).run_agent(
+        _get_str(args, "id", _get_str(args, "agent_id", "repository-analyzer")),
+        prompt=_get_str(args, "prompt", _get_str(args, "value", "")),
+        dry_run=_get_bool(args, "dry_run", _get_bool(args, "dry", False)),
+    )
+
+
+def handle_agent_status(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.agents.runner import AgentRunner
+
+    return AgentRunner(context.workspace_path).status_agent(_get_str(args, "id", _get_str(args, "value", "")))
+
+
+def handle_agent_stop(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.agents.runner import AgentRunner
+
+    return AgentRunner(context.workspace_path).stop_agent(
+        _get_str(args, "id", _get_str(args, "value", "")),
+        reason=_get_str(args, "reason", "Manual stop requested."),
+    )
+
+
+def handle_agent_history(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.agents.runner import AgentRunner
+
+    agent_id = _get_str(args, "id", _get_str(args, "value", "")).strip() or None
+    return AgentRunner(context.workspace_path).history(agent_id=agent_id, limit=_get_int(args, "limit", 20))
+
+
+def handle_agent_context(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.agents.runner import AgentRunner
+
+    return AgentRunner(context.workspace_path).context(_get_str(args, "id", _get_str(args, "value", "")))
+
+
+def handle_skill_list(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.skills.runtime import SkillRuntime
+
+    return SkillRuntime(context.workspace_path).list_skills(include_disabled=_get_bool(args, "include_disabled", True))
+
+
+def handle_skill_show(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.skills.runtime import SkillRuntime
+
+    return SkillRuntime(context.workspace_path).show_skill(_get_str(args, "id", _get_str(args, "value", "")))
+
+
+def handle_skill_attach(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.skills.runtime import SkillRuntime
+
+    return SkillRuntime(context.workspace_path).attach(
+        _get_str(args, "agent_id", _get_str(args, "agent", "")),
+        _get_str(args, "skill_id", _get_str(args, "skill", _get_str(args, "value", ""))),
+    )
+
+
+def handle_skill_detach(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.skills.runtime import SkillRuntime
+
+    return SkillRuntime(context.workspace_path).detach(
+        _get_str(args, "agent_id", _get_str(args, "agent", "")),
+        _get_str(args, "skill_id", _get_str(args, "skill", _get_str(args, "value", ""))),
+    )
+
+
+def handle_agent_skills(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.skills.runtime import SkillRuntime
+
+    return SkillRuntime(context.workspace_path).agent_skills(_get_str(args, "id", _get_str(args, "value", "")))
 
 
 def handle_agent_add(args: dict[str, object], context: CommandContext) -> ToolResult:
@@ -188,6 +280,91 @@ def handle_agent_update(args: dict[str, object], context: CommandContext) -> Too
 
     agent_id = _get_str(args, "id", "") or _get_str(args, "agent_id", "")
     return AgentRunner(context.workspace_path).update_agent_from_file(agent_id, _get_str(args, "file", ""))
+
+
+
+def handle_team_create(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.multi_agent.team import TeamRuntime
+
+    return TeamRuntime(context.workspace_path).create(
+        _get_str(args, "id", _get_str(args, "value", "")),
+        name=_get_str(args, "name", "") or None,
+        mode=_get_str(args, "mode", "sequential"),
+        description=_get_str(args, "description", ""),
+    )
+
+
+def handle_team_add(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.multi_agent.team import TeamRuntime
+
+    return TeamRuntime(context.workspace_path).add(
+        _get_str(args, "team_id", _get_str(args, "id", "")),
+        _get_str(args, "agent_id", _get_str(args, "agent", _get_str(args, "value", ""))),
+    )
+
+
+def handle_team_remove(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.multi_agent.team import TeamRuntime
+
+    return TeamRuntime(context.workspace_path).remove(
+        _get_str(args, "team_id", _get_str(args, "id", "")),
+        _get_str(args, "agent_id", _get_str(args, "agent", _get_str(args, "value", ""))),
+    )
+
+
+def handle_team_list(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.multi_agent.team import TeamRuntime
+
+    return TeamRuntime(context.workspace_path).list(
+        include_disabled=_get_bool(args, "include_disabled", True),
+        include_deleted=_get_bool(args, "include_deleted", False),
+    )
+
+
+def handle_team_show(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.multi_agent.team import TeamRuntime
+
+    return TeamRuntime(context.workspace_path).show(_get_str(args, "id", _get_str(args, "value", "")))
+
+
+def handle_team_run(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.multi_agent.team import TeamRuntime
+
+    return TeamRuntime(context.workspace_path).run(
+        _get_str(args, "id", _get_str(args, "team_id", "")),
+        prompt=_get_str(args, "prompt", _get_str(args, "value", "")),
+        mode=_get_str(args, "mode", "") or None,
+        continue_on_error=_get_bool(args, "continue_on_error", False),
+        dry_run=_get_bool(args, "dry_run", _get_bool(args, "dry", False)),
+    )
+
+
+def handle_team_status(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.multi_agent.team import TeamRuntime
+
+    return TeamRuntime(context.workspace_path).status(_get_str(args, "id", _get_str(args, "value", "")))
+
+
+def handle_team_stop(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.multi_agent.team import TeamRuntime
+
+    return TeamRuntime(context.workspace_path).stop(
+        _get_str(args, "id", _get_str(args, "value", "")),
+        reason=_get_str(args, "reason", "Manual team stop requested."),
+    )
+
+
+def handle_team_history(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.multi_agent.team import TeamRuntime
+
+    team_id = _get_str(args, "id", _get_str(args, "value", "")).strip() or None
+    return TeamRuntime(context.workspace_path).history(team_id=team_id, limit=_get_int(args, "limit", 20))
+
+
+def handle_team_delete(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.multi_agent.team import TeamRuntime
+
+    return TeamRuntime(context.workspace_path).delete(_get_str(args, "id", _get_str(args, "value", "")))
 
 
 def handle_brain_context(args: dict[str, object], context: CommandContext) -> ToolResult:
@@ -1196,6 +1373,13 @@ registry.register(CommandDefinition(
     category="agent",
     handler=handle_agent_show,
 ))
+registry.register(CommandDefinition(
+    name="agent.create",
+    aliases=["ac", "agent.new"],
+    description="Create a workspace-managed runtime agent without requiring a YAML file.",
+    category="agent",
+    handler=handle_agent_create,
+))
 
 
 registry.register(CommandDefinition(
@@ -1245,9 +1429,145 @@ registry.register(CommandDefinition(
 registry.register(CommandDefinition(
     name="agent.run",
     aliases=["ar", "agent"],
-    description="Run a configured agent by delegating to its bound workflow.",
+    description="Run a configured agent through the Agent Runtime and its bound workflow.",
     category="agent",
     handler=handle_agent_run,
+))
+registry.register(CommandDefinition(
+    name="agent.status",
+    aliases=["ast"],
+    description="Show Agent Runtime status, latest runs, permissions and MCP access.",
+    category="agent",
+    handler=handle_agent_status,
+))
+registry.register(CommandDefinition(
+    name="agent.stop",
+    aliases=["astop"],
+    description="Request an agent stop and persist stopped runtime state.",
+    category="agent",
+    handler=handle_agent_stop,
+))
+registry.register(CommandDefinition(
+    name="agent.history",
+    aliases=["ah"],
+    description="List Agent Runtime execution history.",
+    category="agent",
+    handler=handle_agent_history,
+))
+registry.register(CommandDefinition(
+    name="agent.context",
+    aliases=["actx"],
+    description="Show Agent Runtime context, permissions, MCP access and workflow access.",
+    category="agent",
+    handler=handle_agent_context,
+))
+registry.register(CommandDefinition(
+    name="agent.skills",
+    aliases=["askills"],
+    description="Show skills attached to an agent with aggregated capabilities and commands.",
+    category="agent",
+    handler=handle_agent_skills,
+))
+
+registry.register(CommandDefinition(
+    name="skill.list",
+    aliases=["skills", "slk"],
+    description="List built-in and workspace-defined reusable agent skills.",
+    category="skill",
+    handler=handle_skill_list,
+))
+registry.register(CommandDefinition(
+    name="skill.show",
+    aliases=["skill", "ssk"],
+    description="Show a reusable agent skill definition.",
+    category="skill",
+    handler=handle_skill_show,
+))
+registry.register(CommandDefinition(
+    name="skill.attach",
+    aliases=["skill.add", "sa"],
+    description="Attach a reusable skill to an agent.",
+    category="skill",
+    handler=handle_skill_attach,
+))
+registry.register(CommandDefinition(
+    name="skill.detach",
+    aliases=["skill.remove", "sdsk"],
+    description="Detach a reusable skill from an agent.",
+    category="skill",
+    handler=handle_skill_detach,
+))
+
+
+registry.register(CommandDefinition(
+    name="team.create",
+    aliases=["team.new", "tc"],
+    description="Create a workspace-managed multi-agent team.",
+    category="team",
+    handler=handle_team_create,
+))
+registry.register(CommandDefinition(
+    name="team.add",
+    aliases=["ta"],
+    description="Add an agent to a multi-agent team.",
+    category="team",
+    handler=handle_team_add,
+))
+registry.register(CommandDefinition(
+    name="team.remove",
+    aliases=["team.detach", "trm"],
+    description="Remove an agent from a multi-agent team.",
+    category="team",
+    handler=handle_team_remove,
+))
+registry.register(CommandDefinition(
+    name="team.list",
+    aliases=["teams", "tl"],
+    description="List configured multi-agent teams.",
+    category="team",
+    handler=handle_team_list,
+))
+registry.register(CommandDefinition(
+    name="team.show",
+    aliases=["ts"],
+    description="Show a multi-agent team, members and runtime state.",
+    category="team",
+    handler=handle_team_show,
+))
+registry.register(CommandDefinition(
+    name="team.run",
+    aliases=["tr", "team"],
+    description="Run a multi-agent team against a shared objective.",
+    category="team",
+    handler=handle_team_run,
+))
+registry.register(CommandDefinition(
+    name="team.status",
+    aliases=["tst"],
+    description="Show multi-agent team runtime status and recent runs.",
+    category="team",
+    handler=handle_team_status,
+))
+registry.register(CommandDefinition(
+    name="team.stop",
+    aliases=["tstop"],
+    description="Stop a multi-agent team run and persist stopped state.",
+    category="team",
+    handler=handle_team_stop,
+))
+registry.register(CommandDefinition(
+    name="team.history",
+    aliases=["th"],
+    description="List multi-agent team run history.",
+    category="team",
+    handler=handle_team_history,
+))
+registry.register(CommandDefinition(
+    name="team.delete",
+    aliases=["tx"],
+    description="Soft-delete a multi-agent team.",
+    category="team",
+    handler=handle_team_delete,
 ))
 
 registry.register(CommandDefinition(

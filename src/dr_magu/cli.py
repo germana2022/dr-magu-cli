@@ -39,6 +39,7 @@ from dr_magu.project_context.generator import generate_project_context, get_cont
 from dr_magu.workflows.runner import WorkflowRunner
 from dr_magu.runtime.inspector import RuntimeInspector
 from dr_magu.agents.runner import AgentRunner
+from dr_magu.multi_agent.team import TeamRuntime
 from dr_magu.brain.context_loader import BrainContextLoader
 from dr_magu.tools.registry import ToolRegistry
 from dr_magu.security.permission_context import PermissionContextReader
@@ -58,6 +59,7 @@ context_app = typer.Typer(help="Deterministic project context generation")
 workflow_app = typer.Typer(help="Deterministic workflow runtime, and runtime introspection")
 runtime_app = typer.Typer(help="Runtime introspection tools")
 agent_app = typer.Typer(help="Agent registry tools")
+team_app = typer.Typer(help="Multi-agent team orchestration tools")
 brain_app = typer.Typer(help="Brain context loader tools")
 tools_app = typer.Typer(help="Formal tool registry tools")
 permissions_app = typer.Typer(help="Permission context tools")
@@ -76,6 +78,7 @@ app.add_typer(context_app, name="context")
 app.add_typer(workflow_app, name="workflow")
 app.add_typer(runtime_app, name="runtime")
 app.add_typer(agent_app, name="agent")
+app.add_typer(team_app, name="team")
 app.add_typer(brain_app, name="brain")
 app.add_typer(tools_app, name="tools")
 app.add_typer(permissions_app, name="permissions")
@@ -311,6 +314,33 @@ def runtime_inspect_command(
     renderer.render(result, json_output)
 
 
+@agent_app.command("create")
+def agent_create_command(
+    agent_id: str = typer.Argument(..., help="Agent ID to create."),
+    name: str = typer.Option("", "--name", help="Human-readable agent name."),
+    role: str = typer.Option("general", "--role", help="Agent role, for example researcher, architect or reviewer."),
+    workflow: str = typer.Option("research-brief", "--workflow", help="Bound workflow id."),
+    description: str = typer.Option("", "--description", help="Agent description."),
+    capabilities: str = typer.Option("", "--capabilities", help="Comma-separated capabilities."),
+    aliases: str = typer.Option("", "--aliases", help="Comma-separated aliases."),
+    requires_llm: bool = typer.Option(False, "--requires-llm", help="Mark this agent as requiring LLM access."),
+    workspace: str = typer.Option(default_workspace(), "--workspace", "-w", help="Workspace root."),
+    json_output: bool = typer.Option(False, "--json", help="Return JSON output."),
+) -> None:
+    """Create a workspace-managed runtime agent without requiring YAML."""
+    result = AgentRunner(workspace).create_agent(
+        agent_id,
+        name=name or None,
+        role=role,
+        workflow=workflow,
+        description=description,
+        capabilities=[item.strip() for item in capabilities.split(",") if item.strip()] or None,
+        aliases=[item.strip() for item in aliases.split(",") if item.strip()] or None,
+        requires_llm=requires_llm,
+    )
+    renderer.render(result, json_output)
+
+
 @agent_app.command("list")
 def agent_list_command(
     workspace: str = typer.Option(default_workspace(), "--workspace", "-w", help="Workspace root."),
@@ -336,11 +366,59 @@ def agent_show_command(
 @agent_app.command("run")
 def agent_run_command(
     agent_id: str = typer.Argument("repository-analyzer", help="Agent ID or alias."),
+    prompt: str = typer.Argument("", help="Optional agent task prompt or topic."),
+    dry_run: bool = typer.Option(False, "--dry-run", "--dry", help="Plan the bound workflow without executing it."),
     workspace: str = typer.Option(default_workspace(), "--workspace", "-w", help="Workspace root."),
     json_output: bool = typer.Option(False, "--json", help="Return JSON output."),
 ) -> None:
-    """Run a configured agent by delegating to its bound workflow."""
-    result = AgentRunner(workspace).run_agent(agent_id)
+    """Run a configured agent through the Agent Runtime."""
+    result = AgentRunner(workspace).run_agent(agent_id, prompt=prompt, dry_run=dry_run)
+    renderer.render(result, json_output)
+
+
+@agent_app.command("status")
+def agent_status_command(
+    agent_id: str = typer.Argument(..., help="Agent ID or alias."),
+    workspace: str = typer.Option(default_workspace(), "--workspace", "-w", help="Workspace root."),
+    json_output: bool = typer.Option(False, "--json", help="Return JSON output."),
+) -> None:
+    """Show Agent Runtime status and latest execution state."""
+    result = AgentRunner(workspace).status_agent(agent_id)
+    renderer.render(result, json_output)
+
+
+@agent_app.command("stop")
+def agent_stop_command(
+    agent_id: str = typer.Argument(..., help="Agent ID or alias."),
+    reason: str = typer.Option("Manual stop requested.", "--reason", help="Stop reason."),
+    workspace: str = typer.Option(default_workspace(), "--workspace", "-w", help="Workspace root."),
+    json_output: bool = typer.Option(False, "--json", help="Return JSON output."),
+) -> None:
+    """Request an agent stop and persist stopped runtime state."""
+    result = AgentRunner(workspace).stop_agent(agent_id, reason=reason)
+    renderer.render(result, json_output)
+
+
+@agent_app.command("history")
+def agent_history_command(
+    agent_id: str = typer.Argument("", help="Optional agent ID or alias."),
+    limit: int = typer.Option(20, "--limit", help="Maximum run records."),
+    workspace: str = typer.Option(default_workspace(), "--workspace", "-w", help="Workspace root."),
+    json_output: bool = typer.Option(False, "--json", help="Return JSON output."),
+) -> None:
+    """List Agent Runtime execution history."""
+    result = AgentRunner(workspace).history(agent_id=agent_id or None, limit=limit)
+    renderer.render(result, json_output)
+
+
+@agent_app.command("context")
+def agent_context_command(
+    agent_id: str = typer.Argument(..., help="Agent ID or alias."),
+    workspace: str = typer.Option(default_workspace(), "--workspace", "-w", help="Workspace root."),
+    json_output: bool = typer.Option(False, "--json", help="Return JSON output."),
+) -> None:
+    """Show Agent Runtime context, permissions, MCP access and workflow access."""
+    result = AgentRunner(workspace).context(agent_id)
     renderer.render(result, json_output)
 
 
@@ -408,6 +486,127 @@ def agent_update_command(
 ) -> None:
     """Update or override an agent from a YAML definition."""
     result = AgentRunner(workspace).update_agent_from_file(agent_id, file_path)
+    renderer.render(result, json_output)
+
+
+@team_app.command("create")
+def team_create_command(
+    team_id: str = typer.Argument(..., help="Team ID to create."),
+    name: str = typer.Option("", "--name", help="Human-readable team name."),
+    mode: str = typer.Option("sequential", "--mode", help="Team execution mode."),
+    description: str = typer.Option("", "--description", help="Team description."),
+    workspace: str = typer.Option(default_workspace(), "--workspace", "-w", help="Workspace root."),
+    json_output: bool = typer.Option(False, "--json", help="Return JSON output."),
+) -> None:
+    """Create a workspace-managed multi-agent team."""
+    result = TeamRuntime(workspace).create(team_id, name=name or None, mode=mode, description=description)
+    renderer.render(result, json_output)
+
+
+@team_app.command("add")
+def team_add_command(
+    team_id: str = typer.Argument(..., help="Team ID."),
+    agent_id: str = typer.Argument(..., help="Agent ID to add."),
+    workspace: str = typer.Option(default_workspace(), "--workspace", "-w", help="Workspace root."),
+    json_output: bool = typer.Option(False, "--json", help="Return JSON output."),
+) -> None:
+    """Add an agent to a multi-agent team."""
+    result = TeamRuntime(workspace).add(team_id, agent_id)
+    renderer.render(result, json_output)
+
+
+@team_app.command("remove")
+def team_remove_command(
+    team_id: str = typer.Argument(..., help="Team ID."),
+    agent_id: str = typer.Argument(..., help="Agent ID to remove."),
+    workspace: str = typer.Option(default_workspace(), "--workspace", "-w", help="Workspace root."),
+    json_output: bool = typer.Option(False, "--json", help="Return JSON output."),
+) -> None:
+    """Remove an agent from a multi-agent team."""
+    result = TeamRuntime(workspace).remove(team_id, agent_id)
+    renderer.render(result, json_output)
+
+
+@team_app.command("list")
+def team_list_command(
+    workspace: str = typer.Option(default_workspace(), "--workspace", "-w", help="Workspace root."),
+    include_deleted: bool = typer.Option(False, "--include-deleted", help="Include soft-deleted teams."),
+    json_output: bool = typer.Option(False, "--json", help="Return JSON output."),
+) -> None:
+    """List configured multi-agent teams."""
+    result = TeamRuntime(workspace).list(include_deleted=include_deleted)
+    renderer.render(result, json_output)
+
+
+@team_app.command("show")
+def team_show_command(
+    team_id: str = typer.Argument(..., help="Team ID."),
+    workspace: str = typer.Option(default_workspace(), "--workspace", "-w", help="Workspace root."),
+    json_output: bool = typer.Option(False, "--json", help="Return JSON output."),
+) -> None:
+    """Show a multi-agent team, members and runtime state."""
+    result = TeamRuntime(workspace).show(team_id)
+    renderer.render(result, json_output)
+
+
+@team_app.command("run")
+def team_run_command(
+    team_id: str = typer.Argument(..., help="Team ID."),
+    prompt: str = typer.Argument("", help="Shared team objective."),
+    mode: str = typer.Option("", "--mode", help="Override team execution mode."),
+    continue_on_error: bool = typer.Option(False, "--continue-on-error", help="Continue after failed agents."),
+    dry_run: bool = typer.Option(False, "--dry-run", "--dry", help="Run agents in dry-run mode."),
+    workspace: str = typer.Option(default_workspace(), "--workspace", "-w", help="Workspace root."),
+    json_output: bool = typer.Option(False, "--json", help="Return JSON output."),
+) -> None:
+    """Run a multi-agent team against a shared objective."""
+    result = TeamRuntime(workspace).run(team_id, prompt=prompt, mode=mode or None, continue_on_error=continue_on_error, dry_run=dry_run)
+    renderer.render(result, json_output)
+
+
+@team_app.command("status")
+def team_status_command(
+    team_id: str = typer.Argument(..., help="Team ID."),
+    workspace: str = typer.Option(default_workspace(), "--workspace", "-w", help="Workspace root."),
+    json_output: bool = typer.Option(False, "--json", help="Return JSON output."),
+) -> None:
+    """Show multi-agent team runtime status and recent runs."""
+    result = TeamRuntime(workspace).status(team_id)
+    renderer.render(result, json_output)
+
+
+@team_app.command("history")
+def team_history_command(
+    team_id: str = typer.Argument("", help="Optional team ID."),
+    limit: int = typer.Option(20, "--limit", help="Maximum run records."),
+    workspace: str = typer.Option(default_workspace(), "--workspace", "-w", help="Workspace root."),
+    json_output: bool = typer.Option(False, "--json", help="Return JSON output."),
+) -> None:
+    """List multi-agent team run history."""
+    result = TeamRuntime(workspace).history(team_id=team_id or None, limit=limit)
+    renderer.render(result, json_output)
+
+
+@team_app.command("stop")
+def team_stop_command(
+    team_id: str = typer.Argument(..., help="Team ID."),
+    reason: str = typer.Option("Manual team stop requested.", "--reason", help="Stop reason."),
+    workspace: str = typer.Option(default_workspace(), "--workspace", "-w", help="Workspace root."),
+    json_output: bool = typer.Option(False, "--json", help="Return JSON output."),
+) -> None:
+    """Stop a multi-agent team run and persist stopped state."""
+    result = TeamRuntime(workspace).stop(team_id, reason=reason)
+    renderer.render(result, json_output)
+
+
+@team_app.command("delete")
+def team_delete_command(
+    team_id: str = typer.Argument(..., help="Team ID."),
+    workspace: str = typer.Option(default_workspace(), "--workspace", "-w", help="Workspace root."),
+    json_output: bool = typer.Option(False, "--json", help="Return JSON output."),
+) -> None:
+    """Soft-delete a multi-agent team."""
+    result = TeamRuntime(workspace).delete(team_id)
     renderer.render(result, json_output)
 
 
@@ -658,7 +857,7 @@ def tui_command(
 
 @app.command("version")
 def version() -> None:
-    console.print("dr-magu-cli v2.5.0")
+    console.print("dr-magu-cli v2.7.0")
 
 
 
