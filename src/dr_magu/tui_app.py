@@ -21,6 +21,17 @@ from dr_magu.tui.clipboard import copy_text_to_clipboard, format_tool_result_for
 
 
 
+def _strip_rich_markup(value: str) -> str:
+    """Best-effort conversion from Rich markup to copy-friendly plain text."""
+    import re
+
+    # Remove common Rich style tags such as [bold green]...[/]. The TUI keeps a
+    # copy/export transcript separately, so display text should prioritize
+    # selectability and exact error/debug content over styling.
+    value = re.sub(r"\[/?[^\]\n]+\]", "", value)
+    return value
+
+
 def _short_session_id(session_id: str) -> str:
     """Return a compact session label for terminal tables."""
     parts = session_id.split("-")
@@ -91,7 +102,7 @@ class TuiSettings:
     """Settings used to start the Dr Magu Terminal UI."""
 
     workspace_path: str
-    version: str = "2.0.0"
+    version: str = "3.0.1"
 
 
 def _build_context(workspace_path: str) -> CommandContext:
@@ -100,6 +111,21 @@ def _build_context(workspace_path: str) -> CommandContext:
         output_format="human",
         config=load_config(),
     )
+
+
+def _is_registered_command_line(command_line: str, processor: CommandProcessor, command_registry: Any) -> bool:
+    """Return True when a TUI input resolves to a registered command.
+
+    Use CommandProcessor normalization before registry lookup so space-style
+    operational commands such as ``plan list`` resolve to ``plan.list`` and do
+    not fall through to ``brain.ask``.
+    """
+    try:
+        parsed = processor.parse_line(command_line)
+        command_registry.get(str(parsed["command_name"]))
+        return True
+    except Exception:
+        return False
 
 
 def run_tui(workspace_path: str) -> None:
@@ -112,12 +138,87 @@ def run_tui(workspace_path: str) -> None:
         from textual.containers import Container, Horizontal, Vertical
         from textual.events import Key
         from textual.screen import ModalScreen
-        from textual.widgets import Button, DataTable, Footer, Header, Input, Label, RichLog, Static
+        from textual.widgets import Button, DataTable, Footer, Header, Input, Label, RichLog, Static, TextArea
     except ModuleNotFoundError as exc:  # pragma: no cover - only triggered without optional runtime dependency
         missing = exc.name or "textual"
         raise RuntimeError(
             f"Missing dependency '{missing}'. Install the project with TUI dependencies: pip install -e ."
         ) from exc
+
+
+    class SelectableLogView(TextArea):
+        """Read-only selectable console output for precise log copying.
+
+        RichLog is excellent for formatted output, but it captures mouse input in a
+        way that makes partial selection difficult in several terminals. This
+        widget intentionally stores and renders a plain-text transcript so users
+        can select words, lines, JSON fragments, and stack traces with the mouse.
+        """
+
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
+            # RichLog-compatible call sites pass display options such as wrap,
+            # highlight, and markup. TextArea does not accept those keyword
+            # arguments, so strip them here while preserving generic Textual
+            # widget kwargs such as id, classes, and disabled.
+            self._richlog_compat_options = {
+                "wrap": kwargs.pop("wrap", None),
+                "highlight": kwargs.pop("highlight", None),
+                "markup": kwargs.pop("markup", None),
+            }
+            kwargs.setdefault("read_only", True)
+            kwargs.setdefault("show_line_numbers", False)
+            super().__init__("", *args, **kwargs)
+            self._buffer: list[str] = []
+
+        def write(self, text: Any) -> None:
+            self._buffer.append(_strip_rich_markup(str(text)))
+            self._sync_text()
+
+        def clear(self) -> None:
+            self._buffer.clear()
+            self._set_text("")
+
+        def transcript(self) -> str:
+            return "\n".join(self._buffer).strip()
+
+        def selection_text(self) -> str:
+            for attr in ("selected_text", "selection_text"):
+                value = getattr(self, attr, None)
+                if isinstance(value, str):
+                    return value
+                if callable(value):
+                    try:
+                        result = value()
+                    except TypeError:
+                        continue
+                    if isinstance(result, str):
+                        return result
+            return ""
+
+        def _sync_text(self) -> None:
+            self._set_text("\n".join(self._buffer))
+            scroll_end = getattr(self, "scroll_end", None)
+            if callable(scroll_end):
+                try:
+                    scroll_end(animate=False)
+                except TypeError:
+                    scroll_end()
+
+        def _set_text(self, text: str) -> None:
+            load_text = getattr(self, "load_text", None)
+            if callable(load_text):
+                load_text(text)
+                return
+            try:
+                self.text = text
+            except Exception:
+                update = getattr(self, "update", None)
+                if callable(update):
+                    update(text)
+
+    # Keep the rest of this module's renderer signatures stable while switching
+    # the concrete output component to a selectable read-only TextArea.
+    RichLog = SelectableLogView
 
     settings = TuiSettings(workspace_path=str(Path(workspace_path).resolve()))
     processor = CommandProcessor(registry)
@@ -301,7 +402,9 @@ def run_tui(workspace_path: str) -> None:
         TITLE = "Dr Magu"
         SUB_TITLE = "AI Agent Platform"
         BINDINGS = [
-            ("ctrl+c", "quit", "Quit"),
+            ("ctrl+c", "copy_selected_output", "Copy Selection"),
+            ("ctrl+q", "quit", "Quit"),
+            ("ctrl+a", "select_all_output", "Select All"),
             ("ctrl+l", "clear_console", "Clear"),
             ("ctrl+y", "copy_last_output", "Copy Last"),
             ("ctrl+e", "export_transcript", "Export Log"),
@@ -440,6 +543,8 @@ def run_tui(workspace_path: str) -> None:
                         yield Static("\nShortcuts", classes="sidebar-section")
                         yield Label("F1 Help | F2 Commands")
                         yield Label("F3 Sessions | F5 Status")
+                        yield Label("Ctrl+C Copy Selection")
+                        yield Label("Ctrl+A Select Log")
                         yield Label("Ctrl+Y Copy Last")
                         yield Label("Ctrl+E Export Log")
                 with Container(id="input-panel"):
@@ -460,7 +565,7 @@ def run_tui(workspace_path: str) -> None:
             self._write_separator(log)
             log.write("[bold]Try:[/] /help, /commands, /session, /scan, /context, /wf repository.context, /brain, /agents")
             log.write("[dim]Use Arrow Up and Arrow Down to navigate commands executed in this TUI session.[/]")
-            log.write("[dim]Copy helpers: Ctrl+Y or /copy-last copies the last result; Ctrl+E or /export-log writes a plain-text transcript.[/]")
+            log.write("[dim]Copy helpers: select text with mouse and press Ctrl+C, Ctrl+A selects the log, Ctrl+Y copies the last result, Ctrl+E exports the transcript.[/]")
             log.write(f"[dim]Persistent session:[/] {session_metadata.id}")
             self.query_one("#prompt-input", Input).focus()
 
@@ -502,6 +607,27 @@ def run_tui(workspace_path: str) -> None:
         def action_show_status(self) -> None:
             log = self.query_one("#console", RichLog)
             self._execute_and_render("git.status", log)
+
+        def action_copy_selected_output(self) -> None:
+            log = self.query_one("#console", RichLog)
+            selected = log.selection_text().strip()
+            if not selected:
+                log.write("[yellow]No text selection available. Select text in the output panel first, or use /copy-last.[/]")
+                return
+            result = copy_text_to_clipboard(selected)
+            color = "green" if result.success else "yellow"
+            log.write(f"[{color}]{result.message}[/]")
+            if not result.success:
+                path = write_text_artifact(settings.workspace_path, "selected-output.txt", selected)
+                log.write(f"[bold green]Selection artifact:[/] {path}")
+
+        def action_select_all_output(self) -> None:
+            log = self.query_one("#console", RichLog)
+            select_all = getattr(log, "select_all", None)
+            if callable(select_all):
+                select_all()
+                return
+            log.write("[yellow]Select-all is not supported by this terminal widget version. Use /copy-session or /export-log.[/]")
 
         def action_copy_last_output(self) -> None:
             log = self.query_one("#console", RichLog)
@@ -573,6 +699,10 @@ def run_tui(workspace_path: str) -> None:
 
             if command in {"/commands", "commands"}:
                 self._render_commands(log)
+                return
+
+            if command in {"/copy-selection", "copy.selection", "copy-selection"}:
+                self.action_copy_selected_output()
                 return
 
             if command in {"/copy", "copy", "/copy-last", "copy.last", "copy-last"}:
@@ -699,11 +829,8 @@ def run_tui(workspace_path: str) -> None:
                 command = command.removeprefix("/run ").strip()
 
             if not explicit_command:
-                first_token = command.split(maxsplit=1)[0] if command else ""
-                try:
-                    registry.get(first_token)
-                except Exception:
-                    safe_prompt = original_command.replace('"', '\\"')
+                if not _is_registered_command_line(command, processor, registry):
+                    safe_prompt = original_command.replace('"', '\"')
                     self._execute_and_render(f'brain.ask "{safe_prompt}"', log)
                     return
 
@@ -749,10 +876,14 @@ def run_tui(workspace_path: str) -> None:
                 ("/wf <name>", "Run a registered workflow. Defaults to repository.context."),
                 ("/session, ss", "Open the persistent session manager popup."),
                 ("/run <command>", "Execute an internal command."),
+                ("/copy-selection", "Copy the currently selected output text to the OS clipboard."),
                 ("/copy-last, /copy", "Copy the last command result as plain JSON text to the OS clipboard."),
                 ("/copy-session", "Copy the current TUI session transcript to the OS clipboard."),
                 ("/export-log", "Write the current TUI session transcript to .dr-magu/tui/."),
+                ("Ctrl+C", "Copy selected output text."),
+                ("Ctrl+A", "Select all output text when supported by the terminal widget."),
                 ("Ctrl+Y", "Copy the last command result."),
+                ("Ctrl+Q", "Exit the TUI."),
                 ("Ctrl+E", "Export the current TUI transcript."),
                 ("fl, gs, gd", "Quick aliases for files.list, git.status, git.diff."),
                 ("Arrow Up", "Show previous command from the current TUI session."),

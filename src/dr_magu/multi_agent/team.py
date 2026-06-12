@@ -13,6 +13,7 @@ import yaml
 from dr_magu.agents.registry import AgentRegistry
 from dr_magu.agents.runner import AgentRunner
 from dr_magu.result import ToolResult
+from dr_magu.multi_agent.artifacts import TeamArtifactStore
 
 
 def _utc_now() -> str:
@@ -187,6 +188,7 @@ class TeamRuntime:
         self.store = TeamStore(self.workspace_path)
         self.agent_runner = AgentRunner(self.workspace_path)
         self.agent_registry = AgentRegistry(self.workspace_path)
+        self.artifacts = TeamArtifactStore(self.workspace_path)
 
     def create(self, team_id: str, *, name: str | None = None, mode: str = "sequential", description: str = "") -> ToolResult:
         team_id = team_id.strip()
@@ -261,7 +263,11 @@ class TeamRuntime:
         return ToolResult(success=True, tool="team.stop", data={"team": team.to_dict(), "runtime_state": state})
 
     def history(self, team_id: str | None = None, limit: int = 20) -> ToolResult:
-        return ToolResult(success=True, tool="team.history", data={"team_id": team_id, "runs": self.store.list_runs(team_id, limit=limit), "count": len(self.store.list_runs(team_id, limit=limit))})
+        runs = self.store.list_runs(team_id, limit=limit)
+        return ToolResult(success=True, tool="team.history", data={"team_id": team_id, "runs": runs, "count": len(runs)})
+
+    def artifacts_for_run(self, run_id: str) -> ToolResult:
+        return ToolResult(success=True, tool="team.artifacts", data=self.artifacts.list_run_artifacts(run_id))
 
     def delete(self, team_id: str) -> ToolResult:
         try:
@@ -288,14 +294,24 @@ class TeamRuntime:
         results: list[dict[str, Any]] = []
         failed: list[str] = []
         completed: list[str] = []
-        shared_context = {"team_id": team.id, "team_run_id": run_id, "prompt": prompt, "previous_results": []}
+        artifact_records: list[dict[str, Any]] = []
+        run_context_artifact = self.artifacts.write_run_context(run_id, team=team.to_dict(), prompt=prompt, mode=execution_mode, agents=list(team.agents))
+        artifact_records.append(run_context_artifact)
+        shared_context = {
+            "team_id": team.id,
+            "team_run_id": run_id,
+            "prompt": prompt,
+            "previous_results": [],
+            "artifacts": [],
+        }
 
-        # v2.8.0 supports deterministic sequential execution. Parallel/hybrid are
-        # accepted as planning modes and executed safely in dependency-preserving
-        # sequence until async workers are introduced.
-        for agent_id in team.agents:
+        # v3.0.2 keeps deterministic sequential execution but upgrades the team
+        # runtime into a collaboration pipeline: every agent writes an artifact
+        # and the next agent receives artifact summaries and paths in context.
+        for index, agent_id in enumerate(team.agents, start=1):
             agent_prompt = self._agent_prompt(prompt, agent_id, shared_context, execution_mode)
             result = self.agent_runner.run_agent(agent_id, prompt=agent_prompt, dry_run=dry_run)
+            role = self._agent_role(agent_id)
             result_payload = {
                 "agent_id": agent_id,
                 "prompt": agent_prompt,
@@ -305,8 +321,28 @@ class TeamRuntime:
                 "data": result.data,
                 "errors": result.errors,
             }
+            artifact = self.artifacts.write_agent_artifact(
+                run_id,
+                index=index,
+                agent_id=agent_id,
+                role=role,
+                prompt=agent_prompt,
+                result_payload=result_payload,
+                previous_artifacts=list(shared_context.get("artifacts", [])),
+            )
+            result_payload["artifact"] = artifact
             results.append(result_payload)
-            shared_context["previous_results"].append({"agent_id": agent_id, "success": result.success, "errors": result.errors})
+            artifact_records.append(artifact)
+            shared_context["previous_results"].append({"agent_id": agent_id, "success": result.success, "errors": result.errors, "artifact_id": artifact["id"]})
+            shared_context["artifacts"].append({
+                "id": artifact["id"],
+                "agent_id": agent_id,
+                "role": role,
+                "title": artifact["title"],
+                "summary": artifact["summary"],
+                "markdown_path": artifact["markdown_path"],
+                "json_path": artifact["json_path"],
+            })
             if result.success:
                 completed.append(agent_id)
             else:
@@ -318,6 +354,7 @@ class TeamRuntime:
         success = not failed
         status = "completed" if success else "failed"
         completed_at = _utc_now()
+        artifact_manifest = self.artifacts.write_manifest(run_id, artifact_records)
         record = {
             "run_id": run_id,
             "team_id": team.id,
@@ -331,14 +368,68 @@ class TeamRuntime:
             "completed": completed,
             "failed": failed,
             "results": results,
+            "artifacts": artifact_records,
+            "artifact_manifest": artifact_manifest,
             "started_at": started_at,
             "completed_at": completed_at,
             "duration_ms": duration_ms,
         }
         run_path = self.store.save_run(record)
-        self.store.update_state(team.id, {"status": status, "current_run_id": None, "last_run_id": run_id, "last_result": "success" if success else "error", "completed_at": completed_at})
-        return ToolResult(success=success, tool="team.run", data={"team": team.to_dict(), "team_run": record, "run_path": str(run_path), "state_path": str(self.store.state_path), "summary": f"{len(completed)} completed, {len(failed)} failed"}, errors=[] if success else [f"Team run failed: {', '.join(failed)}"])
+        self.store.update_state(team.id, {
+            "status": status,
+            "current_run_id": None,
+            "last_run_id": run_id,
+            "last_result": "success" if success else "error",
+            "last_artifact_manifest": artifact_manifest.get("path"),
+            "completed_at": completed_at,
+        })
+        return ToolResult(
+            success=success,
+            tool="team.run",
+            data={
+                "team": team.to_dict(),
+                "team_run": record,
+                "run_path": str(run_path),
+                "state_path": str(self.store.state_path),
+                "artifact_manifest": artifact_manifest,
+                "artifact_dir": str(self.artifacts.run_dir(run_id)),
+                "summary": f"{len(completed)} completed, {len(failed)} failed, {len(artifact_records)} artifacts",
+            },
+            errors=[] if success else [f"Team run failed: {', '.join(failed)}"],
+        )
 
     def _agent_prompt(self, prompt: str, agent_id: str, shared_context: dict[str, Any], mode: str) -> str:
         prior = ", ".join(item["agent_id"] for item in shared_context.get("previous_results", [])) or "none"
-        return f"Team objective: {prompt}\nExecution mode: {mode}\nCurrent agent: {agent_id}\nPrevious agents completed: {prior}"
+        role = self._agent_role(agent_id)
+        directive = self._role_directive(agent_id, role)
+        artifact_lines = []
+        for artifact in shared_context.get("artifacts", []):
+            artifact_lines.append(f"- {artifact.get('title')} from {artifact.get('agent_id')}: {artifact.get('summary')} ({artifact.get('markdown_path')})")
+        artifact_block = "\n".join(artifact_lines) if artifact_lines else "none"
+        return (
+            f"Team objective: {prompt}\n"
+            f"Execution mode: {mode}\n"
+            f"Current agent: {agent_id}\n"
+            f"Current role: {role}\n"
+            f"Role directive: {directive}\n"
+            f"Previous agents completed: {prior}\n"
+            f"Artifacts available to consume:\n{artifact_block}"
+        )
+
+    def _agent_role(self, agent_id: str) -> str:
+        try:
+            return str(self.agent_registry.get(agent_id, include_deleted=True).role or agent_id)
+        except Exception:
+            return agent_id
+
+    def _role_directive(self, agent_id: str, role: str) -> str:
+        normalized = f"{agent_id} {role}".lower()
+        if "research" in normalized:
+            return "Produce repository findings and evidence that downstream agents can consume."
+        if "architect" in normalized:
+            return "Consume research artifacts and produce architecture observations, components, boundaries and risks."
+        if "review" in normalized:
+            return "Consume architecture and research artifacts and produce quality, security and maintainability review findings."
+        if "report" in normalized:
+            return "Consume all prior artifacts and produce a final synthesized report."
+        return "Consume prior artifacts when available and produce a role-specific output artifact."

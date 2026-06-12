@@ -47,6 +47,8 @@ from dr_magu.plugins.manager import PluginManager
 from dr_magu.control_center.service import ControlCenterService
 from dr_magu.plans.models import BrainPlan, PlanStep
 from dr_magu.plans.validator import PlanValidator
+from dr_magu.bootstrap import WorkspaceBootstrap
+from dr_magu.dynamic_planning.runtime import DynamicPlanningEngine
 
 app = typer.Typer(help="Dr Magu CLI - Tool CLI, TUI, sessions, repository scanner, context generator, workflows, runtime introspection, and Brain foundation")
 files_app = typer.Typer(help="File system tools")
@@ -191,6 +193,28 @@ def session_delete(
     """Soft-delete a persistent session without physically removing files."""
     metadata = SessionManager(workspace).delete(session_id)
     _render_session_metadata(metadata, "Deleted Session")
+
+
+@app.command("init")
+def init_command(
+    workspace: str = typer.Option(default_workspace(), "--workspace", "-w", help="Workspace root."),
+    force: bool = typer.Option(False, "--force", help="Overwrite bootstrap-managed files and recreate defaults."),
+    no_safe_mcp: bool = typer.Option(False, "--no-safe-mcp", help="Do not enable safe local MCP defaults such as playwright/filesystem."),
+    json_output: bool = typer.Option(False, "--json", help="Return JSON output."),
+) -> None:
+    """Bootstrap a ready-to-use dr-magu workspace with defaults."""
+    result = WorkspaceBootstrap(workspace).init(force=force, enable_safe_mcp=not no_safe_mcp)
+    renderer.render(result, json_output)
+
+
+@app.command("doctor")
+def doctor_command(
+    workspace: str = typer.Option(default_workspace(), "--workspace", "-w", help="Workspace root."),
+    json_output: bool = typer.Option(False, "--json", help="Return JSON output."),
+) -> None:
+    """Validate workspace bootstrap, agents, skills, teams, workflows and MCP config."""
+    result = WorkspaceBootstrap(workspace).doctor()
+    renderer.render(result, json_output)
 
 
 @app.command("scan")
@@ -689,6 +713,86 @@ def contracts_tools_command(
     renderer.render(result, json_output)
 
 
+
+@plan_app.command("create")
+def plan_create_command(
+    goal: str = typer.Argument(..., help="Natural-language goal to transform into an execution plan."),
+    workspace: str = typer.Option(default_workspace(), "--workspace", "-w", help="Workspace root."),
+    approve: bool = typer.Option(False, "--approve", help="Create the plan already approved."),
+    json_output: bool = typer.Option(False, "--json", help="Return JSON output."),
+) -> None:
+    """Create a dynamic execution plan from a natural-language goal."""
+    result = DynamicPlanningEngine(workspace).create(goal, approve=approve)
+    renderer.render(result, json_output)
+
+
+@plan_app.command("show")
+def plan_show_command(
+    plan_id: str = typer.Argument(..., help="Plan ID to inspect."),
+    workspace: str = typer.Option(default_workspace(), "--workspace", "-w", help="Workspace root."),
+    json_output: bool = typer.Option(False, "--json", help="Return JSON output."),
+) -> None:
+    """Show a dynamic execution plan."""
+    result = DynamicPlanningEngine(workspace).show(plan_id)
+    renderer.render(result, json_output)
+
+
+@plan_app.command("list")
+def plan_list_command(
+    workspace: str = typer.Option(default_workspace(), "--workspace", "-w", help="Workspace root."),
+    json_output: bool = typer.Option(False, "--json", help="Return JSON output."),
+) -> None:
+    """List dynamic execution plans."""
+    result = DynamicPlanningEngine(workspace).list()
+    renderer.render(result, json_output)
+
+
+@plan_app.command("status")
+def plan_status_command(
+    plan_id: str = typer.Argument(..., help="Plan ID to inspect."),
+    workspace: str = typer.Option(default_workspace(), "--workspace", "-w", help="Workspace root."),
+    json_output: bool = typer.Option(False, "--json", help="Return JSON output."),
+) -> None:
+    """Show dynamic plan execution status."""
+    result = DynamicPlanningEngine(workspace).status(plan_id)
+    renderer.render(result, json_output)
+
+
+@plan_app.command("approve")
+def plan_approve_command(
+    plan_id: str = typer.Argument(..., help="Plan ID to approve."),
+    workspace: str = typer.Option(default_workspace(), "--workspace", "-w", help="Workspace root."),
+    json_output: bool = typer.Option(False, "--json", help="Return JSON output."),
+) -> None:
+    """Approve a dynamic execution plan."""
+    result = DynamicPlanningEngine(workspace).approve(plan_id)
+    renderer.render(result, json_output)
+
+
+@plan_app.command("cancel")
+def plan_cancel_command(
+    plan_id: str = typer.Argument(..., help="Plan ID to cancel."),
+    reason: str = typer.Option("Manual cancellation requested.", "--reason", help="Cancellation reason."),
+    workspace: str = typer.Option(default_workspace(), "--workspace", "-w", help="Workspace root."),
+    json_output: bool = typer.Option(False, "--json", help="Return JSON output."),
+) -> None:
+    """Cancel a dynamic execution plan."""
+    result = DynamicPlanningEngine(workspace).cancel(plan_id, reason=reason)
+    renderer.render(result, json_output)
+
+
+@plan_app.command("run")
+def plan_run_command(
+    plan_id: str = typer.Argument(..., help="Plan ID to run."),
+    workspace: str = typer.Option(default_workspace(), "--workspace", "-w", help="Workspace root."),
+    approved: bool = typer.Option(False, "--approved", help="Allow execution of plans requiring approval."),
+    continue_on_error: bool = typer.Option(False, "--continue-on-error", help="Continue running remaining steps after a failed step."),
+    json_output: bool = typer.Option(False, "--json", help="Return JSON output."),
+) -> None:
+    """Run a dynamic execution plan through the command registry."""
+    result = DynamicPlanningEngine(workspace).run(plan_id, approved=approved, continue_on_error=continue_on_error)
+    renderer.render(result, json_output)
+
 @plan_app.command("validate")
 def plan_validate_command(
     step: list[str] = typer.Option(None, "--step", help="Tool or command step to validate. Can be passed multiple times."),
@@ -730,6 +834,23 @@ def control_plugin_command(
     result = ControlCenterService(workspace).plugin_impact_result(plugin_id)
     renderer.render(result, json_output)
 
+
+
+@app.command("goal-run")
+def goal_run_command(
+    goal: str = typer.Argument(..., help="Create and run a dynamic plan for a natural-language goal."),
+    workspace: str = typer.Option(default_workspace(), "--workspace", "-w", help="Workspace root."),
+    json_output: bool = typer.Option(False, "--json", help="Return JSON output."),
+) -> None:
+    """Create and run a dynamic plan in one command."""
+    engine = DynamicPlanningEngine(workspace)
+    created = engine.create(goal, approve=True)
+    if not created.success or not created.data:
+        renderer.render(created, json_output)
+        return
+    plan_id = created.data["plan"]["id"]
+    result = engine.run(plan_id, approved=True, continue_on_error=True)
+    renderer.render(result, json_output)
 
 @app.command("run")
 def run_command(
@@ -857,7 +978,9 @@ def tui_command(
 
 @app.command("version")
 def version() -> None:
-    console.print("dr-magu-cli v2.7.0")
+    from dr_magu import __version__
+
+    console.print(f"dr-magu-cli v{__version__}")
 
 
 

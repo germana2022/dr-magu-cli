@@ -38,11 +38,11 @@ class CommandProcessor:
         # v2.1.1+ command-first normalization. Operational commands must never be
         # treated as LLM chat. Support both dot syntax (mcp.enable x) and
         # natural space syntax (mcp enable x) across operational domains.
-        operational_domains = {"mcp", "agent", "schedule", "workflow", "skill", "team"}
+        operational_domains = {"mcp", "agent", "schedule", "workflow", "skill", "team", "plan", "goal"}
         operational_actions = {
             "enable", "disable", "start", "stop", "restart", "health",
             "status", "discover", "boot", "servers", "list", "show", "plan",
-            "validate", "run", "runs", "history", "cancel", "resume", "export", "delete", "debug", "test", "tools", "diagnose", "handshake", "create", "new", "context", "attach", "detach", "remove", "add", "skills",
+            "validate", "run", "runs", "history", "cancel", "resume", "export", "delete", "debug", "test", "tools", "diagnose", "handshake", "create", "new", "context", "attach", "detach", "remove", "add", "skills", "approve", "artifacts",
         }
         if len(tokens) > 1 and command_name in operational_domains:
             if command_name == "workflow" and tokens[1] == "engine" and len(tokens) > 2 and tokens[2] in operational_actions:
@@ -53,6 +53,8 @@ class CommandProcessor:
                 action = tokens[1]
                 if command_name == "mcp" and action == "list":
                     action = "servers"
+                if command_name == "goal":
+                    command_name = "plan"
                 if command_name == "agent" and action == "new":
                     action = "create"
                 if command_name == "team" and action == "new":
@@ -172,6 +174,13 @@ class CommandProcessor:
             if len(positional) > 1:
                 args.setdefault("prompt", " ".join(positional[1:]))
         elif command_name in {"team.history", "th"}:
+            if positional:
+                args.setdefault("id", positional[0])
+
+        elif command_name in {"plan.create", "goal.plan", "goal.create", "pc"}:
+            if positional:
+                args.setdefault("goal", " ".join(positional))
+        elif command_name in {"plan.show", "plan.status", "plan.approve", "plan.cancel", "plan.run", "pshow", "pstatus", "papprove", "pcancel", "prun", "goal.show", "goal.status", "goal.approve", "goal.cancel", "goal.run"}:
             if positional:
                 args.setdefault("id", positional[0])
         elif command_name in {"agent.create", "agent.new", "ac"}:

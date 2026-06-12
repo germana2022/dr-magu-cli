@@ -136,6 +136,21 @@ def handle_runtime_inspect(args: dict[str, object], context: CommandContext) -> 
     return RuntimeInspector(context.workspace_path, config=context.config).inspect_result()
 
 
+def handle_workspace_init(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.bootstrap import WorkspaceBootstrap
+
+    return WorkspaceBootstrap(context.workspace_path).init(
+        force=_get_bool(args, "force", False),
+        enable_safe_mcp=not _get_bool(args, "no_safe_mcp", False),
+    )
+
+
+def handle_workspace_doctor(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.bootstrap import WorkspaceBootstrap
+
+    return WorkspaceBootstrap(context.workspace_path).doctor()
+
+
 
 def handle_agent_list(args: dict[str, object], context: CommandContext) -> ToolResult:
     from dr_magu.agents.runner import AgentRunner
@@ -359,6 +374,12 @@ def handle_team_history(args: dict[str, object], context: CommandContext) -> Too
 
     team_id = _get_str(args, "id", _get_str(args, "value", "")).strip() or None
     return TeamRuntime(context.workspace_path).history(team_id=team_id, limit=_get_int(args, "limit", 20))
+
+def handle_team_artifacts(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.multi_agent.team import TeamRuntime
+
+    return TeamRuntime(context.workspace_path).artifacts_for_run(_get_str(args, "run_id", _get_str(args, "id", _get_str(args, "value", ""))))
+
 
 
 def handle_team_delete(args: dict[str, object], context: CommandContext) -> ToolResult:
@@ -1189,6 +1210,57 @@ def handle_contracts_tools(args: dict[str, object], context: CommandContext) -> 
     return ToolResult(success=True, tool="contracts.tools", data=ToolRegistry().as_result_data())
 
 
+
+
+def handle_plan_create(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.dynamic_planning.runtime import DynamicPlanningEngine
+
+    goal = _get_str(args, "goal", _get_str(args, "value", ""))
+    return DynamicPlanningEngine(context.workspace_path).create(goal, approve=_get_bool(args, "approve", False))
+
+
+def handle_plan_show(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.dynamic_planning.runtime import DynamicPlanningEngine
+
+    return DynamicPlanningEngine(context.workspace_path).show(_get_str(args, "id", _get_str(args, "value", "")))
+
+
+def handle_plan_list(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.dynamic_planning.runtime import DynamicPlanningEngine
+
+    return DynamicPlanningEngine(context.workspace_path).list()
+
+
+def handle_plan_status(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.dynamic_planning.runtime import DynamicPlanningEngine
+
+    return DynamicPlanningEngine(context.workspace_path).status(_get_str(args, "id", _get_str(args, "value", "")))
+
+
+def handle_plan_approve(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.dynamic_planning.runtime import DynamicPlanningEngine
+
+    return DynamicPlanningEngine(context.workspace_path).approve(_get_str(args, "id", _get_str(args, "value", "")))
+
+
+def handle_plan_cancel(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.dynamic_planning.runtime import DynamicPlanningEngine
+
+    return DynamicPlanningEngine(context.workspace_path).cancel(
+        _get_str(args, "id", _get_str(args, "value", "")),
+        reason=_get_str(args, "reason", "Manual cancellation requested."),
+    )
+
+
+def handle_plan_run(args: dict[str, object], context: CommandContext) -> ToolResult:
+    from dr_magu.dynamic_planning.runtime import DynamicPlanningEngine
+
+    return DynamicPlanningEngine(context.workspace_path).run(
+        _get_str(args, "id", _get_str(args, "value", "")),
+        approved=_get_bool(args, "approved", False),
+        continue_on_error=_get_bool(args, "continue_on_error", False),
+    )
+
 def handle_plan_validate(args: dict[str, object], context: CommandContext) -> ToolResult:
     from dr_magu.plans.models import BrainPlan
     from dr_magu.plans.validator import PlanValidator
@@ -1562,12 +1634,35 @@ registry.register(CommandDefinition(
     category="team",
     handler=handle_team_history,
 ))
+
+registry.register(CommandDefinition(
+    name="team.artifacts",
+    aliases=["tartifacts"],
+    description="List shared artifact pipeline outputs for a team run.",
+    category="team",
+    handler=handle_team_artifacts,
+))
 registry.register(CommandDefinition(
     name="team.delete",
     aliases=["tx"],
     description="Soft-delete a multi-agent team.",
     category="team",
     handler=handle_team_delete,
+))
+
+registry.register(CommandDefinition(
+    name="workspace.init",
+    aliases=["init", "bootstrap", "workspace.bootstrap"],
+    description="Bootstrap a ready-to-use dr-magu workspace with default agents, skills, teams, workflows and MCP config.",
+    category="workspace",
+    handler=handle_workspace_init,
+))
+registry.register(CommandDefinition(
+    name="workspace.doctor",
+    aliases=["doctor", "workspace.check"],
+    description="Validate workspace bootstrap, defaults, MCP config, agents, skills, teams and workflows.",
+    category="workspace",
+    handler=handle_workspace_doctor,
 ))
 
 registry.register(CommandDefinition(
@@ -1800,6 +1895,57 @@ registry.register(CommandDefinition(
     category="contracts",
     handler=handle_contracts_tools,
 ))
+
+registry.register(CommandDefinition(
+    name="plan.create",
+    aliases=["goal.plan", "goal.create", "pc"],
+    description="Create a dynamic execution plan from a natural-language goal.",
+    category="plan",
+    handler=handle_plan_create,
+))
+registry.register(CommandDefinition(
+    name="plan.show",
+    aliases=["pshow", "goal.show"],
+    description="Show a persisted dynamic execution plan.",
+    category="plan",
+    handler=handle_plan_show,
+))
+registry.register(CommandDefinition(
+    name="plan.list",
+    aliases=["plans", "pln"],
+    description="List persisted dynamic execution plans.",
+    category="plan",
+    handler=handle_plan_list,
+))
+registry.register(CommandDefinition(
+    name="plan.status",
+    aliases=["pstatus", "goal.status"],
+    description="Show dynamic plan execution status.",
+    category="plan",
+    handler=handle_plan_status,
+))
+registry.register(CommandDefinition(
+    name="plan.approve",
+    aliases=["papprove", "goal.approve"],
+    description="Approve a dynamic plan before execution.",
+    category="plan",
+    handler=handle_plan_approve,
+))
+registry.register(CommandDefinition(
+    name="plan.cancel",
+    aliases=["pcancel", "goal.cancel"],
+    description="Cancel a dynamic execution plan.",
+    category="plan",
+    handler=handle_plan_cancel,
+))
+registry.register(CommandDefinition(
+    name="plan.run",
+    aliases=["goal.run", "prun"],
+    description="Run a dynamic execution plan through the command registry.",
+    category="plan",
+    handler=handle_plan_run,
+))
+
 registry.register(CommandDefinition(
     name="plan.validate",
     aliases=["pvld"],
